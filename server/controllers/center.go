@@ -3,7 +3,9 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 
+	"../tools/ToolCenter"
 	"github.com/astaxie/beego"
 )
 
@@ -23,8 +25,14 @@ func (c *CenterController) CenterGetaddr() {
 		CenterPort int
 	}
 
-	res.CenterIP = "192.168.1.100"
-	res.CenterPort = 8080
+	ip, port, err := ToolCenter.CenterGetIpPort()
+	if err != nil {
+		res.CenterIP = ""
+		res.CenterPort = 0
+	} else {
+		res.CenterIP = ip
+		res.CenterPort, _ = strconv.Atoi(port)
+	}
 
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)

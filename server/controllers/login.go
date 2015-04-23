@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"../tools/ToolCenter"
 	"github.com/astaxie/beego"
 )
 
@@ -80,9 +81,16 @@ func LoginCheck(req LoginRequset) (res LoginResponse) {
 		return res
 	}
 
+	err := ToolCenter.CenterSetIpPort(req.CenterIP, req.CenterPort)
+	if err != nil {
+		res.Errmsg = err.Error()
+		return res
+	}
+
 	res.Errmsg = "登录成功"
 	res.Status = 1
 	res.User = req.User
 	res.Usertype = 2
+
 	return res
 }
