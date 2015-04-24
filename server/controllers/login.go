@@ -101,10 +101,18 @@ func LoginCheck(req LoginRequset) (res LoginResponse) {
 		return res
 	}
 
-	err := ToolCenter.CenterSetIpPort(ip, port)
+	rip, rport, err := ToolCenter.CenterGetIpPort()
 	if err != nil {
 		res.Errmsg = err.Error()
 		return res
+	}
+
+	if ip != rip || port != rport {
+		err = ToolCenter.CenterSetIpPort(ip, port)
+		if err != nil {
+			res.Errmsg = err.Error()
+			return res
+		}
 	}
 
 	res.Errmsg = "登录成功"
