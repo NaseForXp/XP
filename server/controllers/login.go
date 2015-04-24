@@ -3,6 +3,8 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
+	"strings"
 
 	"../tools/ToolCenter"
 	"github.com/astaxie/beego"
@@ -10,10 +12,9 @@ import (
 
 // 登录请求
 type LoginRequset struct {
-	User       string // 用户名
-	Password   string // 密码
-	CenterIP   string // 管理中心IP
-	CenterPort string // 管理中心端口
+	User         string // 用户名
+	Password     string // 密码
+	CenterIPPort string // 管理中心IP、端口
 }
 
 // 登录响应
@@ -34,6 +35,7 @@ func (c *LoginController) Get() {
 
 func (c *LoginController) Login() {
 	fmt.Println("---Login")
+	fmt.Println("request :", c.GetString("data"))
 	var req LoginRequset
 	var res LoginResponse
 
@@ -58,8 +60,17 @@ func (c *LoginController) Login() {
 	c.TplNames = "login.tpl"
 }
 
+func LoginCheckIpFormat(ip string) bool {
+	bTrue, _ := regexp.MatchString(`^([1-9]|[1-9][0-9]|1[0-9]?[0-9]?|2[0-5][0-5]){1}(\.([0-9]|[1-9][0-9]|1[0-9]?[0-9]?|2[0-5][0-5])){3}$`, ip)
+	return bTrue
+}
+
+func LoginCheckPortFormat(port string) bool {
+	bTrue, _ := regexp.MatchString(`^\d{1,5}$`, port)
+	return bTrue
+}
+
 func LoginCheck(req LoginRequset) (res LoginResponse) {
-	fmt.Printf("Login: user=[%s], pwd=[%s], center=[%s:%s]\n", req.User, req.Password, req.CenterIP, req.CenterPort)
 	res.Status = 2
 	if req.User == "" {
 		res.Errmsg = "错误:用户名不能为空"
@@ -71,17 +82,26 @@ func LoginCheck(req LoginRequset) (res LoginResponse) {
 		return res
 	}
 
-	if req.CenterIP == "" {
-		res.Errmsg = "错误:管理中心IP不能为空"
+	ipport := strings.Split(req.CenterIPPort, ":")
+	if len(ipport) != 2 {
+		res.Errmsg = "错误:管理中心IP端口格式错误:" + req.CenterIPPort
 		return res
 	}
 
-	if req.CenterPort == "" {
-		res.Errmsg = "错误:管理中心端口不能为空"
+	ip := ipport[0]
+	port := ipport[1]
+
+	if LoginCheckIpFormat(ip) == false {
+		res.Errmsg = "错误:管理中心IP格式错误:" + ip
 		return res
 	}
 
-	err := ToolCenter.CenterSetIpPort(req.CenterIP, req.CenterPort)
+	if LoginCheckPortFormat(port) == false {
+		res.Errmsg = "错误:管理中心Port格式错误:" + port
+		return res
+	}
+
+	err := ToolCenter.CenterSetIpPort(ip, port)
 	if err != nil {
 		res.Errmsg = err.Error()
 		return res
