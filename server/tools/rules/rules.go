@@ -174,3 +174,263 @@ func RulesChangeUserPassword(user string, pwdold, pwdnew string) (err error) {
 
 	return nil
 }
+
+// 添加白名单(可能是目录或末尾带*)
+func RulesAddWhite(fpath string) (err error) {
+	db := hDbRules
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("RulesAddWhite: %s\n", err)
+		return err
+	}
+
+	absPath, _ := filepath.Abs(fpath)
+	sql := fmt.Sprintf("insert into whitelist (id, path) values (null, '%s')", absPath)
+	_, err = tx.Exec(sql)
+	if err != nil {
+		log.Printf("RulesAddWhite(): %s", err)
+		tx.Rollback()
+		return errors.New("错误:添加白名单失败")
+	}
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("RulesAddWhite(commit transaction): %s\n", err)
+		tx.Rollback()
+		return err
+	}
+
+	return nil
+}
+
+// 删除白名单(可能是目录或末尾带*)
+func RulesDelWhite(fpath string) (err error) {
+	db := hDbRules
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("RulesDelWhite: %s\n", err)
+		return err
+	}
+
+	absPath, _ := filepath.Abs(fpath)
+	sql := fmt.Sprintf("delete from whitelist where path = '%s'", absPath)
+	_, err = tx.Exec(sql)
+	if err != nil {
+		log.Printf("RulesDelWhite(): %s", err)
+		tx.Rollback()
+		return errors.New("错误:删除白名单失败")
+	}
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("RulesDelWhite(commit transaction): %s\n", err)
+		tx.Rollback()
+		return err
+	}
+
+	return nil
+}
+
+// 查询白名单总数
+func RulesGetWhiteTotle() (totCnt int, err error) {
+	db := hDbRules
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("RulesGetWhiteTotle: %s\n", err)
+		return totCnt, err
+	}
+
+	sql := fmt.Sprintf("select count(*) from whitelist")
+	rows, err := db.Query(sql)
+	if err != nil {
+		log.Printf("RulesGetWhiteTotle(): %s", err)
+		return totCnt, errors.New("错误:获取白名单总数失败")
+	}
+	defer rows.Close()
+
+	totCnt = 0
+	for rows.Next() {
+		rows.Scan(&totCnt)
+		break
+	}
+	rows.Close()
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("RulesGetWhiteTotle(commit transaction): %s\n", err)
+		tx.Rollback()
+		return totCnt, err
+	}
+
+	return totCnt, nil
+}
+
+// 查询白名单记录(start, length用来分页)
+// limit(start, length)
+// 从start开始，取length条记录
+func RulesQueryWhite(start int, length int) (files []string, err error) {
+	db := hDbRules
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("RulesQueryWhite: %s\n", err)
+		return files, err
+	}
+
+	sql := fmt.Sprintf("select path from whitelist order by path asc limit %d, %d", start, length)
+	rows, err := db.Query(sql)
+	if err != nil {
+		log.Printf("RulesQueryWhite(): %s", err)
+		return files, errors.New("错误:获取白名单记录失败")
+	}
+	defer rows.Close()
+
+	var file string
+	for rows.Next() {
+		rows.Scan(&file)
+		files = append(files, file)
+	}
+	rows.Close()
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("RulesQueryWhite(commit transaction): %s\n", err)
+		tx.Rollback()
+		return files, err
+	}
+
+	return files, nil
+}
+
+// 添加黑名单(可能是目录或末尾带*)
+func RulesAddBlack(fpath string) (err error) {
+	db := hDbRules
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("RulesAddBlack: %s\n", err)
+		return err
+	}
+
+	absPath, _ := filepath.Abs(fpath)
+	sql := fmt.Sprintf("insert into blacklist (id, path) values (null, '%s')", absPath)
+	_, err = tx.Exec(sql)
+	if err != nil {
+		log.Printf("RulesAddBlack(): %s", err)
+		tx.Rollback()
+		return errors.New("错误:添加白名单失败")
+	}
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("RulesAddBlack(commit transaction): %s\n", err)
+		tx.Rollback()
+		return err
+	}
+
+	return nil
+}
+
+// 删除黑名单(可能是目录或末尾带*)
+func RulesDelBlack(fpath string) (err error) {
+	db := hDbRules
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("RulesDelBlack: %s\n", err)
+		return err
+	}
+
+	absPath, _ := filepath.Abs(fpath)
+	sql := fmt.Sprintf("delete from blacklist where path = '%s'", absPath)
+	_, err = tx.Exec(sql)
+	if err != nil {
+		log.Printf("RulesDelBlack(): %s", err)
+		tx.Rollback()
+		return errors.New("错误:删除白名单失败")
+	}
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("RulesDelBlack(commit transaction): %s\n", err)
+		tx.Rollback()
+		return err
+	}
+
+	return nil
+}
+
+// 查询黑名单总数
+func RulesGetBlackTotle() (totCnt int, err error) {
+	db := hDbRules
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("RulesGetBlackTotle: %s\n", err)
+		return totCnt, err
+	}
+
+	sql := fmt.Sprintf("select count(*) from blacklist")
+	rows, err := db.Query(sql)
+	if err != nil {
+		log.Printf("RulesGetBlackTotle(): %s", err)
+		return totCnt, errors.New("错误:获取黑名单总数失败")
+	}
+	defer rows.Close()
+
+	totCnt = 0
+	for rows.Next() {
+		rows.Scan(&totCnt)
+		break
+	}
+	rows.Close()
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("RulesGetBlackTotle(commit transaction): %s\n", err)
+		tx.Rollback()
+		return totCnt, err
+	}
+
+	return totCnt, nil
+}
+
+// 查询黑名单记录(start, length用来分页)
+// limit(start, length)
+// 从start开始，取length条记录
+func RulesQueryBlack(start int, length int) (files []string, err error) {
+	db := hDbRules
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("RulesQueryBlack: %s\n", err)
+		return files, err
+	}
+
+	sql := fmt.Sprintf("select path from blacklist order by path asc limit %d, %d", start, length)
+	rows, err := db.Query(sql)
+	if err != nil {
+		log.Printf("RulesQueryBlack(): %s", err)
+		return files, errors.New("错误:获取黑名单记录失败")
+	}
+	defer rows.Close()
+
+	var file string
+	for rows.Next() {
+		rows.Scan(&file)
+		files = append(files, file)
+	}
+	rows.Close()
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("RulesQueryBlack(commit transaction): %s\n", err)
+		tx.Rollback()
+		return files, err
+	}
+
+	return files, nil
+}

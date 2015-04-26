@@ -218,7 +218,7 @@ func CreateTableWinDir(db *sql.DB) (err error) {
 
 	sql = `create table if not exists win_dir (
 			id integer not null primary key autoincrement, 
-			path      varchar(260) not null,
+			path      varchar(260) not null unique,
 			perm      varchar(8)
 		);`
 	_, err = tx.Exec(sql)
@@ -259,7 +259,7 @@ func CreateTableWinStart(db *sql.DB) (err error) {
 
 	sql = `create table if not exists win_start (
 			id integer not null primary key autoincrement, 
-			path      varchar(260) not null,
+			path      varchar(260) not null unique,
 			perm      varchar(8)
 		);`
 	_, err = tx.Exec(sql)
@@ -301,7 +301,7 @@ func CreateTableWinProc(db *sql.DB) (err error) {
 
 	sql = `create table if not exists win_proc (
 			id integer not null primary key autoincrement, 
-			path      varchar(260) not null
+			path      varchar(260) not null unique
 		);`
 	_, err = tx.Exec(sql)
 	if err != nil {
@@ -346,7 +346,7 @@ func CreateTableWhiteList(db *sql.DB) (err error) {
 
 	sql = `create table if not exists whitelist (
 			id integer not null primary key autoincrement, 
-			path      varchar(260) not null
+			path      varchar(260) not null unique
 		);`
 	_, err = tx.Exec(sql)
 	if err != nil {
@@ -377,7 +377,7 @@ func CreateTableBlackList(db *sql.DB) (err error) {
 
 	sql = `create table if not exists blacklist (
 			id integer not null primary key autoincrement, 
-			path      varchar(260) not null
+			path      varchar(260) not null unique
 		);`
 	_, err = tx.Exec(sql)
 	if err != nil {
