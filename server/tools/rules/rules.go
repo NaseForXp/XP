@@ -23,6 +23,16 @@ var (
 	hDbRules   *sql.DB                    // 规则数据库句柄
 )
 
+func RulesInit() (err error) {
+	err = RulesConnectDb()
+	return err
+}
+
+func RulesRelease() (err error) {
+	CloseSqlite()
+	return nil
+}
+
 // 链接数据库
 func RulesConnectDb() (err error) {
 	rootDir, err := RootDir.GetRootDir()
@@ -58,48 +68,55 @@ var pwdUsedInfo string = "作者:李振逢 QQ:24324962"
 func RulesGetMd5String(s string) (md5string string) {
 	md5string = ""
 	h := md5.New()
-	digest := h.Sum([]byte(s))
+	h.Write([]byte(s))
+	digest := h.Sum(nil)
 	md5string = fmt.Sprintf("%x", digest)
+
 	return md5string
 }
 
 // 用户密码验证
-func RulesCheckUserPassword(user string, pwd string) (isOK bool, uid int, user_type int, err error) {
+func RulesCheckUserPassword(user string, pwd string) (uid int, user_type int, err error) {
 	db := hDbRules
 	tx, err := db.Begin()
 	if err != nil {
 		log.Printf("RulesCheckUserPassword: %s\n", err)
-		return false, uid, user_type, err
+		return uid, user_type, err
 	}
 
 	sql := fmt.Sprintf("select uid, user_type, password from user where uname = '%s'", user)
 	rows, err := db.Query(sql)
 	if err != nil {
 		log.Printf("RulesCheckUserPassword(): %s", err)
-		return false, uid, user_type, errors.New("错误:查询用户名密码失败")
+		return uid, user_type, errors.New("错误:查询用户名密码失败")
 	}
 	defer rows.Close()
 
-	var password string
+	var password string = ""
 	for rows.Next() {
 		rows.Scan(&uid, &user_type, &password)
 		break
 	}
 	rows.Close()
+
 	// 事务提交
 	err = tx.Commit()
 	if err != nil {
 		log.Printf("RulesCheckUserPassword(commit transaction): %s\n", err)
 		tx.Rollback()
-		return false, uid, user_type, err
+		return uid, user_type, err
 	}
 
+	if password == "" {
+		return uid, user_type, errors.New("错误:用户不存在")
+	}
 	// 校验密码
 	md5Pwd := RulesGetMd5String(pwdUsedInfo + pwd)
-	if md5Pwd == password {
-		return true, uid, user_type, nil
+	if md5Pwd != password {
+		return uid, user_type, errors.New("错误:密码不正确")
 	}
-	return false, uid, user_type, nil
+
+	return uid, user_type, nil
 }
 
 // 修改用户密码
@@ -125,6 +142,10 @@ func RulesChangeUserPassword(user string, pwdold, pwdnew string) (err error) {
 		break
 	}
 	rows.Close()
+
+	if password == "" {
+		return errors.New("错误:用户不存在")
+	}
 
 	// 校验旧密码
 	md5oldPwd := RulesGetMd5String(pwdUsedInfo + pwdold)

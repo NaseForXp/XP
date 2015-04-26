@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"../tools/ToolCenter"
+	"../tools/rules"
 	"github.com/astaxie/beego"
 )
 
@@ -115,10 +116,16 @@ func LoginCheck(req LoginRequset) (res LoginResponse) {
 		}
 	}
 
+	_, user_type, err := rules.RulesCheckUserPassword(req.User, req.Password)
+	if err != nil {
+		res.Errmsg = err.Error()
+		return res
+	}
+
 	res.Errmsg = "登录成功"
 	res.Status = 1
 	res.User = req.User
-	res.Usertype = 2
+	res.Usertype = user_type
 
 	return res
 }

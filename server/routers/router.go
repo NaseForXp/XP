@@ -12,4 +12,7 @@ func init() {
 
 	beego.Router("/center/getaddr", &controllers.CenterController{}, "get,post:CenterGetaddr")
 
+	// 系统设置页面
+	beego.Router("/sys/changepassword", &controllers.SysController{}, "get,post:SysChangePassword")
+
 }
