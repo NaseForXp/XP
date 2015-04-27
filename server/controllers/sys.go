@@ -76,7 +76,6 @@ func (c *SysController) SysChangePassword() {
 			res.Status = 2
 			res.Errmsg = "错误:参数格式错误" + data
 		} else {
-			//res = LoginCheck(req)
 			//正常
 			err := rules.RulesChangeUserPassword(req.User, req.OldPwd, req.NewPwd)
 			if err != nil {

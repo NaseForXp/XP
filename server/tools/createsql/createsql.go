@@ -79,14 +79,14 @@ func CreateTableSafeBase(db *sql.DB) (err error) {
 	}
 
 	var sql string
-
 	sql = `create table if not exists safe_base (
 			id integer not null primary key, 
-			win_dir    integer default 0,
-			win_start  integer default 0,
-			win_format interger default 0,
-			win_proc   interger default 0,
-			win_sevice interger default 0
+			Mode       integer default 0,
+			WinDir     integer default 0,
+			WinStart   integer default 0,
+			WinFormat  interger default 0,
+			WinProc    interger default 0,
+			WinService interger default 0
 		);`
 	_, err = tx.Exec(sql)
 	if err != nil {
@@ -95,8 +95,8 @@ func CreateTableSafeBase(db *sql.DB) (err error) {
 		return err
 	}
 
-	sql = `insert into safe_base (id, win_dir, win_start, win_format, win_proc, win_sevice) values 
-		(1, 0, 0, 0, 0, 0);	`
+	sql = `insert into safe_base (id, Mode, WinDir, WinStart, WinFormat, WinProc, WinService) values 
+		(1, 0, 0, 0, 0, 0, 0);	`
 	_, err = tx.Exec(sql)
 	if err != nil {
 		log.Printf("InsertTable(user): %s, %s\n", err, sql)
@@ -123,16 +123,16 @@ func CreateTableSafeHigh(db *sql.DB) (err error) {
 	}
 
 	var sql string
-
 	sql = `create table if not exists safe_high (
 			id integer not null primary key, 
-			add_sevice    integer default 0,
-			auto_run      integer default 0,
-			add_start     interger default 0,
-			readwrite     interger default 0,
-			create_exe    interger default 0,
-			load_sys      interger default 0,
-			proc_inject   interger default 0
+			Mode         integer default 0,
+			AddService   integer default 0,
+			AutoRun      integer default 0,
+			AddStart     interger default 0,
+			ReadWrite    interger default 0,
+			CreateExe    interger default 0,
+			LoadSys      interger default 0,
+			ProcInject   interger default 0
 		);`
 	_, err = tx.Exec(sql)
 	if err != nil {
@@ -141,8 +141,8 @@ func CreateTableSafeHigh(db *sql.DB) (err error) {
 		return err
 	}
 
-	sql = `insert into safe_high (id, add_sevice, auto_run, add_start, readwrite, create_exe, load_sys, proc_inject) values 
-		(1, 0, 0, 0, 0, 0, 0, 0);	`
+	sql = `insert into safe_high (id, Mode, AddService, AutoRun, AddStart, ReadWrite, CreateExe, LoadSys, ProcInject) values 
+		(1, 0, 0, 0, 0, 0, 0, 0, 0);	`
 	_, err = tx.Exec(sql)
 	if err != nil {
 		log.Printf("CreateTableSafeHigh: %s, %s\n", err, sql)
@@ -172,13 +172,13 @@ func CreateTableSafeAccount(db *sql.DB) (err error) {
 
 	sql = `create table if not exists safe_account (
 			id integer not null primary key, 
-			safe_lev      integer default 0,
-			pwd_complex   integer default 0,
-			pwd_min_len   integer default 0,
-			pwd_lock_time interger default 0,
-			pwd_used_min  interger default 0,
-			pwd_used_max  interger default 0,
-			pwd_old_num   interger default 0
+			SafeLev     integer default 0,
+			PwdComplex  integer default 0,
+			PwdMinLen   integer default 0,
+			PwdLockTime interger default 0,
+			PwdUsedMin  interger default 0,
+			PwdUsedMax  interger default 0,
+			PwdOldNum   interger default 0
 		);`
 	_, err = tx.Exec(sql)
 	if err != nil {
@@ -187,7 +187,7 @@ func CreateTableSafeAccount(db *sql.DB) (err error) {
 		return err
 	}
 
-	sql = `insert into safe_account (id, safe_lev, pwd_complex, pwd_min_len, pwd_lock_time, pwd_used_min, pwd_used_max, pwd_old_num) values 
+	sql = `insert into safe_account (id, SafeLev, PwdComplex, PwdMinLen, PwdLockTime, PwdUsedMin, PwdUsedMax, PwdOldNum) values 
 		(1, 0, 0, 0, 0, 0, 0, 0);	`
 	_, err = tx.Exec(sql)
 	if err != nil {

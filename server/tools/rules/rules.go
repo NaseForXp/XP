@@ -1,7 +1,6 @@
 package rules
 
 import (
-	"../RootDir"
 	"crypto/md5"
 	"database/sql"
 	"errors"
@@ -9,6 +8,8 @@ import (
 	"log"
 	"path/filepath"
 	"sync"
+
+	"../RootDir"
 
 	"github.com/larspensjo/config"
 	_ "github.com/mattn/go-sqlite3"
@@ -433,4 +434,203 @@ func RulesQueryBlack(start int, length int) (files []string, err error) {
 	}
 
 	return files, nil
+}
+
+/////////////////////////////////
+// Safe
+/////////////////////////////////
+// 安全防护 - 基本防护 - 配置
+type SafeBaseConfig struct {
+	Mode       int // 模式：0:监视模式 1:防护模式
+	WinDir     int // 系统文件及目录保护状态 0:关闭 1:开启
+	WinStart   int // 系统启动文件保护状态   0:关闭 1:开启
+	WinFormat  int // 防止格式化磁盘状态    0:关闭 1:开启
+	WinProc    int // 防止系统关键进程被杀死 0:关闭 1:开启
+	WinService int // 防止篡改系统服务      0:关闭 1:开启
+}
+
+// 获取系统基本防护配置
+func RulesSafeBaseGet() (cfg SafeBaseConfig, err error) {
+	db := hDbRules
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("RulesSafeBaseGet: %s\n", err)
+		return cfg, err
+	}
+
+	sql := fmt.Sprintf("select Mode, WinDir, WinStart, WinFormat, WinProc, WinService from safe_base where id = 1")
+	rows, err := db.Query(sql)
+	if err != nil {
+		log.Printf("RulesSafeBaseGet(): %s", err)
+		return cfg, errors.New("错误:获取系统基本防护配置失败")
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		rows.Scan(&cfg.Mode, &cfg.WinDir, &cfg.WinStart, &cfg.WinFormat, &cfg.WinProc, &cfg.WinService)
+		break
+	}
+	rows.Close()
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("RulesSafeBaseGet(commit transaction): %s\n", err)
+		tx.Rollback()
+		return cfg, err
+	}
+	return cfg, nil
+}
+
+// 设置系统基本防护配置
+func RulesSafeBaseSet(cfg SafeBaseConfig) (err error) {
+	db := hDbRules
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("RulesSafeBaseSet: %s\n", err)
+		return err
+	}
+
+	sql := fmt.Sprintf("update safe_base set Mode = %d, WinDir = %d, WinStart = %d, WinFormat = %d, WinProc = %d, WinService = %d where id = 1", cfg.Mode, cfg.WinDir, cfg.WinStart, cfg.WinFormat, cfg.WinProc, cfg.WinService)
+	_, err = tx.Exec(sql)
+	if err != nil {
+		log.Printf("RulesSafeBaseSet(): %s", err)
+		tx.Rollback()
+		return errors.New("错误:设置系统基本防护配置失败")
+	}
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("RulesSafeBaseSet(commit transaction): %s\n", err)
+		tx.Rollback()
+		return err
+	}
+	return nil
+}
+
+// 导出系统基本防护配置 ini
+func RulesSafeBaseSave() (saveString string, err error) {
+	base, err := RulesSafeBaseGet()
+	if err != nil {
+		return saveString, err
+	}
+
+	saveString = ""
+	saveString += "### 配置文件\n\n"
+
+	saveString += "[INFO]\n"
+	saveString += "Name = SafeBase\n"
+	saveString += "\n"
+
+	saveString += "[CONFIG]\n"
+	saveString += "Mode = " + string(base.Mode) + "\n"
+	saveString += "WinDir = " + string(base.WinDir) + "\n"
+	saveString += "WinStart = " + string(base.WinStart) + "\n"
+	saveString += "WinFormat = " + string(base.WinFormat) + "\n"
+	saveString += "WinProc = " + string(base.WinProc) + "\n"
+	saveString += "WinService = " + string(base.WinService) + "\n"
+	saveString += "\n"
+
+	return saveString, nil
+}
+
+// 安全防护 - 增强防护 - 配置
+type SafeHighConfig struct {
+	Mode       int // 模式：0:监视模式 1:防护模式
+	AddService int // 防止服务被添加       0:关闭 1:开启
+	AutoRun    int // 防止自动运行恶意程序  0:关闭 1:开启
+	AddStart   int // 防止添加开机启动项    0:关闭 1:开启
+	ReadWrite  int // 防止磁盘直接读写      0:关闭 1:开启
+	CreateExe  int // 防止创建EXE文件      0:关闭 1:开启
+	LoadSys    int // 防止驱动被加载        0:关闭 1:开启
+	ProcInject int // 防止进程被注入        0:关闭 1:开启
+}
+
+// 获取系统增强防护配置
+func RulesSafeHighGet() (cfg SafeHighConfig, err error) {
+	db := hDbRules
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("RulesSafeHighGet: %s\n", err)
+		return cfg, err
+	}
+
+	sql := fmt.Sprintf("select Mode, AddService, AutoRun, AddStart, ReadWrite, CreateExe, LoadSys, ProcInject from safe_high where id = 1")
+	rows, err := db.Query(sql)
+	if err != nil {
+		log.Printf("RulesSafeHighGet(): %s", err)
+		return cfg, errors.New("错误:获取系统增强防护配置失败")
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		rows.Scan(&cfg.Mode, &cfg.AddService, &cfg.AutoRun, &cfg.AddStart, &cfg.ReadWrite, &cfg.CreateExe, &cfg.LoadSys, &cfg.ProcInject)
+		break
+	}
+	rows.Close()
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("RulesSafeHighGet(commit transaction): %s\n", err)
+		tx.Rollback()
+		return cfg, err
+	}
+	return cfg, nil
+}
+
+// 设置系统增强防护配置
+func RulesSafeHighSet(cfg SafeHighConfig) (err error) {
+	db := hDbRules
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("RulesSafeHighGet: %s\n", err)
+		return err
+	}
+
+	sql := fmt.Sprintf("update safe_high set Mode = %d, AddService = %d, AutoRun = %d, AddStart = %d, ReadWrite = %d, CreateExe = %d, LoadSys = %d, ProcInject = %d  where id = 1", cfg.Mode, cfg.AddService, cfg.AutoRun, cfg.AddStart, cfg.ReadWrite, cfg.CreateExe, cfg.LoadSys, cfg.ProcInject)
+	_, err = tx.Exec(sql)
+	if err != nil {
+		log.Printf("RulesSafeHighGet(): %s", err)
+		tx.Rollback()
+		return errors.New("错误:设置系统增强防护配置失败")
+	}
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("RulesSafeHighGet(commit transaction): %s\n", err)
+		tx.Rollback()
+		return err
+	}
+	return nil
+}
+
+// 导出系统增强防护配置 ini
+func RulesSafeHighSave() (saveString string, err error) {
+	base, err := RulesSafeHighGet()
+	if err != nil {
+		return saveString, err
+	}
+
+	saveString = ""
+	saveString += "### 配置文件\n\n"
+
+	saveString += "[INFO]\n"
+	saveString += "Name = SafeHigh\n"
+	saveString += "\n"
+
+	saveString += "[CONFIG]\n"
+	saveString += "Mode = " + string(base.Mode) + "\n"
+	saveString += "AddService = " + string(base.AddService) + "\n"
+	saveString += "AutoRun = " + string(base.AutoRun) + "\n"
+	saveString += "AddStart = " + string(base.AddStart) + "\n"
+	saveString += "ReadWrite = " + string(base.ReadWrite) + "\n"
+	saveString += "CreateExe = " + string(base.CreateExe) + "\n"
+	saveString += "LoadSys = " + string(base.LoadSys) + "\n"
+	saveString += "ProcInject = " + string(base.ProcInject) + "\n"
+	saveString += "\n"
+
+	return saveString, nil
 }
