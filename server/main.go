@@ -1,9 +1,10 @@
 package main
 
 import (
+	"fmt"
+
 	_ "../server/routers"
 	"./tools/rules"
-	"fmt"
 	"github.com/astaxie/beego"
 )
 
@@ -13,5 +14,7 @@ func main() {
 		fmt.Println(err)
 		return
 	}
+
+	rules.RulesMemPrint()
 	beego.Run()
 }

@@ -17,15 +17,26 @@ import (
 
 // 全局变量定义
 var (
-	rwLockRule sync.RWMutex // 全局读写锁 - 内存中的规则
-	//hMemRules  ruleMemHandle                    // 规则内存句柄
-	configFile string  = "config.ini"     // 配置文件相对路径
-	ruleDB     string  = "rule\\rules.db" // 规则数据库文件
-	hDbRules   *sql.DB                    // 规则数据库句柄
+	rwLockRule sync.RWMutex                     // 全局读写锁 - 内存中的规则
+	hMemRules  RuleMemHandle                    // 规则内存句柄
+	configFile string        = "config.ini"     // 配置文件相对路径
+	ruleDB     string        = "rule\\rules.db" // 规则数据库文件
+	hDbRules   *sql.DB                          // 规则数据库句柄
 )
 
+// 模块初始化
 func RulesInit() (err error) {
+	//连接数据库
 	err = RulesConnectDb()
+	if err != nil {
+		return err
+	}
+
+	// 规则加载到内存
+	err = RulesMemInit()
+	if err != nil {
+		return err
+	}
 	return err
 }
 
@@ -176,8 +187,53 @@ func RulesChangeUserPassword(user string, pwdold, pwdnew string) (err error) {
 	return nil
 }
 
+// 查找是否在白名单
+func RuleCheckInWhite(fpath string) (bFind bool, err error) {
+	bFind = false
+	db := hDbRules
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("RuleCheckInWhite: %s\n", err)
+		return bFind, err
+	}
+
+	absPath, _ := filepath.Abs(fpath)
+	sql := fmt.Sprintf("select * from whitelist where path = '%s'", absPath)
+	rows, err := db.Query(sql)
+	if err != nil {
+		log.Printf("RuleCheckInWhite(): %s", err)
+		return bFind, errors.New("错误:查找白名单数据失败")
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		bFind = true
+		break
+	}
+	rows.Close()
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("RuleCheckInWhite(commit transaction): %s\n", err)
+		tx.Rollback()
+		return bFind, err
+	}
+
+	return bFind, nil
+}
+
 // 添加白名单(可能是目录或末尾带*)
 func RulesAddWhite(fpath string) (err error) {
+	bFind, err := RuleCheckInBlack(fpath)
+	if err != nil {
+		return err
+	}
+
+	if bFind == true {
+		return errors.New("错误:该记录已经存在于黑名单中")
+	}
+
 	db := hDbRules
 	tx, err := db.Begin()
 	if err != nil {
@@ -202,6 +258,10 @@ func RulesAddWhite(fpath string) (err error) {
 		return err
 	}
 
+	// 更新内存
+	rwLockRule.Lock()
+	hMemRules.White[absPath] = 0
+	rwLockRule.Unlock()
 	return nil
 }
 
@@ -230,6 +290,11 @@ func RulesDelWhite(fpath string) (err error) {
 		tx.Rollback()
 		return err
 	}
+
+	// 更新内存
+	rwLockRule.Lock()
+	delete(hMemRules.White, absPath)
+	rwLockRule.Unlock()
 
 	return nil
 }
@@ -306,8 +371,52 @@ func RulesQueryWhite(start int, length int) (files []string, err error) {
 	return files, nil
 }
 
+// 查找是否在黑名单
+func RuleCheckInBlack(fpath string) (bFind bool, err error) {
+	bFind = false
+	db := hDbRules
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("RuleCheckInBlack: %s\n", err)
+		return bFind, err
+	}
+
+	absPath, _ := filepath.Abs(fpath)
+	sql := fmt.Sprintf("select * from blacklist where path = '%s'", absPath)
+	rows, err := db.Query(sql)
+	if err != nil {
+		log.Printf("RuleCheckInBlack(): %s", err)
+		return bFind, errors.New("错误:查找黑名单数据失败")
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		bFind = true
+		break
+	}
+	rows.Close()
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("RuleCheckInBlack(commit transaction): %s\n", err)
+		tx.Rollback()
+		return bFind, err
+	}
+
+	return bFind, nil
+}
+
 // 添加黑名单(可能是目录或末尾带*)
 func RulesAddBlack(fpath string) (err error) {
+	bFind, err := RuleCheckInWhite(fpath)
+	if err != nil {
+		return err
+	}
+
+	if bFind == true {
+		return errors.New("错误:该记录已经存在于白名单中")
+	}
 	db := hDbRules
 	tx, err := db.Begin()
 	if err != nil {
@@ -331,6 +440,11 @@ func RulesAddBlack(fpath string) (err error) {
 		tx.Rollback()
 		return err
 	}
+
+	// 更新内存
+	rwLockRule.Lock()
+	hMemRules.Black[absPath] = 0
+	rwLockRule.Unlock()
 
 	return nil
 }
@@ -360,6 +474,11 @@ func RulesDelBlack(fpath string) (err error) {
 		tx.Rollback()
 		return err
 	}
+
+	// 更新内存
+	rwLockRule.Lock()
+	delete(hMemRules.Black, absPath)
+	rwLockRule.Unlock()
 
 	return nil
 }
@@ -506,6 +625,16 @@ func RulesSafeBaseSet(cfg SafeBaseConfig) (err error) {
 		tx.Rollback()
 		return err
 	}
+
+	// 更新内存
+	rwLockRule.Lock()
+	hMemRules.SafeBaseCfg.Mode = cfg.Mode
+	hMemRules.SafeBaseCfg.WinDir = cfg.WinDir
+	hMemRules.SafeBaseCfg.WinStart = cfg.WinStart
+	hMemRules.SafeBaseCfg.WinFormat = cfg.WinFormat
+	hMemRules.SafeBaseCfg.WinProc = cfg.WinProc
+	hMemRules.SafeBaseCfg.WinService = cfg.WinService
+	rwLockRule.Unlock()
 	return nil
 }
 
@@ -604,6 +733,18 @@ func RulesSafeHighSet(cfg SafeHighConfig) (err error) {
 		tx.Rollback()
 		return err
 	}
+
+	// 更新内存
+	rwLockRule.Lock()
+	hMemRules.SafeHighCfg.Mode = cfg.Mode
+	hMemRules.SafeHighCfg.AddService = cfg.AddService
+	hMemRules.SafeHighCfg.AutoRun = cfg.AutoRun
+	hMemRules.SafeHighCfg.AddStart = cfg.AddStart
+	hMemRules.SafeHighCfg.ReadWrite = cfg.ReadWrite
+	hMemRules.SafeHighCfg.CreateExe = cfg.CreateExe
+	hMemRules.SafeHighCfg.LoadSys = cfg.LoadSys
+	hMemRules.SafeHighCfg.ProcInject = cfg.ProcInject
+	rwLockRule.Unlock()
 	return nil
 }
 
@@ -633,4 +774,314 @@ func RulesSafeHighSave() (saveString string, err error) {
 	saveString += "\n"
 
 	return saveString, nil
+}
+
+// 添加系统目录及文件 WinDir
+func RulesAddSafeBaseWinDir(fpath string, perm string) (err error) {
+	db := hDbRules
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("RulesAddSafeBaseWinDir: %s\n", err)
+		return err
+	}
+
+	absPath, _ := filepath.Abs(fpath)
+	sql := fmt.Sprintf("insert into win_dir (id, path, perm) values (null, '%s', '%s')", absPath, perm)
+	_, err = tx.Exec(sql)
+	if err != nil {
+		log.Printf("RulesAddSafeBaseWinDir(): %s", err)
+		tx.Rollback()
+		return errors.New("错误:添加系统目录或文件失败")
+	}
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("RulesAddSafeBaseWinDir(commit transaction): %s\n", err)
+		tx.Rollback()
+		return err
+	}
+
+	// 更新内存
+	rwLockRule.Lock()
+	hMemRules.WinDir[absPath] = perm
+	rwLockRule.Unlock()
+
+	return nil
+}
+
+// 删除系统目录及文件 WinDir
+func RulesDelSafeBaseWinDir(fpath string) (err error) {
+	db := hDbRules
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("RulesDelSafeBaseWinDir: %s\n", err)
+		return err
+	}
+
+	absPath, _ := filepath.Abs(fpath)
+	sql := fmt.Sprintf("delete from win_dir where path = '%s'", absPath)
+	_, err = tx.Exec(sql)
+	if err != nil {
+		log.Printf("RulesDelSafeBaseWinDir(): %s", err)
+		tx.Rollback()
+		return errors.New("错误:删除系统目录及文件失败")
+	}
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("RulesDelSafeBaseWinDir(commit transaction): %s\n", err)
+		tx.Rollback()
+		return err
+	}
+
+	// 更新内存
+	rwLockRule.Lock()
+	delete(hMemRules.WinDir, absPath)
+	rwLockRule.Unlock()
+
+	return nil
+}
+
+// 查询系统目录及文件 WinDir
+func RulesQuerySafeBaseWinDir() (files map[string]string, err error) {
+	files = make(map[string]string)
+	db := hDbRules
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("RulesQuerySafeBaseWinDir: %s\n", err)
+		return files, err
+	}
+
+	sql := fmt.Sprintf("select path, perm from win_dir")
+	rows, err := db.Query(sql)
+	if err != nil {
+		log.Printf("RulesQuerySafeBaseWinDir(): %s", err)
+		return files, errors.New("错误:查询系统目录及文件失败")
+	}
+	defer rows.Close()
+
+	var file, perm string
+	for rows.Next() {
+		rows.Scan(&file, &perm)
+		files[file] = perm
+	}
+	rows.Close()
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("RulesQuerySafeBaseWinDir(commit transaction): %s\n", err)
+		tx.Rollback()
+		return files, err
+	}
+
+	return files, nil
+}
+
+/////
+// 添加系统启动文件 WinStart
+func RulesAddSafeBaseWinStart(fpath string, perm string) (err error) {
+	db := hDbRules
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("RulesAddSafeBaseWinStart: %s\n", err)
+		return err
+	}
+
+	absPath, _ := filepath.Abs(fpath)
+	sql := fmt.Sprintf("insert into win_start (id, path, perm) values (null, '%s', '%s')", absPath, perm)
+	_, err = tx.Exec(sql)
+	if err != nil {
+		log.Printf("RulesAddSafeBaseWinStart(): %s", err)
+		tx.Rollback()
+		return errors.New("错误:添加系统启动文件失败")
+	}
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("RulesAddSafeBaseWinStart(commit transaction): %s\n", err)
+		tx.Rollback()
+		return err
+	}
+
+	// 更新内存
+	rwLockRule.Lock()
+	hMemRules.WinStart[absPath] = perm
+	rwLockRule.Unlock()
+	return nil
+}
+
+// 删除系统启动文件 WinStart
+func RulesDelSafeBaseWinStart(fpath string) (err error) {
+	db := hDbRules
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("RulesDelSafeBaseWinStart: %s\n", err)
+		return err
+	}
+
+	absPath, _ := filepath.Abs(fpath)
+	sql := fmt.Sprintf("delete from win_start where path = '%s'", absPath)
+	_, err = tx.Exec(sql)
+	if err != nil {
+		log.Printf("RulesDelSafeBaseWinStart(): %s", err)
+		tx.Rollback()
+		return errors.New("错误:删除系统启动文件失败")
+	}
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("RulesDelSafeBaseWinStart(commit transaction): %s\n", err)
+		tx.Rollback()
+		return err
+	}
+
+	// 更新内存
+	rwLockRule.Lock()
+	delete(hMemRules.WinDir, absPath)
+	rwLockRule.Unlock()
+	return nil
+}
+
+// 查询系统启动文件 WinStart
+func RulesQuerySafeBaseWinStart() (files map[string]string, err error) {
+	files = make(map[string]string)
+	db := hDbRules
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("RulesQuerySafeBaseWinStart: %s\n", err)
+		return files, err
+	}
+
+	sql := fmt.Sprintf("select path, perm from win_start")
+	rows, err := db.Query(sql)
+	if err != nil {
+		log.Printf("RulesQuerySafeBaseWinStart(): %s", err)
+		return files, errors.New("错误:查询系统启动文件失败")
+	}
+	defer rows.Close()
+
+	var file, perm string
+	for rows.Next() {
+		rows.Scan(&file, &perm)
+		files[file] = perm
+	}
+	rows.Close()
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("RulesQuerySafeBaseWinStart(commit transaction): %s\n", err)
+		tx.Rollback()
+		return files, err
+	}
+
+	return files, nil
+}
+
+////
+// 添加系统关键进程 WinProc
+func RulesAddSafeBaseWinProc(fpath string) (err error) {
+	db := hDbRules
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("RulesAddSafeBaseWinProc: %s\n", err)
+		return err
+	}
+
+	absPath, _ := filepath.Abs(fpath)
+	sql := fmt.Sprintf("insert into win_proc (id, path) values (null, '%s')", absPath)
+	_, err = tx.Exec(sql)
+	if err != nil {
+		log.Printf("RulesAddSafeBaseWinProc(): %s", err)
+		tx.Rollback()
+		return errors.New("错误:添加系统关键进程件失败")
+	}
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("RulesAddSafeBaseWinProc(commit transaction): %s\n", err)
+		tx.Rollback()
+		return err
+	}
+
+	// 更新内存
+	rwLockRule.Lock()
+	hMemRules.WinProc[absPath] = 0
+	rwLockRule.Unlock()
+
+	return nil
+}
+
+// 删除系统关键进程 WinProc
+func RulesDelSafeBaseWinProc(fpath string) (err error) {
+	db := hDbRules
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("RulesDelSafeBaseWinProc: %s\n", err)
+		return err
+	}
+
+	absPath, _ := filepath.Abs(fpath)
+	sql := fmt.Sprintf("delete from win_proc where path = '%s'", absPath)
+	_, err = tx.Exec(sql)
+	if err != nil {
+		log.Printf("RulesDelSafeBaseWinProc(): %s", err)
+		tx.Rollback()
+		return errors.New("错误:删除系统关键进程失败")
+	}
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("RulesDelSafeBaseWinProc(commit transaction): %s\n", err)
+		tx.Rollback()
+		return err
+	}
+
+	// 更新内存
+	rwLockRule.Lock()
+	delete(hMemRules.WinProc, absPath)
+	rwLockRule.Unlock()
+	return nil
+}
+
+// 查询系统关键进程 WinProc
+func RulesQuerySafeBaseWinProc() (files []string, err error) {
+	db := hDbRules
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("RulesQuerySafeBaseWinProc: %s\n", err)
+		return files, err
+	}
+
+	sql := fmt.Sprintf("select path from win_proc")
+	rows, err := db.Query(sql)
+	if err != nil {
+		log.Printf("RulesQuerySafeBaseWinProc(): %s", err)
+		return files, errors.New("错误:查询系统关键进程失败")
+	}
+	defer rows.Close()
+
+	var file string
+	for rows.Next() {
+		rows.Scan(&file)
+		files = append(files, file)
+	}
+	rows.Close()
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("RulesQuerySafeBaseWinProc(commit transaction): %s\n", err)
+		tx.Rollback()
+		return files, err
+	}
+
+	return files, nil
 }
