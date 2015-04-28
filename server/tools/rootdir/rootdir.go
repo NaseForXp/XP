@@ -8,7 +8,7 @@ import (
 )
 
 func GetRootDir() (rootdir string, err error) {
-	rootdir, err = filepath.Abs("../")
+	rootdir, err = filepath.Abs("./")
 	if err != nil {
 		return "", errors.New("错误:获取根路径失败")
 	}

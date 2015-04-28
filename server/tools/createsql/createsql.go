@@ -84,9 +84,9 @@ func CreateTableSafeBase(db *sql.DB) (err error) {
 			Mode       integer default 0,
 			WinDir     integer default 0,
 			WinStart   integer default 0,
-			WinFormat  interger default 0,
-			WinProc    interger default 0,
-			WinService interger default 0
+			WinFormat  integer default 0,
+			WinProc    integer default 0,
+			WinService integer default 0
 		);`
 	_, err = tx.Exec(sql)
 	if err != nil {
@@ -128,11 +128,11 @@ func CreateTableSafeHigh(db *sql.DB) (err error) {
 			Mode         integer default 0,
 			AddService   integer default 0,
 			AutoRun      integer default 0,
-			AddStart     interger default 0,
-			ReadWrite    interger default 0,
-			CreateExe    interger default 0,
-			LoadSys      interger default 0,
-			ProcInject   interger default 0
+			AddStart     integer default 0,
+			ReadWrite    integer default 0,
+			CreateExe    integer default 0,
+			LoadSys      integer default 0,
+			ProcInject   integer default 0
 		);`
 	_, err = tx.Exec(sql)
 	if err != nil {
@@ -172,13 +172,15 @@ func CreateTableSafeAccount(db *sql.DB) (err error) {
 
 	sql = `create table if not exists safe_account (
 			id integer not null primary key, 
-			SafeLev     integer default 0,
-			PwdComplex  integer default 0,
-			PwdMinLen   integer default 0,
-			PwdLockTime interger default 0,
-			PwdUsedMin  interger default 0,
-			PwdUsedMax  interger default 0,
-			PwdOldNum   interger default 0
+			Mode          integer default 0,
+			SafeLev       integer default 0,
+			PwdComplex    integer default 0,
+			PwdMinLen     integer default 0,
+			PwdUsedMin    integer default 0,
+			PwdUsedMax    integer default 0,
+			PwdOldNum     integer default 0,
+			AccountTimes  integer default 0,
+			AccountMinute integer default 0
 		);`
 	_, err = tx.Exec(sql)
 	if err != nil {
@@ -187,8 +189,8 @@ func CreateTableSafeAccount(db *sql.DB) (err error) {
 		return err
 	}
 
-	sql = `insert into safe_account (id, SafeLev, PwdComplex, PwdMinLen, PwdLockTime, PwdUsedMin, PwdUsedMax, PwdOldNum) values 
-		(1, 0, 0, 0, 0, 0, 0, 0);	`
+	sql = `insert into safe_account (id, SafeLev, PwdComplex, PwdMinLen, PwdUsedMin, PwdUsedMax, PwdOldNum, AccountTimes, AccountMinute) values 
+		(1, 0, 0, 0, 0, 0, 0, 0, 0);`
 	_, err = tx.Exec(sql)
 	if err != nil {
 		log.Printf("InsertTable(user): %s, %s\n", err, sql)

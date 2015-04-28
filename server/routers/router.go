@@ -34,4 +34,9 @@ func init() {
 	beego.Router("/safe/highget", &controllers.SafeController{}, "get,post:SafeHighGet")
 	beego.Router("/safe/highset", &controllers.SafeController{}, "get,post:SafeHighSet")
 	beego.Router("/safe/highsave", &controllers.SafeController{}, "get,post:SafeHighSave")
+
+	// 账户安全
+	beego.Router("/account/get", &controllers.AccountController{}, "get,post:AccountGet")
+	beego.Router("/account/set", &controllers.AccountController{}, "get,post:AccountSet")
+	beego.Router("/account/save", &controllers.AccountController{}, "get,post:AccountSave")
 }

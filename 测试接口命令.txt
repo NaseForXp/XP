@@ -75,3 +75,17 @@
       -- 导出
       Request : http://127.0.0.1:8080/safe/highsave?UserTokey="f5ab1c6a"
       Response:{"Status":1,"Errmsg":"增强防护规则导出成功","Config":"### 配置文件\n\n[INFO]\nName = SafeHigh\n\n[CONFIG]\nMode = \u0000\nAddService = \u0000\nAutoRun = \u0000\nAddStart = \u0000\nReadWrite = \u0000\nCreateExe = \u0000\nLoadSys = \u0000\nProcInject = \u0000\n\n"}
+
+   8、账户安全
+      -- 设置
+      Request : http://127.0.0.1:8080/account/set?UserTokey=%22f5ab1c6a%22&data={%22Mode%22:0,%22SafeLev%22:0,%22PwdComplex%22:0,%22PwdMinLen%22:0,%22PwdUsedMin%22:0,%22PwdUsedMax%22:0,%22PwdOldNum%22:0,%22AccountTimes%22:0,%22AccountMinute%22:0}
+      Response:{"Status":1,"Errmsg":"账户安全设置成功"}
+
+      -- 获取设置
+      Request : http://127.0.0.1:8080/account/get?UserTokey=%22f5ab1c6a%22
+      Response:{"Status":1,"Errmsg":"获取账户安全设置成功","Mode":0,"SafeLev":0,"PwdComplex":0,"PwdMinLen":0,"PwdUsedMin":0,"PwdUsedMax":0,"PwdOldNum":0,"AccountTimes":0,"AccountMinute":0}
+
+      -- 导出
+      Request : http://127.0.0.1:8080/account/save?UserTokey=%22f5ab1c6a%22
+      Response:{"Status":1,"Errmsg":"账户安全规则导出成功","Config":"### 配置文件\n\n[INFO]\nName = Account\n\n[CONFIG]\nMode = \u0000\nSafeLev = \u0000\nPwdComplex = \u0000\nPwdMinLen = \u0000\nPwdUsedMin = \u0000\nPwdUsedMax = \u0000\nPwdOldNum = \u0000\nAccountTimes = \u0000\nAccountMinute = \u0000\n\n"}
+

@@ -3,6 +3,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"sync"
 	"time"
 
@@ -17,7 +18,7 @@ var (
 )
 
 func LoginCreateTokey() string {
-	s := rules.RulesGetMd5String("lzf:24324@qq.com" + string(time.Now().Unix()))
+	s := rules.RulesGetMd5String(fmt.Sprintf("lzf:24324@qq.com:%d", time.Now().Unix()))
 	return s[4:12]
 }
 

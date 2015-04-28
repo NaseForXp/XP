@@ -24,6 +24,41 @@ var (
 	hDbRules   *sql.DB                          // 规则数据库句柄
 )
 
+// 安全防护 - 基本防护 - 配置
+type SafeBaseConfig struct {
+	Mode       int // 模式：0:监视模式 1:防护模式
+	WinDir     int // 系统文件及目录保护状态 0:关闭 1:开启
+	WinStart   int // 系统启动文件保护状态   0:关闭 1:开启
+	WinFormat  int // 防止格式化磁盘状态    0:关闭 1:开启
+	WinProc    int // 防止系统关键进程被杀死 0:关闭 1:开启
+	WinService int // 防止篡改系统服务      0:关闭 1:开启
+}
+
+// 安全防护 - 增强防护 - 配置
+type SafeHighConfig struct {
+	Mode       int // 模式：0:监视模式 1:防护模式
+	AddService int // 防止服务被添加       0:关闭 1:开启
+	AutoRun    int // 防止自动运行恶意程序  0:关闭 1:开启
+	AddStart   int // 防止添加开机启动项    0:关闭 1:开启
+	ReadWrite  int // 防止磁盘直接读写      0:关闭 1:开启
+	CreateExe  int // 防止创建EXE文件      0:关闭 1:开启
+	LoadSys    int // 防止驱动被加载        0:关闭 1:开启
+	ProcInject int // 防止进程被注入        0:关闭 1:开启
+}
+
+// 账户安全 - 配置
+type AccountConfig struct {
+	Mode          int // 模式：0:关闭 1:开启
+	SafeLev       int // 账户策略设置 0:自定义 1:低级 2:中级 3:高级
+	PwdComplex    int // 密码复杂度  0:关闭 1:开启
+	PwdMinLen     int // 密码最小长度(字符个数)
+	PwdUsedMin    int // 最短使用期限(天)
+	PwdUsedMax    int // 最长使用期限(天)
+	PwdOldNum     int // 强制密码历史次数(次)
+	AccountTimes  int // 账户锁定次数(无效登录次数)
+	AccountMinute int // 账户锁定时长(分钟)
+}
+
 // 模块初始化
 func RulesInit() (err error) {
 	//连接数据库
@@ -558,15 +593,6 @@ func RulesQueryBlack(start int, length int) (files []string, err error) {
 /////////////////////////////////
 // Safe
 /////////////////////////////////
-// 安全防护 - 基本防护 - 配置
-type SafeBaseConfig struct {
-	Mode       int // 模式：0:监视模式 1:防护模式
-	WinDir     int // 系统文件及目录保护状态 0:关闭 1:开启
-	WinStart   int // 系统启动文件保护状态   0:关闭 1:开启
-	WinFormat  int // 防止格式化磁盘状态    0:关闭 1:开启
-	WinProc    int // 防止系统关键进程被杀死 0:关闭 1:开启
-	WinService int // 防止篡改系统服务      0:关闭 1:开启
-}
 
 // 获取系统基本防护配置
 func RulesSafeBaseGet() (cfg SafeBaseConfig, err error) {
@@ -662,18 +688,6 @@ func RulesSafeBaseSave() (saveString string, err error) {
 	saveString += "\n"
 
 	return saveString, nil
-}
-
-// 安全防护 - 增强防护 - 配置
-type SafeHighConfig struct {
-	Mode       int // 模式：0:监视模式 1:防护模式
-	AddService int // 防止服务被添加       0:关闭 1:开启
-	AutoRun    int // 防止自动运行恶意程序  0:关闭 1:开启
-	AddStart   int // 防止添加开机启动项    0:关闭 1:开启
-	ReadWrite  int // 防止磁盘直接读写      0:关闭 1:开启
-	CreateExe  int // 防止创建EXE文件      0:关闭 1:开启
-	LoadSys    int // 防止驱动被加载        0:关闭 1:开启
-	ProcInject int // 防止进程被注入        0:关闭 1:开启
 }
 
 // 获取系统增强防护配置
@@ -1084,4 +1098,99 @@ func RulesQuerySafeBaseWinProc() (files []string, err error) {
 	}
 
 	return files, nil
+}
+
+/////////////////////////////////
+// Account
+/////////////////////////////////
+
+// 获取账户安全配置
+func RulesAccountGet() (cfg AccountConfig, err error) {
+	db := hDbRules
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("RulesAccountGet: %s\n", err)
+		return cfg, err
+	}
+
+	sql := fmt.Sprintf("select Mode, SafeLev, PwdComplex, PwdMinLen, PwdUsedMin, PwdUsedMax, PwdOldNum, AccountTimes, AccountMinute from safe_account where id = 1")
+	rows, err := db.Query(sql)
+	if err != nil {
+		log.Printf("RulesAccountGet(): %s", err)
+		return cfg, errors.New("错误:获取账户安全配置失败")
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		rows.Scan(&cfg.Mode, &cfg.SafeLev, &cfg.PwdComplex, &cfg.PwdMinLen, &cfg.PwdUsedMin, &cfg.PwdUsedMax, &cfg.PwdOldNum, &cfg.AccountTimes, &cfg.AccountMinute)
+		break
+	}
+	rows.Close()
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("RulesAccountGet(commit transaction): %s\n", err)
+		tx.Rollback()
+		return cfg, err
+	}
+	return cfg, nil
+}
+
+// 设置账户安全配置
+func RulesAccountSet(cfg AccountConfig) (err error) {
+	db := hDbRules
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("RulesAccountSet: %s\n", err)
+		return err
+	}
+
+	sql := fmt.Sprintf("update safe_account set Mode = %d, SafeLev = %d, PwdComplex = %d, PwdMinLen = %d, PwdUsedMin = %d, PwdUsedMax = %d, PwdOldNum = %d, AccountTimes = %d, AccountMinute = %d where id = 1", cfg.Mode, cfg.SafeLev, cfg.PwdComplex, cfg.PwdMinLen, cfg.PwdUsedMin, cfg.PwdUsedMax, cfg.PwdOldNum, cfg.AccountTimes, cfg.AccountMinute)
+	_, err = tx.Exec(sql)
+	if err != nil {
+		log.Printf("RulesAccountSet(): %s", err)
+		tx.Rollback()
+		return errors.New("错误:设置账户安全配置失败")
+	}
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("RulesAccountSet(commit transaction): %s\n", err)
+		tx.Rollback()
+		return err
+	}
+
+	// 更新系统配置
+	return nil
+}
+
+// 导出账户安全配置 ini
+func RulesAccountSave() (saveString string, err error) {
+	acc, err := RulesAccountGet()
+	if err != nil {
+		return saveString, err
+	}
+
+	saveString = ""
+	saveString += "### 配置文件\n\n"
+
+	saveString += "[INFO]\n"
+	saveString += "Name = Account\n"
+	saveString += "\n"
+
+	saveString += "[CONFIG]\n"
+	saveString += "Mode = " + string(acc.Mode) + "\n"
+	saveString += "SafeLev = " + string(acc.SafeLev) + "\n"
+	saveString += "PwdComplex = " + string(acc.PwdComplex) + "\n"
+	saveString += "PwdMinLen = " + string(acc.PwdMinLen) + "\n"
+	saveString += "PwdUsedMin = " + string(acc.PwdUsedMin) + "\n"
+	saveString += "PwdUsedMax = " + string(acc.PwdUsedMax) + "\n"
+	saveString += "PwdOldNum = " + string(acc.PwdOldNum) + "\n"
+	saveString += "AccountTimes = " + string(acc.AccountTimes) + "\n"
+	saveString += "AccountMinute = " + string(acc.AccountMinute) + "\n"
+	saveString += "\n"
+
+	return saveString, nil
 }
