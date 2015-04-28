@@ -61,12 +61,21 @@ func (c *SysController) Get() {
 }
 
 func (c *SysController) SysChangePassword() {
-	fmt.Println("---SysChangePassword")
-	fmt.Println("request :", c.GetString("data"))
 	var req SysChangePasswordRequset
 	var res SysChangePasswordResponse
 
+	usertokey := c.GetString("UserTokey")
 	data := c.GetString("data")
+
+	fmt.Println("---SysChangePassword")
+	fmt.Println("request :", usertokey, " | ", data)
+
+	if LoginCheckTokeyJson(usertokey) == false {
+		res.Status = 2
+		res.Errmsg = "错误:请登录后操作"
+		goto End
+	}
+
 	if data == "" {
 		res.Status = 2
 		res.Errmsg = "错误:数据data为空"
@@ -89,6 +98,7 @@ func (c *SysController) SysChangePassword() {
 		}
 	}
 
+End:
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["Sys_ret"] = string(jres)
@@ -98,12 +108,21 @@ func (c *SysController) SysChangePassword() {
 
 // 添加白名单
 func (c *SysController) SysAddWhite() {
-	fmt.Println("---SysAddWhite")
-	fmt.Println("request :", c.GetString("data"))
 	var req SysFileRequest
 	var res SysFileResponse
 
+	usertokey := c.GetString("UserTokey")
 	data := c.GetString("data")
+
+	fmt.Println("---SysAddWhite")
+	fmt.Println("request :", usertokey, " | ", data)
+
+	if LoginCheckTokeyJson(usertokey) == false {
+		res.Status = 2
+		res.Errmsg = "错误:请登录后操作"
+		goto End
+	}
+
 	if data == "" {
 		res.Status = 2
 		res.Errmsg = "错误:数据data为空"
@@ -125,7 +144,7 @@ func (c *SysController) SysAddWhite() {
 			}
 		}
 	}
-
+End:
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["Sys_ret"] = string(jres)
@@ -135,12 +154,21 @@ func (c *SysController) SysAddWhite() {
 
 // 删除白名单
 func (c *SysController) SysDelWhite() {
-	fmt.Println("---SysDelWhite")
-	fmt.Println("request :", c.GetString("data"))
 	var req SysFileRequest
 	var res SysFileResponse
 
+	usertokey := c.GetString("UserTokey")
 	data := c.GetString("data")
+
+	fmt.Println("---SysDelWhite")
+	fmt.Println("request :", usertokey, " | ", data)
+
+	if LoginCheckTokeyJson(usertokey) == false {
+		res.Status = 2
+		res.Errmsg = "错误:请登录后操作"
+		goto End
+	}
+
 	if data == "" {
 		res.Status = 2
 		res.Errmsg = "错误:数据data为空"
@@ -162,7 +190,7 @@ func (c *SysController) SysDelWhite() {
 			}
 		}
 	}
-
+End:
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["Sys_ret"] = string(jres)
@@ -172,21 +200,31 @@ func (c *SysController) SysDelWhite() {
 
 // 查询白名单总数
 func (c *SysController) SysTotleWhite() {
-	fmt.Println("---SysTotleWhite")
 	var res SysFileTotleResponse
 
-	//正常
-	totCnt, err := rules.RulesGetWhiteTotle()
-	if err != nil {
-		res.Status = 2
-		res.Errmsg = err.Error()
-	} else {
-		// 成功
-		res.Status = 1
-		res.Errmsg = "查询白名单总数成功"
-		res.TotCnt = totCnt
-	}
+	usertokey := c.GetString("UserTokey")
 
+	fmt.Println("---SysTotleWhite")
+	fmt.Println("request :", usertokey)
+
+	if LoginCheckTokeyJson(usertokey) == false {
+		res.Status = 2
+		res.Errmsg = "错误:请登录后操作"
+		goto End
+	} else {
+		//正常
+		totCnt, err := rules.RulesGetWhiteTotle()
+		if err != nil {
+			res.Status = 2
+			res.Errmsg = err.Error()
+		} else {
+			// 成功
+			res.Status = 1
+			res.Errmsg = "查询白名单总数成功"
+			res.TotCnt = totCnt
+		}
+	}
+End:
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["Sys_ret"] = string(jres)
@@ -196,12 +234,21 @@ func (c *SysController) SysTotleWhite() {
 
 // 查询白名单
 func (c *SysController) SysQueryWhite() {
-	fmt.Println("---SysQueryWhite")
-	fmt.Println("request :", c.GetString("data"))
 	var req SysFileQueryRequest
 	var res SysFileQueryResponse
 
+	usertokey := c.GetString("UserTokey")
 	data := c.GetString("data")
+
+	fmt.Println("---SysQueryWhite")
+	fmt.Println("request :", usertokey, " | ", data)
+
+	if LoginCheckTokeyJson(usertokey) == false {
+		res.Status = 2
+		res.Errmsg = "错误:请登录后操作"
+		goto End
+	}
+
 	if data == "" {
 		res.Status = 2
 		res.Errmsg = "错误:数据data为空"
@@ -224,7 +271,7 @@ func (c *SysController) SysQueryWhite() {
 			}
 		}
 	}
-
+End:
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["Sys_ret"] = string(jres)
@@ -234,12 +281,21 @@ func (c *SysController) SysQueryWhite() {
 
 // 添加黑名单
 func (c *SysController) SysAddBlack() {
-	fmt.Println("---SysAddBlack")
-	fmt.Println("request :", c.GetString("data"))
 	var req SysFileRequest
 	var res SysFileResponse
 
+	usertokey := c.GetString("UserTokey")
 	data := c.GetString("data")
+
+	fmt.Println("---SysAddBlack")
+	fmt.Println("request :", usertokey, " | ", data)
+
+	if LoginCheckTokeyJson(usertokey) == false {
+		res.Status = 2
+		res.Errmsg = "错误:请登录后操作"
+		goto End
+	}
+
 	if data == "" {
 		res.Status = 2
 		res.Errmsg = "错误:数据data为空"
@@ -261,7 +317,7 @@ func (c *SysController) SysAddBlack() {
 			}
 		}
 	}
-
+End:
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["Sys_ret"] = string(jres)
@@ -271,12 +327,21 @@ func (c *SysController) SysAddBlack() {
 
 // 删除黑名单
 func (c *SysController) SysDelBlack() {
-	fmt.Println("---SysDelBlack")
-	fmt.Println("request :", c.GetString("data"))
 	var req SysFileRequest
 	var res SysFileResponse
 
+	usertokey := c.GetString("UserTokey")
 	data := c.GetString("data")
+
+	fmt.Println("---SysDelBlack")
+	fmt.Println("request :", usertokey, " | ", data)
+
+	if LoginCheckTokeyJson(usertokey) == false {
+		res.Status = 2
+		res.Errmsg = "错误:请登录后操作"
+		goto End
+	}
+
 	if data == "" {
 		res.Status = 2
 		res.Errmsg = "错误:数据data为空"
@@ -298,7 +363,7 @@ func (c *SysController) SysDelBlack() {
 			}
 		}
 	}
-
+End:
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["Sys_ret"] = string(jres)
@@ -308,12 +373,21 @@ func (c *SysController) SysDelBlack() {
 
 // 查询黑名单
 func (c *SysController) SysQueryBlack() {
-	fmt.Println("---SysQueryBlack")
-	fmt.Println("request :", c.GetString("data"))
 	var req SysFileQueryRequest
 	var res SysFileQueryResponse
 
+	usertokey := c.GetString("UserTokey")
 	data := c.GetString("data")
+
+	fmt.Println("---SysQueryBlack")
+	fmt.Println("request :", usertokey, " | ", data)
+
+	if LoginCheckTokeyJson(usertokey) == false {
+		res.Status = 2
+		res.Errmsg = "错误:请登录后操作"
+		goto End
+	}
+
 	if data == "" {
 		res.Status = 2
 		res.Errmsg = "错误:数据data为空"
@@ -336,7 +410,7 @@ func (c *SysController) SysQueryBlack() {
 			}
 		}
 	}
-
+End:
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["Sys_ret"] = string(jres)
@@ -346,20 +420,31 @@ func (c *SysController) SysQueryBlack() {
 
 // 查询黑名单总数
 func (c *SysController) SysTotleBlack() {
-	fmt.Println("---SysTotleBlack")
 	var res SysFileTotleResponse
 
-	//正常
-	totCnt, err := rules.RulesGetBlackTotle()
-	if err != nil {
+	usertokey := c.GetString("UserTokey")
+
+	fmt.Println("---SysTotleBlack")
+	fmt.Println("request :", usertokey)
+
+	if LoginCheckTokeyJson(usertokey) == false {
 		res.Status = 2
-		res.Errmsg = err.Error()
+		res.Errmsg = "错误:请登录后操作"
+		goto End
 	} else {
-		// 成功
-		res.Status = 1
-		res.Errmsg = "查询黑名单总数成功"
-		res.TotCnt = totCnt
+		//正常
+		totCnt, err := rules.RulesGetBlackTotle()
+		if err != nil {
+			res.Status = 2
+			res.Errmsg = err.Error()
+		} else {
+			// 成功
+			res.Status = 1
+			res.Errmsg = "查询黑名单总数成功"
+			res.TotCnt = totCnt
+		}
 	}
+End:
 
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)

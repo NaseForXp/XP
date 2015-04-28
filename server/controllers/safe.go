@@ -79,12 +79,21 @@ type SafeSaveResponse struct {
 
 // 基本防护 - 设置
 func (c *SafeController) SafeBaseSet() {
-	fmt.Println("---SafeBaseSet")
-	fmt.Println("request :", c.GetString("data"))
 	var req SafeBaseSetRequest
 	var res SafeSetResponse
 
+	usertokey := c.GetString("UserTokey")
 	data := c.GetString("data")
+
+	fmt.Println("---SafeBaseSet")
+	fmt.Println("request :", usertokey, " | ", data)
+
+	if LoginCheckTokeyJson(usertokey) == false {
+		res.Status = 2
+		res.Errmsg = "错误:请登录后操作"
+		goto End
+	}
+
 	if data == "" {
 		res.Status = 2
 		res.Errmsg = "错误:数据data为空"
@@ -114,7 +123,7 @@ func (c *SafeController) SafeBaseSet() {
 			}
 		}
 	}
-
+End:
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["Safe_ret"] = string(jres)
@@ -124,26 +133,36 @@ func (c *SafeController) SafeBaseSet() {
 
 // 基本防护 - 获取设置
 func (c *SafeController) SafeBaseGet() {
-	fmt.Println("---SafeBaseGet")
 	var res SafeBaseGetResponse
 
-	base, err := rules.RulesSafeBaseGet()
-	if err != nil {
+	usertokey := c.GetString("UserTokey")
+
+	fmt.Println("---SafeBaseGet")
+	fmt.Println("request :", usertokey)
+
+	if LoginCheckTokeyJson(usertokey) == false {
 		res.Status = 2
-		res.Errmsg = err.Error()
+		res.Errmsg = "错误:请登录后操作"
+		goto End
 	} else {
-		//正常
-		res.Status = 1
-		res.Errmsg = "获取基本防护设置成功"
+		base, err := rules.RulesSafeBaseGet()
+		if err != nil {
+			res.Status = 2
+			res.Errmsg = err.Error()
+		} else {
+			//正常
+			res.Status = 1
+			res.Errmsg = "获取基本防护设置成功"
 
-		res.Mode = base.Mode
-		res.WinDir = base.WinDir
-		res.WinStart = base.WinStart
-		res.WinFormat = base.WinFormat
-		res.WinProc = base.WinProc
-		res.WinService = base.WinService
+			res.Mode = base.Mode
+			res.WinDir = base.WinDir
+			res.WinStart = base.WinStart
+			res.WinFormat = base.WinFormat
+			res.WinProc = base.WinProc
+			res.WinService = base.WinService
+		}
 	}
-
+End:
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["Safe_ret"] = string(jres)
@@ -152,19 +171,30 @@ func (c *SafeController) SafeBaseGet() {
 
 // 基本防护 - 导出
 func (c *SafeController) SafeBaseSave() {
-	fmt.Println("---SafeBaseSave")
 	var res SafeSaveResponse
 
-	saveString, err := rules.RulesSafeBaseSave()
-	if err != nil {
+	usertokey := c.GetString("UserTokey")
+
+	fmt.Println("---SafeBaseSave")
+	fmt.Println("request :", usertokey)
+
+	if LoginCheckTokeyJson(usertokey) == false {
 		res.Status = 2
-		res.Errmsg = err.Error()
+		res.Errmsg = "错误:请登录后操作"
+		goto End
 	} else {
-		//正常
-		res.Status = 1
-		res.Errmsg = "基本防护规则导出成功"
-		res.Config = saveString
+		saveString, err := rules.RulesSafeBaseSave()
+		if err != nil {
+			res.Status = 2
+			res.Errmsg = err.Error()
+		} else {
+			//正常
+			res.Status = 1
+			res.Errmsg = "基本防护规则导出成功"
+			res.Config = saveString
+		}
 	}
+End:
 
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
@@ -174,12 +204,21 @@ func (c *SafeController) SafeBaseSave() {
 
 // 增强防护 - 设置
 func (c *SafeController) SafeHighSet() {
-	fmt.Println("---SafeHighSet")
-	fmt.Println("request :", c.GetString("data"))
 	var req SafeHighSetRequest
 	var res SafeSetResponse
 
+	usertokey := c.GetString("UserTokey")
 	data := c.GetString("data")
+
+	fmt.Println("---SafeHighSet")
+	fmt.Println("request :", usertokey, " | ", data)
+
+	if LoginCheckTokeyJson(usertokey) == false {
+		res.Status = 2
+		res.Errmsg = "错误:请登录后操作"
+		goto End
+	}
+
 	if data == "" {
 		res.Status = 2
 		res.Errmsg = "错误:数据data为空"
@@ -211,7 +250,7 @@ func (c *SafeController) SafeHighSet() {
 			}
 		}
 	}
-
+End:
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["Safe_ret"] = string(jres)
@@ -221,27 +260,38 @@ func (c *SafeController) SafeHighSet() {
 
 // 增强防护 - 获取设置
 func (c *SafeController) SafeHighGet() {
-	fmt.Println("---SafeHighGet")
 	var res SafeHighGetResponse
 
-	high, err := rules.RulesSafeHighGet()
-	if err != nil {
-		res.Status = 2
-		res.Errmsg = err.Error()
-	} else {
-		//正常
-		res.Status = 1
-		res.Errmsg = "获取增强防护设置成功"
+	usertokey := c.GetString("UserTokey")
 
-		res.Mode = high.Mode
-		res.AddService = high.AddService
-		res.AutoRun = high.AutoRun
-		res.AddStart = high.AddStart
-		res.ReadWrite = high.ReadWrite
-		res.CreateExe = high.CreateExe
-		res.LoadSys = high.LoadSys
-		res.ProcInject = high.ProcInject
+	fmt.Println("---SafeHighGet")
+	fmt.Println("request :", usertokey)
+
+	if LoginCheckTokeyJson(usertokey) == false {
+		res.Status = 2
+		res.Errmsg = "错误:请登录后操作"
+		goto End
+	} else {
+		high, err := rules.RulesSafeHighGet()
+		if err != nil {
+			res.Status = 2
+			res.Errmsg = err.Error()
+		} else {
+			//正常
+			res.Status = 1
+			res.Errmsg = "获取增强防护设置成功"
+
+			res.Mode = high.Mode
+			res.AddService = high.AddService
+			res.AutoRun = high.AutoRun
+			res.AddStart = high.AddStart
+			res.ReadWrite = high.ReadWrite
+			res.CreateExe = high.CreateExe
+			res.LoadSys = high.LoadSys
+			res.ProcInject = high.ProcInject
+		}
 	}
+End:
 
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
@@ -251,19 +301,30 @@ func (c *SafeController) SafeHighGet() {
 
 // 增强防护 - 导出
 func (c *SafeController) SafeHighSave() {
-	fmt.Println("---SafeHighSave")
 	var res SafeSaveResponse
 
-	saveString, err := rules.RulesSafeHighSave()
-	if err != nil {
+	usertokey := c.GetString("UserTokey")
+
+	fmt.Println("---SafeHighSave")
+	fmt.Println("request :", usertokey)
+
+	if LoginCheckTokeyJson(usertokey) == false {
 		res.Status = 2
-		res.Errmsg = err.Error()
+		res.Errmsg = "错误:请登录后操作"
+		goto End
 	} else {
-		//正常
-		res.Status = 1
-		res.Errmsg = "增强防护规则导出成功"
-		res.Config = saveString
+		saveString, err := rules.RulesSafeHighSave()
+		if err != nil {
+			res.Status = 2
+			res.Errmsg = err.Error()
+		} else {
+			//正常
+			res.Status = 1
+			res.Errmsg = "增强防护规则导出成功"
+			res.Config = saveString
+		}
 	}
+End:
 
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)

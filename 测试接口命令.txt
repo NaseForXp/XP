@@ -8,70 +8,70 @@
 
    2、登录
       Request : http://127.0.0.1:8080/login?data={"User":"admin","Password":"123456","CenterIPPort":"192.168.1.2:8081"}
-      Response: {"Status":1,"Errmsg":"登录成功","User":"admin","Usertype":2}
+      Response: {"Status":1,"Errmsg":"登录成功","User":"admin","Usertype":2,"UserTokey":"f5ab1c6a"}
       [注]：
          参数有简单校验，可能会返回其他错误情况
 
    3、系统设置-修改密码
-      Request : http://127.0.0.1:8080/sys/changepassword?data={"User":"Admin","OldPwd":"123456","NewPwd":"654321"}
+      Request : http://127.0.0.1:8080/sys/changepassword?UserTokey="f5ab1c6a"&data={"User":"Admin","OldPwd":"123456","NewPwd":"654321"}
       Response:{"Status":1,"Errmsg":"密码修改成功"}
 
    4、系统设置 - 白名单
       --白名单添加：
-      Request : http://127.0.0.1:8080/sys/addwhite?data={"File":"C://test"}
+      Request : http://127.0.0.1:8080/sys/addwhite?UserTokey="f5ab1c6a"&data={"File":"C://test"}
       Response:{"Status":1,"Errmsg":"添加白名单成功"}
 
       --白名单删除
-      Request : http://127.0.0.1:8080/sys/delwhite?data={"File":"C://test"}
+      Request : http://127.0.0.1:8080/sys/delwhite?UserTokey="f5ab1c6a"&data={"File":"C://test"}
       Response:{"Status":1,"Errmsg":"删除白名单成功"}
 
       --获取白名单数量
-      Request : http://127.0.0.1:8080/sys/totlewhite
+      Request : http://127.0.0.1:8080/sys/totlewhite?UserTokey="f5ab1c6a"
       Response:{"Status":1,"Errmsg":"查询白名单总数成功","TotCnt":10}
 
       --查询白名单内容
-      Request : http://127.0.0.1:8080/sys/querywhite?data={"Start":0,"Length":10}
+      Request : http://127.0.0.1:8080/sys/querywhite?UserTokey="f5ab1c6a"&data={"Start":0,"Length":10}
       Response:{"Status":1,"Errmsg":"查询白名单成功","Files":["C:\\test","C:\\test\\dd"]}
 
    5、系统设置 - 黑名单
       --黑名单添加：
-      Request : http://127.0.0.1:8080/sys/addblack?data={"File":"C://test"}
+      Request : http://127.0.0.1:8080/sys/addblack?UserTokey="f5ab1c6a"&data={"File":"C://test"}
       Response:{"Status":1,"Errmsg":"添加黑名单成功"}
 
       --黑名单删除
-      Request : http://127.0.0.1:8080/sys/delblack?data={"File":"C://test"}
+      Request : http://127.0.0.1:8080/sys/delblack?UserTokey="f5ab1c6a"&data={"File":"C://test"}
       Response:{"Status":1,"Errmsg":"删除黑名单成功"}
 
       --获取黑名单数量
-      Request : http://127.0.0.1:8080/sys/totleblack
+      Request : http://127.0.0.1:8080/sys/totleblack?UserTokey="f5ab1c6a"
       Response:{"Status":1,"Errmsg":"查询黑名单总数成功","TotCnt":10}
 
       --查询黑名单内容
-      Request : http://127.0.0.1:8080/sys/queryblack?data={"Start":0,"Length":10}
+      Request : http://127.0.0.1:8080/sys/queryblack?UserTokey="f5ab1c6a"&data={"Start":0,"Length":10}
       Response:{"Status":1,"Errmsg":"查询黑名单成功","Files":["C:\\test","C:\\test\\dd"]}   
 
    6、系统防护 - 基础防护
       -- 设置
-      Request : http://127.0.0.1:8080/safe/baseset?data={"Mode":0,"WinDir":0,"WinStart":0,"WinFormat":0,"WinProc":0,"WinService":0}
+      Request : http://127.0.0.1:8080/safe/baseset?UserTokey="f5ab1c6a"&data={"Mode":0,"WinDir":0,"WinStart":0,"WinFormat":0,"WinProc":0,"WinService":0}
       Response:{"Status":1,"Errmsg":"基本防护设置成功"}
 
       -- 获取设置
-      Request : http://127.0.0.1:8080/safe/baseget
+      Request : http://127.0.0.1:8080/safe/baseget?UserTokey="f5ab1c6a"
       Response:{"Status":1,"Errmsg":"获取基本防护设置成功","Mode":0,"WinDir":0,"WinStart":0,"WinFormat":0,"WinProc":0,"WinService":0}
 
       -- 导出
-      Request : http://127.0.0.1:8080/safe/basesave
+      Request : http://127.0.0.1:8080/safe/basesave?UserTokey="f5ab1c6a"
       Response:{"Status":1,"Errmsg":"基本防护规则导出成功","Config":"### 配置文件\n\n[INFO]\nName = SafeBase\n\n[CONFIG]\nMode = \u0000\nWinDir = \u0000\nWinStart = \u0000\nWinFormat = \u0000\nWinProc = \u0000\nWinService = \u0000\n\n"}
 
    7、系统防护 - 增强防护
       -- 设置
-      Request : http://127.0.0.1:8080/safe/highset?data={"Mode":0,"AddService":0,"AutoRun":0,"AddStart":0,"ReadWrite":0,"CreateExe":0,"LoadSys":0,"ProcInject":0}
+      Request : http://127.0.0.1:8080/safe/highset?UserTokey="f5ab1c6a"&data={"Mode":0,"AddService":0,"AutoRun":0,"AddStart":0,"ReadWrite":0,"CreateExe":0,"LoadSys":0,"ProcInject":0}
       Response:{"Status":1,"Errmsg":"增强防护设置成功"}
 
       -- 获取设置
-      Request : http://127.0.0.1:8080/safe/highget
+      Request : http://127.0.0.1:8080/safe/highget?UserTokey="f5ab1c6a"
       Response:{"Status":1,"Errmsg":"获取增强防护设置成功","Mode":0,"AddService":0,"AutoRun":0,"AddStart":0,"ReadWrite":0,"CreateExe":0,"LoadSys":0,"ProcInject":0}
 
       -- 导出
-      Request : http://127.0.0.1:8080/safe/highsave
+      Request : http://127.0.0.1:8080/safe/highsave?UserTokey="f5ab1c6a"
       Response:{"Status":1,"Errmsg":"增强防护规则导出成功","Config":"### 配置文件\n\n[INFO]\nName = SafeHigh\n\n[CONFIG]\nMode = \u0000\nAddService = \u0000\nAutoRun = \u0000\nAddStart = \u0000\nReadWrite = \u0000\nCreateExe = \u0000\nLoadSys = \u0000\nProcInject = \u0000\n\n"}

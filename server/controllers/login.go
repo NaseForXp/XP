@@ -20,10 +20,11 @@ type LoginRequset struct {
 
 // 登录响应
 type LoginResponse struct {
-	Status   int    // 1:成功 其他:失败
-	Errmsg   string // 错误原因
-	User     string // 用户名
-	Usertype int    // 用户类型 1:管理中心  2:admin  3：audit
+	Status    int    // 1:成功 其他:失败
+	Errmsg    string // 错误原因
+	User      string // 用户名
+	Usertype  int    // 用户类型 1:管理中心  2:admin  3：audit
+	UserTokey string // 随机字符串，验证是否已经登录
 }
 
 type LoginController struct {
@@ -122,10 +123,15 @@ func LoginCheck(req LoginRequset) (res LoginResponse) {
 		return res
 	}
 
+	// 生成用户令牌
+	tokey := LoginCreateTokey()
+	LoginAddTokey(req.User, tokey)
+
 	res.Errmsg = "登录成功"
 	res.Status = 1
 	res.User = req.User
 	res.Usertype = user_type
+	res.UserTokey = tokey
 
 	return res
 }
