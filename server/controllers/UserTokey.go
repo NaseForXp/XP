@@ -62,3 +62,23 @@ func LoginCheckTokeyJson(jtokey string) (isOk bool) {
 		}
 	}
 }
+
+func LoginGetUserByTokey(jtokey string) (user string) {
+	var tokey string
+	if jtokey == "" {
+		return "Admin"
+	}
+
+	err := json.Unmarshal([]byte(jtokey), &tokey)
+	if err != nil {
+		return "Admin"
+	}
+
+	for k, u := range gUserTokey {
+		if k == tokey {
+			return u
+		}
+	}
+
+	return "Admin"
+}

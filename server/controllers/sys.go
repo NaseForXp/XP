@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"../tools/rules"
+	"../tools/xplog"
 	"github.com/astaxie/beego"
 )
 
@@ -99,6 +100,11 @@ func (c *SysController) SysChangePassword() {
 	}
 
 End:
+	if res.Status == 1 {
+		xplog.LogInsertSys(req.User, "修改密码", "", "成功")
+	} else {
+		xplog.LogInsertSys(req.User, "修改密码", "", "失败")
+	}
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["Sys_ret"] = string(jres)
@@ -145,6 +151,11 @@ func (c *SysController) SysAddWhite() {
 		}
 	}
 End:
+	if res.Status == 1 {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "添加白名单", req.File, "成功")
+	} else {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "添加白名单", req.File, "失败")
+	}
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["Sys_ret"] = string(jres)
@@ -191,6 +202,12 @@ func (c *SysController) SysDelWhite() {
 		}
 	}
 End:
+	if res.Status == 1 {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "删除白名单", req.File, "成功")
+	} else {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "删除白名单", req.File, "失败")
+	}
+
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["Sys_ret"] = string(jres)
@@ -225,6 +242,12 @@ func (c *SysController) SysTotleWhite() {
 		}
 	}
 End:
+	if res.Status == 1 {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "查询白名单总数", "", "成功")
+	} else {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "查询白名单总数", "", "失败")
+	}
+
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["Sys_ret"] = string(jres)
@@ -272,6 +295,12 @@ func (c *SysController) SysQueryWhite() {
 		}
 	}
 End:
+	if res.Status == 1 {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "查询白名单", fmt.Sprintf("start=%d, length=%d", req.Start, req.Length), "成功")
+	} else {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "查询白名单", fmt.Sprintf("start=%d, length=%d", req.Start, req.Length), "失败")
+	}
+
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["Sys_ret"] = string(jres)
@@ -318,6 +347,11 @@ func (c *SysController) SysAddBlack() {
 		}
 	}
 End:
+	if res.Status == 1 {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "添加黑名单", req.File, "成功")
+	} else {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "添加黑名单", req.File, "失败")
+	}
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["Sys_ret"] = string(jres)
@@ -364,6 +398,11 @@ func (c *SysController) SysDelBlack() {
 		}
 	}
 End:
+	if res.Status == 1 {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "删除黑名单", req.File, "成功")
+	} else {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "删除黑名单", req.File, "失败")
+	}
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["Sys_ret"] = string(jres)
@@ -411,6 +450,11 @@ func (c *SysController) SysQueryBlack() {
 		}
 	}
 End:
+	if res.Status == 1 {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "查询黑名单", fmt.Sprintf("start=%d, length=%d", req.Start, req.Length), "成功")
+	} else {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "查询黑名单", fmt.Sprintf("start=%d, length=%d", req.Start, req.Length), "失败")
+	}
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["Sys_ret"] = string(jres)
@@ -445,7 +489,11 @@ func (c *SysController) SysTotleBlack() {
 		}
 	}
 End:
-
+	if res.Status == 1 {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "查询黑名单总数", "", "成功")
+	} else {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "查询黑名单总数", "", "失败")
+	}
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["Sys_ret"] = string(jres)

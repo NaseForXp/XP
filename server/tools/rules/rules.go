@@ -17,11 +17,10 @@ import (
 
 // 全局变量定义
 var (
-	rwLockRule sync.RWMutex                     // 全局读写锁 - 内存中的规则
-	hMemRules  RuleMemHandle                    // 规则内存句柄
-	configFile string        = "config.ini"     // 配置文件相对路径
-	ruleDB     string        = "rule\\rules.db" // 规则数据库文件
-	hDbRules   *sql.DB                          // 规则数据库句柄
+	rwLockRule sync.RWMutex                 // 全局读写锁 - 内存中的规则
+	hMemRules  RuleMemHandle                // 规则内存句柄
+	configFile string        = "config.ini" // 配置文件相对路径
+	hDbRules   *sql.DB                      // 规则数据库句柄
 )
 
 // 安全防护 - 基本防护 - 配置

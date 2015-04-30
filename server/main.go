@@ -5,13 +5,21 @@ import (
 
 	_ "../server/routers"
 	"./tools/rules"
+	"./tools/xplog"
 	"github.com/astaxie/beego"
 )
 
 func main() {
-	err := rules.RulesInit()
+	err := xplog.LogInit()
 	if err != nil {
 		fmt.Println(err)
+		return
+	}
+
+	err = rules.RulesInit()
+	if err != nil {
+		fmt.Println(err)
+		xplog.LogFini()
 		return
 	}
 

@@ -8,6 +8,7 @@ import (
 
 	"../tools/ToolCenter"
 	"../tools/rules"
+	"../tools/xplog"
 	"github.com/astaxie/beego"
 )
 
@@ -53,6 +54,12 @@ func (c *LoginController) Login() {
 		} else {
 			res = LoginCheck(req)
 		}
+	}
+
+	if res.Status == 1 {
+		xplog.LogInsertSys(req.User, "登录", res.Errmsg, "成功")
+	} else {
+		xplog.LogInsertSys(req.User, "登录", res.Errmsg, "失败")
 	}
 
 	jres, err := json.Marshal(res)
