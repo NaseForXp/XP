@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"../tools/rules"
+	"../tools/xplog"
 	"github.com/astaxie/beego"
 )
 
@@ -102,11 +103,16 @@ func (c *AccountController) AccountSet() {
 			} else {
 				// 成功
 				res.Status = 1
-				res.Errmsg = "账户安全设置成功"
+				res.Errmsg = "设置账户安全配置成功"
 			}
 		}
 	}
 End:
+	if res.Status == 1 {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "设置账户安全配置", data, "成功")
+	} else {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "设置账户安全配置", data, "失败")
+	}
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["Account_ret"] = string(jres)
@@ -134,7 +140,7 @@ func (c *AccountController) AccountGet() {
 		} else {
 			//正常
 			res.Status = 1
-			res.Errmsg = "获取账户安全设置成功"
+			res.Errmsg = "获取账户安全配置成功"
 
 			res.Mode = account.Mode
 			res.SafeLev = account.SafeLev
@@ -148,7 +154,11 @@ func (c *AccountController) AccountGet() {
 		}
 	}
 End:
-
+	if res.Status == 1 {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "获取账户安全配置", "", "成功")
+	} else {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "获取账户安全配置", "", "失败")
+	}
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["Account_ret"] = string(jres)
@@ -176,12 +186,16 @@ func (c *AccountController) AccountSave() {
 		} else {
 			//正常
 			res.Status = 1
-			res.Errmsg = "账户安全规则导出成功"
+			res.Errmsg = "导出账户安全配置成功"
 			res.Config = saveString
 		}
 	}
 End:
-
+	if res.Status == 1 {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "导出账户安全配置", "", "成功")
+	} else {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "导出账户安全配置", "", "失败")
+	}
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["Account_ret"] = string(jres)

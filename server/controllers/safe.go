@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"../tools/rules"
+	"../tools/xplog"
 	"github.com/astaxie/beego"
 )
 
@@ -124,6 +125,11 @@ func (c *SafeController) SafeBaseSet() {
 		}
 	}
 End:
+	if res.Status == 1 {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "设置基本防护配置", data, "成功")
+	} else {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "设置基本防护配置", data, "失败")
+	}
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["Safe_ret"] = string(jres)
@@ -163,6 +169,11 @@ func (c *SafeController) SafeBaseGet() {
 		}
 	}
 End:
+	if res.Status == 1 {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "获取基本防护配置", "", "成功")
+	} else {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "获取基本防护配置", "", "失败")
+	}
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["Safe_ret"] = string(jres)
@@ -195,6 +206,12 @@ func (c *SafeController) SafeBaseSave() {
 		}
 	}
 End:
+
+	if res.Status == 1 {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "导出基本防护配置", "", "成功")
+	} else {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "导出基本防护配置", "", "失败")
+	}
 
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
@@ -246,11 +263,16 @@ func (c *SafeController) SafeHighSet() {
 			} else {
 				// 成功
 				res.Status = 1
-				res.Errmsg = "增强防护设置成功"
+				res.Errmsg = "设置增强防护配置成功"
 			}
 		}
 	}
 End:
+	if res.Status == 1 {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "设置增强防护配置", data, "成功")
+	} else {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "设置增强防护配置", data, "失败")
+	}
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["Safe_ret"] = string(jres)
@@ -279,7 +301,7 @@ func (c *SafeController) SafeHighGet() {
 		} else {
 			//正常
 			res.Status = 1
-			res.Errmsg = "获取增强防护设置成功"
+			res.Errmsg = "获取增强防护配置成功"
 
 			res.Mode = high.Mode
 			res.AddService = high.AddService
@@ -292,7 +314,11 @@ func (c *SafeController) SafeHighGet() {
 		}
 	}
 End:
-
+	if res.Status == 1 {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "获取增强防护配置", "", "成功")
+	} else {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "获取增强防护配置", "", "失败")
+	}
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["Safe_ret"] = string(jres)
@@ -320,12 +346,16 @@ func (c *SafeController) SafeHighSave() {
 		} else {
 			//正常
 			res.Status = 1
-			res.Errmsg = "增强防护规则导出成功"
+			res.Errmsg = "导出增强防护配置成功"
 			res.Config = saveString
 		}
 	}
 End:
-
+	if res.Status == 1 {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "导出增强防护配置", "", "成功")
+	} else {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "导出增强防护配置", "", "失败")
+	}
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["Safe_ret"] = string(jres)

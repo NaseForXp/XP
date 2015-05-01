@@ -36,6 +36,11 @@ func LogInit() (err error) {
 		return err
 	}
 
+	err = LogCreateTable()
+	if err != nil {
+		return err
+	}
+
 	logWaitGroup.Add(1)
 	go LogWriteCacheToDb()
 	return nil
