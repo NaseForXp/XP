@@ -39,4 +39,11 @@ func init() {
 	beego.Router("/account/get", &controllers.AccountController{}, "get,post:AccountGet")
 	beego.Router("/account/set", &controllers.AccountController{}, "get,post:AccountSet")
 	beego.Router("/account/save", &controllers.AccountController{}, "get,post:AccountSave")
+
+	// 获取日志
+	beego.Router("/log/systotle", &controllers.LogController{}, "get,post:LogSysTotle")
+	beego.Router("/log/sysquery", &controllers.LogController{}, "get,post:LogSysQuery")
+	beego.Router("/log/eventtotle", &controllers.LogController{}, "get,post:LogEventTotle")
+	beego.Router("/log/eventquery", &controllers.LogController{}, "get,post:LogEventQuery")
+
 }

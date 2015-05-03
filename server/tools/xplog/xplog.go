@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -29,6 +30,27 @@ var (
 	logWriteSpace  time.Duration  = time.Second * 1 // 日志写入间隔
 	logStatus      int            = 0               // 线程退出标志
 )
+
+// 系统日志 - 查询 - 单条 (返回结果为数组)
+type LogSysQueryRes struct {
+	Uname  string // 用户名
+	Op     string // 操作
+	Info   string // 内容
+	Result string // 结果
+	Time   string // 时间
+}
+
+// 拦截日志 - 查询 - 单条 (返回结果为数组)
+type LogEventQueryRes struct {
+	Module string // 模块 (安全防护 | 增强防护)
+	Mode   string // 模式 (防护模式 | 监控模式)
+	User   string // 用户名
+	Sub    string // 主体进程
+	Obj    string // 对象
+	Op     string // 操作
+	Ret    string // 操作结果
+	Time   string // 时间
+}
 
 func LogInit() (err error) {
 	err = LogConnectSqlite()
@@ -209,6 +231,209 @@ func LogCreateTable() (err error) {
 		return err
 	}
 	return err
+}
+
+// 查询系统日志总数
+func LogQuerySysTotle() (totCount int, err error) {
+	db := hDBLog
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("LogQuerySysTotle:DB.Begin(): %s\n", err)
+		return totCount, err
+	}
+
+	sql := "select count(*) from log_sys"
+	rows, err := db.Query(sql)
+	if err != nil {
+		log.Printf("LogQuerySysTotle(): %s", err)
+		return totCount, errors.New("错误:查询系统日志总数失败")
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		rows.Scan(&totCount)
+		break
+	}
+	rows.Close()
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("LogQuerySysTotle(commit transaction): %s\n", err)
+		tx.Rollback()
+		return totCount, err
+	}
+
+	return totCount, nil
+}
+
+// 查询安全日志总数
+func LogQueryEventTotle() (totCount int, err error) {
+	db := hDBLog
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("LogQueryEventTotle:DB.Begin(): %s\n", err)
+		return totCount, err
+	}
+
+	sql := "select count(*) from log_event"
+	rows, err := db.Query(sql)
+	if err != nil {
+		log.Printf("LogQueryEventTotle(): %s", err)
+		return totCount, errors.New("错误:查询安全日志总数失败")
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		rows.Scan(&totCount)
+		break
+	}
+	rows.Close()
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("LogQueryEventTotle(commit transaction): %s\n", err)
+		tx.Rollback()
+		return totCount, err
+	}
+
+	return totCount, nil
+}
+
+// 检测时间格式
+func IsTimeRangeRight(timeStart string, timeEnd string) bool {
+	var unix_stime int64
+	var unix_etime int64
+
+	if strings.EqualFold(timeStart, "") != true {
+		s_time, err := time.Parse("2006-01-02 15:04:05", timeStart)
+		if err == nil {
+			unix_stime = s_time.Unix()
+		} else {
+			return false
+		}
+	} else {
+		unix_stime = 0
+	}
+	if strings.EqualFold(timeEnd, "") != true {
+		e_time, err1 := time.Parse("2006-01-02 15:04:05", timeEnd)
+		if err1 == nil {
+			unix_etime = e_time.Unix()
+		} else {
+			return false
+		}
+	} else {
+		unix_etime = time.Now().Unix()
+	}
+	if unix_stime > unix_etime {
+		return false
+	} else {
+		return true
+	}
+}
+
+// 查询系统日志
+func LogQuerySys(KeyWord, TimeStart, TimeStop string) (resArray []LogSysQueryRes, err error) {
+	if IsTimeRangeRight(TimeStart, TimeStop) == false {
+		return resArray, errors.New("错误:查询时间格式不正确:[" + TimeStart + "~" + TimeStop + "]")
+	}
+
+	db := hDBLog
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("LogQuerySys:DB.Begin(): %s\n", err)
+		return resArray, err
+	}
+
+	sql := "select Uname, Op, Info, Result, strftime('%Y-%m-%d %H:%M:%S', Time) from log_sys where " +
+		"Time >= '" + TimeStart + "' and " +
+		"Time <= '" + TimeStop + "' and " +
+		"( Uname like '%" + KeyWord + "%' or " +
+		"Op like '%" + KeyWord + "%' or " +
+		"Info like '%" + KeyWord + "%' or " +
+		"Result like '%" + KeyWord + "%' ) " +
+		"order by Id desc"
+
+	fmt.Println(sql)
+	rows, err := db.Query(sql)
+	if err != nil {
+		log.Printf("LogQuerySys(): %s", err)
+		return resArray, errors.New("错误:查询系统日志失败")
+	}
+	defer rows.Close()
+
+	var res LogSysQueryRes
+	for rows.Next() {
+		rows.Scan(&res.Uname, &res.Op, &res.Info, &res.Result, &res.Time)
+		resArray = append(resArray, res)
+	}
+	rows.Close()
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("LogQuerySys(commit transaction): %s\n", err)
+		tx.Rollback()
+		return resArray, err
+	}
+
+	return resArray, nil
+}
+
+// 查询安全日志
+func LogQueryEvent(Mode, KeyWord, TimeStart, TimeStop string) (resArray []LogEventQueryRes, err error) {
+	if IsTimeRangeRight(TimeStart, TimeStop) == false {
+		return resArray, errors.New("错误:查询时间格式不正确:[" + TimeStart + "~" + TimeStop + "]")
+	}
+
+	db := hDBLog
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("LogQueryEvent:DB.Begin(): %s\n", err)
+		return resArray, err
+	}
+
+	sql := "select Module, Mode, User, Sub, Obj, Op, Ret, strftime('%Y-%m-%d %H:%M:%S', Time) from log_event where " +
+		"Time >= '" + TimeStart + "' and " +
+		"Time <= '" + TimeStop + "' and ( "
+	if Mode == "监视模式" {
+		sql += fmt.Sprintf("Mode = 0 or ")
+	} else if Mode == "防护模式" {
+		sql += fmt.Sprintf("Mode = 1 or ")
+	} else if Mode == "All" {
+	}
+	sql += " Module like '%" + KeyWord + "%' or " +
+		"User like '%" + KeyWord + "%' or " +
+		"Sub like '%" + KeyWord + "%' or " +
+		"Obj like '%" + KeyWord + "%' or " +
+		"Op like '%" + KeyWord + "%' or " +
+		"Ret like '%" + KeyWord + "%' ) " +
+		"order by Id desc"
+
+	rows, err := db.Query(sql)
+	if err != nil {
+		log.Printf("LogQueryEvent(): %s", err)
+		return resArray, errors.New("错误:查询系统日志失败")
+	}
+	defer rows.Close()
+
+	var res LogEventQueryRes
+	for rows.Next() {
+		rows.Scan(&res.Module, &res.Mode, &res.User, &res.Sub, &res.Obj, &res.Op, &res.Ret, &res.Ret, &res.Time)
+		resArray = append(resArray, res)
+	}
+	rows.Close()
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("LogQueryEvent(commit transaction): %s\n", err)
+		tx.Rollback()
+		return resArray, err
+	}
+
+	return resArray, nil
 }
 
 /*

@@ -78,14 +78,36 @@
 
    8、账户安全
       -- 设置
-      Request : http://127.0.0.1:8080/account/set?UserTokey=%22f5ab1c6a%22&data={%22Mode%22:0,%22SafeLev%22:0,%22PwdComplex%22:0,%22PwdMinLen%22:0,%22PwdUsedMin%22:0,%22PwdUsedMax%22:0,%22PwdOldNum%22:0,%22AccountTimes%22:0,%22AccountMinute%22:0}
+      Request : http://127.0.0.1:8080/account/set?UserTokey="f5ab1c6a"&data={"Mode":0,"SafeLev":0,"PwdComplex":0,"PwdMinLen":0,"PwdUsedMin":0,"PwdUsedMax":0,"PwdOldNum":0,"AccountTimes":0,"AccountMinute":0}
       Response:{"Status":1,"Errmsg":"账户安全设置成功"}
 
       -- 获取设置
-      Request : http://127.0.0.1:8080/account/get?UserTokey=%22f5ab1c6a%22
+      Request : http://127.0.0.1:8080/account/get?UserTokey="f5ab1c6a"
       Response:{"Status":1,"Errmsg":"获取账户安全设置成功","Mode":0,"SafeLev":0,"PwdComplex":0,"PwdMinLen":0,"PwdUsedMin":0,"PwdUsedMax":0,"PwdOldNum":0,"AccountTimes":0,"AccountMinute":0}
 
       -- 导出
-      Request : http://127.0.0.1:8080/account/save?UserTokey=%22f5ab1c6a%22
+      Request : http://127.0.0.1:8080/account/save?UserTokey="f5ab1c6a"
       Response:{"Status":1,"Errmsg":"账户安全规则导出成功","Config":"### 配置文件\n\n[INFO]\nName = Account\n\n[CONFIG]\nMode = \u0000\nSafeLev = \u0000\nPwdComplex = \u0000\nPwdMinLen = \u0000\nPwdUsedMin = \u0000\nPwdUsedMax = \u0000\nPwdOldNum = \u0000\nAccountTimes = \u0000\nAccountMinute = \u0000\n\n"}
 
+   9、日志 - 系统运行日志
+      -- 获取数量
+      Request : http://127.0.0.1:8080/log/systotle?UserTokey="f5ab1c6a"
+      Response:{"Status":1,"Errmsg":"查询:系统日志数量成功","Count":10}
+
+      -- 获取日志
+      Request : http://127.0.0.1:8080/log/sysquery?UserTokey="f5ab1c6a"&data={"KeyWord":"查询:系统日志","TimeStart":"2015-01-01 12:12:12","TimeStop":"2015-06-01 12:12:12"}
+      Response:{"Status":1,"Errmsg":"查询:系统日志成功","LogArray":[
+	{"Uname":"Admin","Op":"查询:系统日志","Info":"{\"KeyWord\":\"\",\"TimeStart\":\"2015-01-01 12:12:12\",\"TimeStop\":\"2015-06-01 12:12:12\"}","Result":"成功","Time":"2015-05-03 01:13:06"},
+	{"Uname":"Admin","Op":"查询:系统日志","Info":"{\"KeyWord\":\"登录\",\"TimeStart\":\"2015-01-01 12:12:12\",\"TimeStop\":\"2015-06-01 12:12:12\"}","Result":"成功","Time":"2015-05-02 15:38:57"},
+	{"Uname":"Admin","Op":"查询:系统日志","Info":"{\"KeyWord\":\"系统日志\",\"TimeStart\":\"2015-01-01 12:12:12\",\"TimeStop\":\"2015-06-01 12:12:12\"}","Result":"成功","Time":"2015-05-02 15:37:36"},
+	]}
+
+
+   10、日志 - 安全日志
+      -- 获取数量
+      Request : http://127.0.0.1:8080/log/eventtotle?UserTokey="f5ab1c6a"
+      Response:{"Status":1,"Errmsg":"查询:安全日志数量成功","Count":10}
+
+      -- 获取日志
+      Request : http://127.0.0.1:8080/log/eventquery?UserTokey="f5ab1c6a"&data={"KeyWord":"查询:系统日志","TimeStart":"2015-01-01 12:12:12","TimeStop":"2015-06-01 12:12:12"}
+      Response:{"Status":1,"Errmsg":"查询:安全日志数量成功","Count":0}
