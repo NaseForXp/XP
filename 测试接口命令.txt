@@ -110,4 +110,4 @@
 
       -- 获取日志
       Request : http://127.0.0.1:8080/log/eventquery?UserTokey="f5ab1c6a"&data={"KeyWord":"查询:系统日志","TimeStart":"2015-01-01 12:12:12","TimeStop":"2015-06-01 12:12:12"}
-      Response:{"Status":1,"Errmsg":"查询:安全日志数量成功","Count":0}
+      Response:{{"Status":1,"Errmsg":"查询:安全日志成功","LogArray":null}
