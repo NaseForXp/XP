@@ -23,6 +23,13 @@ func main() {
 		return
 	}
 
+	err = rules.RuleMatchInit()
+	if err != nil {
+		fmt.Println(err)
+		xplog.LogFini()
+		rules.RulesRelease()
+		return
+	}
 	rules.RulesMemPrint()
 	beego.Run()
 }

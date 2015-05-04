@@ -2,6 +2,7 @@ package rules
 
 import (
 	"fmt"
+	"strings"
 )
 
 type StringInt map[string]int
@@ -46,7 +47,7 @@ func RulesMemInit() (err error) {
 
 		rwLockRule.Lock()
 		for _, f := range ws {
-			hMemRules.White[f] = 0
+			hMemRules.White[strings.ToLower(f)] = 0
 		}
 		rwLockRule.Unlock()
 	}
@@ -65,7 +66,7 @@ func RulesMemInit() (err error) {
 
 		rwLockRule.Lock()
 		for _, f := range bs {
-			hMemRules.Black[f] = 0
+			hMemRules.Black[strings.ToLower(f)] = 0
 		}
 		rwLockRule.Unlock()
 	}
@@ -78,7 +79,8 @@ func RulesMemInit() (err error) {
 
 	rwLockRule.Lock()
 	for f, perm := range windir {
-		hMemRules.WinDir[f] = perm
+		hMemRules.WinDir[strings.ToLower(f)] = perm
+
 	}
 	rwLockRule.Unlock()
 
@@ -90,7 +92,7 @@ func RulesMemInit() (err error) {
 
 	rwLockRule.Lock()
 	for f, perm := range winstart {
-		hMemRules.WinStart[f] = perm
+		hMemRules.WinStart[strings.ToLower(f)] = perm
 	}
 	rwLockRule.Unlock()
 
@@ -102,7 +104,7 @@ func RulesMemInit() (err error) {
 
 	rwLockRule.Lock()
 	for _, f := range winsproc {
-		hMemRules.WinProc[f] = 0
+		hMemRules.WinProc[strings.ToLower(f)] = 0
 	}
 	rwLockRule.Unlock()
 

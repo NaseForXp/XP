@@ -231,7 +231,7 @@ func CreateTableWinDir(db *sql.DB) (err error) {
 	}
 
 	sql = `insert into win_dir (id, path, perm) values 
-		(null, 'C:\\Windows\\*', 'r');`
+		(null, 'C:\\Windows\\', 'r');`
 	_, err = tx.Exec(sql)
 	if err != nil {
 		log.Printf("InsertTable(user): %s, %s\n", err, sql)
