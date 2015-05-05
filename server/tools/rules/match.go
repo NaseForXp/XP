@@ -202,23 +202,6 @@ func RuleMatchFileCreate(uname, proc, file string) bool {
 	return true
 }
 
-// 黑白名单检测
-func RuleMatchWhiteBlack(uname, proc, file, new_file, op string) bool {
-	// 白名单放行
-	_, ok := hMemRules.White[proc]
-	if ok {
-		return true
-	}
-
-	// 黑名单拒绝
-	_, ok = hMemRules.Black[proc]
-	if ok {
-		// Log
-		return false
-	}
-	return true
-}
-
 // 规则匹配 - 文件操作
 func RuleMatchFile(uname, proc, file, new_file, op string) bool {
 	uname, _ = filepath.Abs(strings.ToLower(uname))
@@ -229,8 +212,17 @@ func RuleMatchFile(uname, proc, file, new_file, op string) bool {
 	rwLockRule.RLock()
 	defer rwLockRule.RUnlock()
 
-	// 黑白名单检查
-	if RuleMatchWhiteBlack(uname, proc, file, new_file, op) == false {
+	// 白名单放行
+	_, ok := hMemRules.White[proc]
+	if ok {
+		return true
+	}
+
+	// 黑名单拒绝
+	_, ok = hMemRules.Black[proc]
+	if ok {
+		// Log
+		//xplog.LogInsertEvent("黑名单", "防护模式", uname, proc, file, op, "拒绝")
 		return false
 	}
 
@@ -247,7 +239,111 @@ func RuleMatchFile(uname, proc, file, new_file, op string) bool {
 		break
 	case "FILE_CREATE":
 		return RuleMatchFileCreate(uname, proc, file)
-		break
+	}
+
+	return true
+}
+
+// 规则匹配 - 进程操作
+func RuleMatchProcess(uname, process, dst_proc, op string) bool {
+	uname, _ = filepath.Abs(strings.ToLower(uname))
+	process, _ = filepath.Abs(strings.ToLower(process))
+	dst_proc, _ = filepath.Abs(strings.ToLower(dst_proc))
+
+	rwLockRule.RLock()
+	defer rwLockRule.RUnlock()
+
+	// 白名单放行
+	_, ok := hMemRules.White[process]
+	if ok {
+		return true
+	}
+
+	// 黑名单拒绝
+	_, ok = hMemRules.Black[process]
+	if ok {
+		// Log
+		return false
+	}
+	switch op {
+	case "PROC_KILL":
+		// 系统关键进程
+		_, ok := hMemRules.WinProc[dst_proc]
+		if ok {
+			// Log
+			return false
+		}
+	case "PROC_INJECT":
+		// log
+		return false
+	}
+
+	return true
+}
+
+// 规则匹配 - 服务
+func RuleMatchService(uname, process, service_name, binPath, op string) bool {
+	uname, _ = filepath.Abs(strings.ToLower(uname))
+	process, _ = filepath.Abs(strings.ToLower(process))
+	binPath, _ = filepath.Abs(strings.ToLower(binPath))
+
+	rwLockRule.RLock()
+	defer rwLockRule.RUnlock()
+
+	// 白名单放行
+	_, ok := hMemRules.White[process]
+	if ok {
+		return true
+	}
+
+	// 黑名单拒绝
+	_, ok = hMemRules.Black[process]
+	if ok {
+		// Log
+		return false
+	}
+
+	switch op {
+	case "SRV_CREATE":
+		// Log
+		return false
+	case "SRV_DEL":
+		// Log change
+		return false
+	case "SRV_CHANGE":
+		// Log change
+		return false
+	}
+
+	return true
+}
+
+// 规则匹配 - 驱动
+func RuleMatchDrive(uname, process, service_name, binPath, op string) bool {
+	uname, _ = filepath.Abs(strings.ToLower(uname))
+	process, _ = filepath.Abs(strings.ToLower(process))
+	binPath, _ = filepath.Abs(strings.ToLower(binPath))
+
+	rwLockRule.RLock()
+	defer rwLockRule.RUnlock()
+
+	// 白名单放行
+	_, ok := hMemRules.White[process]
+	if ok {
+		return true
+	}
+
+	// 黑名单拒绝
+	_, ok = hMemRules.Black[process]
+	if ok {
+		// Log
+		return false
+	}
+
+	switch op {
+	case "DRIVE_LOAD":
+		// Log
+		return false
 	}
 
 	return true
