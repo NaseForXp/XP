@@ -1099,6 +1099,110 @@ func RulesQuerySafeBaseWinProc() (files []string, err error) {
 	return files, nil
 }
 
+// 添加AutoRun注册表项
+func RulesAddSafeHighAutoRun(fpath string, perm string) (err error) {
+	db := hDbRules
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("RulesAddSafeHighAutoRun: %s\n", err)
+		return err
+	}
+
+	absPath := fpath
+	sql := fmt.Sprintf("insert into auto_run (id, path, perm) values (null, '%s', '%s')", absPath, perm)
+	_, err = tx.Exec(sql)
+	if err != nil {
+		log.Printf("RulesAddSafeHighAutoRun(): %s", err)
+		tx.Rollback()
+		return errors.New("错误:添加AutoRun注册表项失败")
+	}
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("RulesAddSafeHighAutoRun(commit transaction): %s\n", err)
+		tx.Rollback()
+		return err
+	}
+
+	// 更新内存
+	rwLockRule.Lock()
+	hMemRules.AutoRunReg[absPath] = perm
+	rwLockRule.Unlock()
+
+	return nil
+}
+
+// 删除AutoRun注册表项
+func RulesDelSafeHighAutoRun(fpath string) (err error) {
+	db := hDbRules
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("RulesDelSafeHighAutoRun: %s\n", err)
+		return err
+	}
+
+	absPath := fpath
+	sql := fmt.Sprintf("delete from auto_run where path = '%s'", absPath)
+	_, err = tx.Exec(sql)
+	if err != nil {
+		log.Printf("RulesDelSafeHighAutoRun(): %s", err)
+		tx.Rollback()
+		return errors.New("错误:删除AutoRun注册表项失败")
+	}
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("RulesDelSafeHighAutoRun(commit transaction): %s\n", err)
+		tx.Rollback()
+		return err
+	}
+
+	// 更新内存
+	rwLockRule.Lock()
+	delete(hMemRules.AutoRunReg, absPath)
+	rwLockRule.Unlock()
+
+	return nil
+}
+
+// 查询AutoRun注册表项
+func RulesQuerySafeHighAutoRun() (regs map[string]string, err error) {
+	regs = make(map[string]string)
+	db := hDbRules
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("RulesQuerySafeHighAutoRun: %s\n", err)
+		return regs, err
+	}
+
+	sql := fmt.Sprintf("select path, perm from auto_run")
+	rows, err := db.Query(sql)
+	if err != nil {
+		log.Printf("RulesQuerySafeHighAutoRun(): %s", err)
+		return regs, errors.New("错误:查询AutoRun注册表项失败")
+	}
+	defer rows.Close()
+
+	var file, perm string
+	for rows.Next() {
+		rows.Scan(&file, &perm)
+		regs[file] = perm
+	}
+	rows.Close()
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("RulesQuerySafeHighAutoRun(commit transaction): %s\n", err)
+		tx.Rollback()
+		return regs, err
+	}
+
+	return regs, nil
+}
+
 /////////////////////////////////
 // Account
 /////////////////////////////////

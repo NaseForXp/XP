@@ -336,6 +336,47 @@ func CreateTableWinProc(db *sql.DB) (err error) {
 	return err
 }
 
+// 系统文件及目录
+func CreateTableAutoRun(db *sql.DB) (err error) {
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("CreateTable:DB.Begin(): %s\n", err)
+		return err
+	}
+
+	var sql string
+
+	sql = `create table if not exists auto_run (
+			id integer not null primary key autoincrement, 
+			path      varchar(260) not null unique,
+			perm      varchar(8)
+		);`
+	_, err = tx.Exec(sql)
+	if err != nil {
+		log.Printf("CreateTable(auto_run): %s, %s\n", err, sql)
+		tx.Rollback()
+		return err
+	}
+
+	sql = `insert into auto_run (id, path, perm) values 
+		(null, 'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\MountPoints2', 'r');`
+	_, err = tx.Exec(sql)
+	if err != nil {
+		log.Printf("InsertTable(auto_run): %s, %s\n", err, sql)
+		tx.Rollback()
+		return err
+	}
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("CreateTable(commit transaction): %s\n", err)
+		tx.Rollback()
+		return err
+	}
+	return err
+}
+
 // 白名单
 func CreateTableWhiteList(db *sql.DB) (err error) {
 	tx, err := db.Begin()
@@ -425,6 +466,9 @@ func main() {
 	fmt.Println(err)
 
 	err = CreateTableWinProc(db)
+	fmt.Println(err)
+
+	err = CreateTableAutoRun(db)
 	fmt.Println(err)
 
 	err = CreateTableWhiteList(db)

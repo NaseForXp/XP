@@ -39,7 +39,7 @@ extern "C" {
  *  2.In SEWIN_MODE_NOTIFY mode:
  *      the operation will be permitted all the time.
  */
-typedef struct sewin_operations {
+struct sewin_operations {
     // File(Dir) operations
     BOOLEAN(*file_create)           (WCHAR *user_name, WCHAR *process, WCHAR *file_path);
     BOOLEAN(*file_unlink)           (WCHAR *user_name, WCHAR *process, WCHAR *file_path);
@@ -53,6 +53,10 @@ typedef struct sewin_operations {
     BOOLEAN(*dir_unlink)            (WCHAR *user_name, WCHAR *process, WCHAR *dir_path);
     BOOLEAN(*dir_set_attr)          (WCHAR *user_name, WCHAR *process, WCHAR *dir_path, PFILE_BASIC_INFORMATION pfbi);
     BOOLEAN(*dir_rename)            (WCHAR *user_name, WCHAR *process, WCHAR *src_dir, WCHAR *new_name);
+
+	BOOLEAN(*disk_read)             (WCHAR *user_name, WCHAR *process, WCHAR *dir_path);
+	BOOLEAN(*disk_write)            (WCHAR *user_name, WCHAR *process, WCHAR *dir_path);
+	BOOLEAN(*disk_format)           (WCHAR *user_name, WCHAR *process, WCHAR *dir_path);
 
     // Process operations
     BOOLEAN(*process_create)        (WCHAR *user_name, WCHAR *process, WCHAR *dst_proc);
@@ -86,7 +90,7 @@ typedef struct sewin_operations {
 	BOOLEAN(*service_delete)        (WCHAR *user_name, WCHAR *process, WCHAR *service_name);
 	BOOLEAN(*service_change)        (WCHAR *user_name, WCHAR *process, WCHAR *service_name);
 	BOOLEAN(*driver_load)			(WCHAR *user_name, WCHAR *process, WCHAR *service_name, WCHAR *bin_path);
-}SewinOps;
+};
 
 /**
  * sewin_init : init sewindows

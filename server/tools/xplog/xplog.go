@@ -87,9 +87,9 @@ func LogInsertSys(uname string, op string, info string, ret string) {
 }
 
 // 插入违规日志
-func LogInsertEvent(Module string, Mode int, User, Sub, Obj, Op, Ret string) {
+func LogInsertEvent(Module, Mode, User, Sub, Obj, Op, Ret string) {
 	sql := "insert into log_event (id, Module, Mode, User, Sub, Obj, Op, Ret, Time) values " +
-		fmt.Sprintf("(null, '%s', %d, '%s', '%s', '%s', '%s', '%s', datetime())", Module, Mode, User, Sub, Obj, Op, Ret)
+		fmt.Sprintf("(null, '%s', '%s', '%s', '%s', '%s', '%s', '%s', datetime())", Module, Mode, User, Sub, Obj, Op, Ret)
 
 	rwLockLog.Lock()
 	logCacheInsert = append(logCacheInsert, sql)
@@ -105,6 +105,7 @@ func LogWriteCacheToDbExe() (err error) {
 	}
 
 	for _, sql := range logCacheWrite {
+		fmt.Println(sql)
 		_, err = tx.Exec(sql)
 		if err != nil {
 			log.Printf("LogWriteCacheToDbExe(user): %s, %s\n", err, sql)
@@ -207,11 +208,11 @@ func LogCreateTable() (err error) {
 	// 违规记录表
 	sql = `create table if not exists log_event (
 			Id integer not null primary key, 
-			Module varchar(32) not null,
-			Mode   integer not null,
+			Module varchar(128) not null,
+			Mode   varchar(32) not null,
 			User   varchar(128) not null,
 			Sub    varchar(260) not null,
-			Obj    varchar(260) not null,
+			Obj    varchar(520) not null,
 			Op     varchar(64) not null,
 			Ret    varchar(16) not null,
 			Time   datetime
@@ -382,7 +383,7 @@ func LogQuerySys(KeyWord, TimeStart, TimeStop string) (resArray []LogSysQueryRes
 }
 
 // 查询安全日志
-func LogQueryEvent(Mode, KeyWord, TimeStart, TimeStop string) (resArray []LogEventQueryRes, err error) {
+func LogQueryEvent(KeyWord, TimeStart, TimeStop string) (resArray []LogEventQueryRes, err error) {
 	if IsTimeRangeRight(TimeStart, TimeStop) == false {
 		return resArray, errors.New("错误:查询时间格式不正确:[" + TimeStart + "~" + TimeStop + "]")
 	}
@@ -396,14 +397,9 @@ func LogQueryEvent(Mode, KeyWord, TimeStart, TimeStop string) (resArray []LogEve
 
 	sql := "select Module, Mode, User, Sub, Obj, Op, Ret, strftime('%Y-%m-%d %H:%M:%S', Time) from log_event where " +
 		"Time >= '" + TimeStart + "' and " +
-		"Time <= '" + TimeStop + "' and ( "
-	if Mode == "监视模式" {
-		sql += fmt.Sprintf("Mode = 0 or ")
-	} else if Mode == "防护模式" {
-		sql += fmt.Sprintf("Mode = 1 or ")
-	} else if Mode == "All" {
-	}
-	sql += " Module like '%" + KeyWord + "%' or " +
+		"Time <= '" + TimeStop + "' and ( " +
+		"Mode like '%" + KeyWord + "%' or " +
+		"Module like '%" + KeyWord + "%' or " +
 		"User like '%" + KeyWord + "%' or " +
 		"Sub like '%" + KeyWord + "%' or " +
 		"Obj like '%" + KeyWord + "%' or " +
@@ -420,7 +416,7 @@ func LogQueryEvent(Mode, KeyWord, TimeStart, TimeStop string) (resArray []LogEve
 
 	var res LogEventQueryRes
 	for rows.Next() {
-		rows.Scan(&res.Module, &res.Mode, &res.User, &res.Sub, &res.Obj, &res.Op, &res.Ret, &res.Ret, &res.Time)
+		rows.Scan(&res.Module, &res.Mode, &res.User, &res.Sub, &res.Obj, &res.Op, &res.Ret, &res.Time)
 		resArray = append(resArray, res)
 	}
 	rows.Close()

@@ -6,6 +6,5 @@ BOOLEAN C_SewinSetModeNotify();
 BOOLEAN C_SewinSetModeIntercept();
 BOOLEAN C_SewinRegOps();
 
-BOOLEAN C_file_create(WCHAR *user_name, WCHAR *process, WCHAR *file_path);
 
 #endif

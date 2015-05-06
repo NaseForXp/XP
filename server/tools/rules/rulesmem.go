@@ -2,6 +2,7 @@ package rules
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 )
 
@@ -14,8 +15,10 @@ type RuleMemHandle struct {
 	WinDir      StringStr      // 受保护的系统目录
 	WinStart    StringStr      // 受保护的系统启动项
 	WinProc     StringInt      // 受保护的系统进程
+	AutoRunReg  StringStr      // AutoRun的注册表项目
 	SafeBaseCfg SafeBaseConfig // 系统防护_基本防护配置
 	SafeHighCfg SafeHighConfig // 系统防护_增强防护配置
+	AccountCfg  AccountConfig  // 账户安全配置
 }
 
 /* 全局变量定义 - rules.go中定义
@@ -32,6 +35,7 @@ func RulesMemInit() (err error) {
 	hMemRules.WinDir = make(StringStr)
 	hMemRules.WinStart = make(StringStr)
 	hMemRules.WinProc = make(StringInt)
+	hMemRules.AutoRunReg = make(StringStr)
 
 	// 获取白名单
 	totCnt, err := RulesGetWhiteTotle()
@@ -47,7 +51,8 @@ func RulesMemInit() (err error) {
 
 		rwLockRule.Lock()
 		for _, f := range ws {
-			hMemRules.White[strings.ToLower(f)] = 0
+			f, _ = filepath.Abs(strings.ToLower(f))
+			hMemRules.White[f] = 0
 		}
 		rwLockRule.Unlock()
 	}
@@ -66,7 +71,8 @@ func RulesMemInit() (err error) {
 
 		rwLockRule.Lock()
 		for _, f := range bs {
-			hMemRules.Black[strings.ToLower(f)] = 0
+			f, _ = filepath.Abs(strings.ToLower(f))
+			hMemRules.Black[f] = 0
 		}
 		rwLockRule.Unlock()
 	}
@@ -79,7 +85,8 @@ func RulesMemInit() (err error) {
 
 	rwLockRule.Lock()
 	for f, perm := range windir {
-		hMemRules.WinDir[strings.ToLower(f)] = perm
+		f, _ = filepath.Abs(strings.ToLower(f))
+		hMemRules.WinDir[f] = perm
 
 	}
 	rwLockRule.Unlock()
@@ -92,7 +99,8 @@ func RulesMemInit() (err error) {
 
 	rwLockRule.Lock()
 	for f, perm := range winstart {
-		hMemRules.WinStart[strings.ToLower(f)] = perm
+		f, _ = filepath.Abs(strings.ToLower(f))
+		hMemRules.WinStart[f] = perm
 	}
 	rwLockRule.Unlock()
 
@@ -104,7 +112,20 @@ func RulesMemInit() (err error) {
 
 	rwLockRule.Lock()
 	for _, f := range winsproc {
-		hMemRules.WinProc[strings.ToLower(f)] = 0
+		f, _ = filepath.Abs(strings.ToLower(f))
+		hMemRules.WinProc[f] = 0
+	}
+	rwLockRule.Unlock()
+
+	// 获取AutoRun注册表项
+	autorunRegs, err := RulesQuerySafeHighAutoRun()
+	if err != nil {
+		return err
+	}
+
+	rwLockRule.Lock()
+	for _, f := range autorunRegs {
+		hMemRules.AutoRunReg[strings.ToUpper(f)] = ""
 	}
 	rwLockRule.Unlock()
 
@@ -120,12 +141,19 @@ func RulesMemInit() (err error) {
 		return err
 	}
 
+	// 获取账户防护 设置
+	hMemRules.AccountCfg, err = RulesAccountGet()
+	if err != nil {
+		return err
+	}
+
 	return err
 }
 
 func RulesMemPrint() {
 	fmt.Println("SafeBaseCfg:", hMemRules.SafeBaseCfg)
 	fmt.Println("SafeHighCfg:", hMemRules.SafeHighCfg)
+	fmt.Println("AccountCfg:", hMemRules.AccountCfg)
 	fmt.Println("Black:", hMemRules.Black)
 	fmt.Println("White:", hMemRules.White)
 	fmt.Println("WinDir:", hMemRules.WinDir)
