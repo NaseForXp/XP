@@ -124,7 +124,8 @@ func RulesMemInit() (err error) {
 	}
 
 	rwLockRule.Lock()
-	for _, f := range autorunRegs {
+	for f, _ := range autorunRegs {
+		//f = strings.Replace(f, "\\\\", "\\", -1)
 		hMemRules.AutoRunReg[strings.ToUpper(f)] = ""
 	}
 	rwLockRule.Unlock()
@@ -159,4 +160,5 @@ func RulesMemPrint() {
 	fmt.Println("WinDir:", hMemRules.WinDir)
 	fmt.Println("WinStart:", hMemRules.WinStart)
 	fmt.Println("WinProc:", hMemRules.WinProc)
+	fmt.Println("WinAutoRun:", hMemRules.AutoRunReg)
 }

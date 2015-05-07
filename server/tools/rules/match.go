@@ -12,6 +12,7 @@ package rules
 import "C"
 import (
 	"errors"
+	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -50,6 +51,24 @@ func Go_file_unlink(user_name, process, file_path *C.char) C.BOOLEAN {
 	fpath = decoder.ConvertString(fpath)
 
 	bret := RuleMatchFileUnlink(uname, proc, fpath)
+	if bret {
+		return C.TRUE
+	}
+	return C.FALSE
+}
+
+//export Go_file_read
+func Go_file_read(user_name, process, file_path *C.char) C.BOOLEAN {
+	decoder := mahonia.NewDecoder("GBK")
+	uname := C.GoString(user_name)
+	proc := C.GoString(process)
+	fpath := C.GoString(file_path)
+
+	uname = decoder.ConvertString(uname)
+	proc = decoder.ConvertString(proc)
+	fpath = decoder.ConvertString(fpath)
+
+	bret := RuleMatchFileRead(uname, proc, fpath)
 	if bret {
 		return C.TRUE
 	}
@@ -405,6 +424,47 @@ func RuleMatchDiskFormat(uname, proc, file string) bool {
 		} else {
 			xplog.LogInsertEvent("基本防护-防止格式化系统磁盘", "防护模式", uname, proc, file, opStr, "拒绝")
 			return false
+		}
+	}
+
+	return true
+}
+
+// 文件读操作 - autorun.inf
+func RuleMatchFileRead(uname, proc, file string) bool {
+	proc, _ = filepath.Abs(strings.ToLower(proc))
+	file = strings.ToLower(file)
+
+	rwLockRule.RLock()
+	defer rwLockRule.RUnlock()
+
+	// 白名单放行
+	_, ok := hMemRules.White[proc]
+	if ok {
+		xplog.LogInsertEvent("白名单", "防护模式", uname, proc, file, "写文件", "允许")
+		return true
+	}
+
+	// 黑名单拒绝
+	_, ok = hMemRules.Black[proc]
+	if ok {
+		xplog.LogInsertEvent("黑名单", "防护模式", uname, proc, file, "写文件", "拒绝")
+		return false
+	}
+
+	// 自动运行
+	if hMemRules.SafeHighCfg.AutoRun == 1 {
+		// 功能开启
+
+		if strings.Index(file, "autorun.inf") > 0 {
+			fmt.Println(strings.Index(file, "autorun.inf"))
+			if hMemRules.SafeHighCfg.Mode == 0 {
+				xplog.LogInsertEvent("增强防护-防止自动运行", "监视模式", uname, proc, file, "自动运行", "拒绝")
+				return true
+			} else {
+				xplog.LogInsertEvent("增强防护-防止自动运行", "防护模式", uname, proc, file, "自动运行", "拒绝")
+				return false
+			}
 		}
 	}
 
@@ -883,7 +943,12 @@ func RuleMatchRegRead(uname, process, reg_path string) bool {
 
 	rwLockRule.RLock()
 	defer rwLockRule.RUnlock()
-
+	/*
+		fmt.Println("RuleMatchRegRead", uname, process, reg_path)
+		fmt.Println("Mode:", hMemRules.SafeHighCfg.Mode)
+		fmt.Println("Winproc:", hMemRules.SafeHighCfg.AutoRun)
+		fmt.Println(hMemRules.SafeHighCfg)
+	*/
 	// 防止自动运行
 	if hMemRules.SafeHighCfg.LoadSys == 1 {
 		_, ok := hMemRules.AutoRunReg[reg_path]

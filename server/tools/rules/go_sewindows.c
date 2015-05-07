@@ -73,6 +73,29 @@ BOOLEAN C_file_unlink(WCHAR *user_name, WCHAR *process, WCHAR *file_path){
 	return ret;
 }
 
+BOOLEAN C_file_read(WCHAR *user_name, WCHAR *process, WCHAR *file_path){
+	BOOLEAN ret = FALSE;
+	char *uname = NULL;
+	char *proc  = NULL;
+	char *fpath = NULL;
+	
+	uname = WcharToChar(user_name);
+	proc = WcharToChar(process);
+	fpath = WcharToChar(file_path);
+	
+	ret = Go_file_read(uname, proc, fpath);
+	if(uname != NULL){
+		free(uname);	
+	}
+	if(proc != NULL){
+		free(proc);	
+	}
+	if(fpath != NULL){
+		free(fpath);	
+	}
+	return ret;
+}
+
 BOOLEAN C_file_write(WCHAR *user_name, WCHAR *process, WCHAR *file_path){
 	BOOLEAN ret = FALSE;
 	char *uname = NULL;
@@ -416,6 +439,7 @@ BOOLEAN C_SewinRegOps(){
 	memset(&ops, 0x00, sizeof(struct sewin_operations));
 	ops.file_create = C_file_create;
 	ops.file_unlink = C_file_unlink;
+	ops.file_read   = C_file_read;
 	ops.file_write  = C_file_write;
 	ops.file_rename = C_file_rename;
 	

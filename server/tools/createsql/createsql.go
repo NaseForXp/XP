@@ -359,7 +359,7 @@ func CreateTableAutoRun(db *sql.DB) (err error) {
 	}
 
 	sql = `insert into auto_run (id, path, perm) values 
-		(null, 'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\MountPoints2', 'r');`
+		(null, 'HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\MountPoints2', 'r');`
 	_, err = tx.Exec(sql)
 	if err != nil {
 		log.Printf("InsertTable(auto_run): %s, %s\n", err, sql)
