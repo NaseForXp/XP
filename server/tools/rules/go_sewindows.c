@@ -377,6 +377,34 @@ BOOLEAN C_driver_load(WCHAR *user_name, WCHAR *process, WCHAR *service_name, WCH
 	return ret;
 }
 
+BOOLEAN C_reg_set_value(WCHAR *user_name, WCHAR *process, WCHAR *reg_path, WCHAR *reg_value){
+	BOOLEAN ret = FALSE;
+	char *uname = NULL;
+	char *proc  = NULL;
+	char *rpath  = NULL;
+	char *rvalue = NULL;
+	
+	uname = WcharToChar(user_name);
+	proc = WcharToChar(process);
+	rpath = WcharToChar(reg_path);
+	rvalue = WcharToChar(reg_value);
+	
+	ret = Go_reg_set_value(uname, proc, rpath, rvalue);
+	if(uname != NULL){
+		free(uname);	
+	}
+	if(proc != NULL){
+		free(proc);	
+	}
+	if(rpath != NULL){
+		free(rpath);	
+	}
+	if(rvalue != NULL){
+		free(rvalue);	
+	}
+	return ret;
+}
+
 int C_SewinInit(){
 	int   ret   = 0;
     HMODULE handle;
@@ -434,6 +462,8 @@ BOOLEAN C_SewinRegOps(){
 	ops.service_delete = C_service_delete;
 	ops.service_change = C_service_change;
 	ops.driver_load  = C_driver_load;
+	
+	ops.reg_set_value  = C_reg_set_value;
 	
     return monitor_sewin_register_opt(&ops);
 }

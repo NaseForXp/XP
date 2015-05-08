@@ -278,6 +278,26 @@ func Go_driver_load(user_name, process, sname, binPath *C.char) C.BOOLEAN {
 	return C.FALSE
 }
 
+//export Go_reg_set_value
+func Go_reg_set_value(user_name, process, rpath, rvalue *C.char) C.BOOLEAN {
+	decoder := mahonia.NewDecoder("GBK")
+	uname := C.GoString(user_name)
+	proc := C.GoString(process)
+	regpath := C.GoString(rpath)
+	regvalue := C.GoString(rvalue)
+
+	uname = decoder.ConvertString(uname)
+	proc = decoder.ConvertString(proc)
+	regpath = decoder.ConvertString(regpath)
+	regvalue = decoder.ConvertString(regvalue)
+
+	bret := RuleMatchRegSetValue(uname, proc, regpath, regvalue)
+	if bret {
+		return C.TRUE
+	}
+	return C.FALSE
+}
+
 // Sewindows驱动初始化
 func SewindowsInit() (err error) {
 	var ret C.int
@@ -376,7 +396,8 @@ func RuleMatchDiskReadWrite(uname, proc, file, opStr string) bool {
 // 规则匹配 - 磁盘格式化
 func RuleMatchDiskFormat(uname, proc, file string) bool {
 	proc, _ = filepath.Abs(strings.ToLower(proc))
-	file, _ = filepath.Abs(strings.ToLower(file))
+	// 格式化路径已经是磁盘了
+	file = strings.ToLower(file)
 
 	opStr := "格式化磁盘"
 
@@ -910,6 +931,47 @@ func RuleMatchDriveLoad(uname, process, service_name, binPath string) bool {
 		} else {
 			xplog.LogInsertEvent("增强防护-防止驱动程序被加载", "防护模式", uname, process, logdst, "驱动加载", "拒绝")
 			return false
+		}
+	}
+	return true
+}
+
+// 规则匹配 - 注册表设置 - 开机启动
+func RuleMatchRegSetValue(uname, process, regpath, regvalue string) bool {
+	process, _ = filepath.Abs(strings.ToLower(process))
+	regpath = strings.ToUpper(regpath)
+
+	rwLockRule.RLock()
+	defer rwLockRule.RUnlock()
+
+	logdst := "[" + regvalue + "]" + regpath
+	// 防止驱动程序被加载
+	if hMemRules.SafeHighCfg.AddStart == 1 {
+		// 白名单放行
+		_, ok := hMemRules.White[process]
+		if ok {
+			xplog.LogInsertEvent("白名单", "防护模式", uname, process, logdst, "设置开机启动", "允许")
+			return true
+		}
+
+		// 黑名单拒绝
+		_, ok = hMemRules.HighWinStart[regpath]
+		if ok {
+			xplog.LogInsertEvent("黑名单", "防护模式", uname, process, logdst, "设置开机启动", "拒绝")
+			return false
+		}
+
+		for r, _ := range hMemRules.HighWinStart {
+			if strings.Index(regpath, r) == 0 {
+				// 访问启动项注册表
+				if hMemRules.SafeHighCfg.Mode == 0 {
+					xplog.LogInsertEvent("增强防护-防止开机自启动", "监视模式", uname, process, logdst, "设置开机启动", "拒绝")
+					return true
+				} else {
+					xplog.LogInsertEvent("增强防护-防止开机自启动", "防护模式", uname, process, logdst, "设置开机启动", "拒绝")
+					return false
+				}
+			}
 		}
 	}
 	return true

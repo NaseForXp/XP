@@ -336,8 +336,8 @@ func CreateTableWinProc(db *sql.DB) (err error) {
 	return err
 }
 
-// 系统文件及目录
-func CreateTableAutoRun(db *sql.DB) (err error) {
+// 增强防护 - 开机启动项
+func CreateTableHighWinStart(db *sql.DB) (err error) {
 	tx, err := db.Begin()
 	if err != nil {
 		log.Printf("CreateTable:DB.Begin(): %s\n", err)
@@ -346,23 +346,24 @@ func CreateTableAutoRun(db *sql.DB) (err error) {
 
 	var sql string
 
-	sql = `create table if not exists auto_run (
+	sql = `create table if not exists high_winstart (
 			id integer not null primary key autoincrement, 
-			path      varchar(260) not null unique,
-			perm      varchar(8)
+			path      varchar(260) not null unique
 		);`
 	_, err = tx.Exec(sql)
 	if err != nil {
-		log.Printf("CreateTable(auto_run): %s, %s\n", err, sql)
+		log.Printf("CreateTable(high_winstart): %s, %s\n", err, sql)
 		tx.Rollback()
 		return err
 	}
 
-	sql = `insert into auto_run (id, path, perm) values 
-		(null, 'HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\MountPoints2', 'r');`
+	sql = `insert into high_winstart (id, path) values 
+		(null, 'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Run'),
+		(null, 'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce')
+		;`
 	_, err = tx.Exec(sql)
 	if err != nil {
-		log.Printf("InsertTable(auto_run): %s, %s\n", err, sql)
+		log.Printf("InsertTable(high_winstart): %s, %s\n", err, sql)
 		tx.Rollback()
 		return err
 	}
@@ -468,7 +469,7 @@ func main() {
 	err = CreateTableWinProc(db)
 	fmt.Println(err)
 
-	err = CreateTableAutoRun(db)
+	err = CreateTableHighWinStart(db)
 	fmt.Println(err)
 
 	err = CreateTableWhiteList(db)

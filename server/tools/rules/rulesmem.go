@@ -10,15 +10,15 @@ type StringInt map[string]int
 type StringStr map[string]string
 
 type RuleMemHandle struct {
-	White       StringInt      // 白名单的程序和目录
-	Black       StringInt      // 黑名单的程序和目录
-	WinDir      StringStr      // 受保护的系统目录
-	WinStart    StringStr      // 受保护的系统启动项
-	WinProc     StringInt      // 受保护的系统进程
-	AutoRunReg  StringStr      // AutoRun的注册表项目
-	SafeBaseCfg SafeBaseConfig // 系统防护_基本防护配置
-	SafeHighCfg SafeHighConfig // 系统防护_增强防护配置
-	AccountCfg  AccountConfig  // 账户安全配置
+	White        StringInt      // 白名单的程序和目录
+	Black        StringInt      // 黑名单的程序和目录
+	WinDir       StringStr      // 受保护的系统目录
+	WinStart     StringStr      // 受保护的系统启动项
+	WinProc      StringInt      // 受保护的系统进程
+	HighWinStart StringStr      // 增强防护 - 开机启动项
+	SafeBaseCfg  SafeBaseConfig // 系统防护_基本防护配置
+	SafeHighCfg  SafeHighConfig // 系统防护_增强防护配置
+	AccountCfg   AccountConfig  // 账户安全配置
 }
 
 /* 全局变量定义 - rules.go中定义
@@ -35,7 +35,7 @@ func RulesMemInit() (err error) {
 	hMemRules.WinDir = make(StringStr)
 	hMemRules.WinStart = make(StringStr)
 	hMemRules.WinProc = make(StringInt)
-	hMemRules.AutoRunReg = make(StringStr)
+	hMemRules.HighWinStart = make(StringStr)
 
 	// 获取白名单
 	totCnt, err := RulesGetWhiteTotle()
@@ -117,16 +117,16 @@ func RulesMemInit() (err error) {
 	}
 	rwLockRule.Unlock()
 
-	// 获取AutoRun注册表项
-	autorunRegs, err := RulesQuerySafeHighAutoRun()
+	// 获取开机启动注册表项
+	startRegs, err := RulesQuerySafeHighWinStart()
 	if err != nil {
 		return err
 	}
 
 	rwLockRule.Lock()
-	for f, _ := range autorunRegs {
+	for f, _ := range startRegs {
 		//f = strings.Replace(f, "\\\\", "\\", -1)
-		hMemRules.AutoRunReg[strings.ToUpper(f)] = ""
+		hMemRules.HighWinStart[strings.ToUpper(f)] = ""
 	}
 	rwLockRule.Unlock()
 
@@ -160,5 +160,5 @@ func RulesMemPrint() {
 	fmt.Println("WinDir:", hMemRules.WinDir)
 	fmt.Println("WinStart:", hMemRules.WinStart)
 	fmt.Println("WinProc:", hMemRules.WinProc)
-	fmt.Println("WinAutoRun:", hMemRules.AutoRunReg)
+	fmt.Println("HighWinStart:", hMemRules.HighWinStart)
 }

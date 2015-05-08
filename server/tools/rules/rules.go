@@ -1099,103 +1099,103 @@ func RulesQuerySafeBaseWinProc() (files []string, err error) {
 	return files, nil
 }
 
-// 添加AutoRun注册表项
-func RulesAddSafeHighAutoRun(fpath string, perm string) (err error) {
+// 添加开机自启动注册表项
+func RulesAddSafeHighWinStart(fpath string) (err error) {
 	db := hDbRules
 	tx, err := db.Begin()
 	if err != nil {
-		log.Printf("RulesAddSafeHighAutoRun: %s\n", err)
+		log.Printf("RulesAddSafeHighWinStart: %s\n", err)
 		return err
 	}
 
 	absPath := fpath
-	sql := fmt.Sprintf("insert into auto_run (id, path, perm) values (null, '%s', '%s')", absPath, perm)
+	sql := fmt.Sprintf("insert into high_winstart (id, path) values (null, '%s')", absPath)
 	_, err = tx.Exec(sql)
 	if err != nil {
-		log.Printf("RulesAddSafeHighAutoRun(): %s", err)
+		log.Printf("RulesAddSafeHighWinStart(): %s", err)
 		tx.Rollback()
-		return errors.New("错误:添加AutoRun注册表项失败")
+		return errors.New("错误:添加开机自启动注册表项失败")
 	}
 
 	// 事务提交
 	err = tx.Commit()
 	if err != nil {
-		log.Printf("RulesAddSafeHighAutoRun(commit transaction): %s\n", err)
+		log.Printf("RulesAddSafeHighWinStart(commit transaction): %s\n", err)
 		tx.Rollback()
 		return err
 	}
 
 	// 更新内存
 	rwLockRule.Lock()
-	hMemRules.AutoRunReg[absPath] = perm
+	hMemRules.HighWinStart[absPath] = ""
 	rwLockRule.Unlock()
 
 	return nil
 }
 
-// 删除AutoRun注册表项
-func RulesDelSafeHighAutoRun(fpath string) (err error) {
+// 删除开机自启动注册表项
+func RulesDelSafeHighWinStart(fpath string) (err error) {
 	db := hDbRules
 	tx, err := db.Begin()
 	if err != nil {
-		log.Printf("RulesDelSafeHighAutoRun: %s\n", err)
+		log.Printf("RulesDelSafeHighWinStart: %s\n", err)
 		return err
 	}
 
 	absPath := fpath
-	sql := fmt.Sprintf("delete from auto_run where path = '%s'", absPath)
+	sql := fmt.Sprintf("delete from high_winstart where path = '%s'", absPath)
 	_, err = tx.Exec(sql)
 	if err != nil {
-		log.Printf("RulesDelSafeHighAutoRun(): %s", err)
+		log.Printf("RulesDelSafeHighWinStart(): %s", err)
 		tx.Rollback()
-		return errors.New("错误:删除AutoRun注册表项失败")
+		return errors.New("错误:删除开机自启动注册表项失败")
 	}
 
 	// 事务提交
 	err = tx.Commit()
 	if err != nil {
-		log.Printf("RulesDelSafeHighAutoRun(commit transaction): %s\n", err)
+		log.Printf("RulesDelSafeHighWinStart(commit transaction): %s\n", err)
 		tx.Rollback()
 		return err
 	}
 
 	// 更新内存
 	rwLockRule.Lock()
-	delete(hMemRules.AutoRunReg, absPath)
+	delete(hMemRules.HighWinStart, absPath)
 	rwLockRule.Unlock()
 
 	return nil
 }
 
-// 查询AutoRun注册表项
-func RulesQuerySafeHighAutoRun() (regs map[string]string, err error) {
+// 查询开机自启动注册表项
+func RulesQuerySafeHighWinStart() (regs map[string]string, err error) {
 	regs = make(map[string]string)
 	db := hDbRules
 	tx, err := db.Begin()
 	if err != nil {
-		log.Printf("RulesQuerySafeHighAutoRun: %s\n", err)
+		log.Printf("RulesQuerySafeHighWinStart: %s\n", err)
 		return regs, err
 	}
 
-	sql := fmt.Sprintf("select path, perm from auto_run")
+	sql := fmt.Sprintf("select path from high_winstart")
 	rows, err := db.Query(sql)
 	if err != nil {
-		log.Printf("RulesQuerySafeHighAutoRun(): %s", err)
-		return regs, errors.New("错误:查询AutoRun注册表项失败")
+		log.Printf("RulesQuerySafeHighWinStart(): %s", err)
+		return regs, errors.New("错误:查询开机自启动注册表项失败")
 	}
 	defer rows.Close()
 
-	var file, perm string
+	var file string
 	for rows.Next() {
-		rows.Scan(&file, &perm)
-		regs[file] = perm
+		rows.Scan(&file)
+		regs[file] = ""
 	}
 	rows.Close()
 
 	// 事务提交
 	err = tx.Commit()
 	if err != nil {
-		log.Printf("RulesQuerySafeHighAutoRun(commit transaction): %s\n", err)
+		log.Printf("RulesQuerySafeHighWinStart(commit transaction): %s\n", err)
 		tx.Rollback()
 		return regs, err
 	}
