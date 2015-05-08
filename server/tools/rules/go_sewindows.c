@@ -275,30 +275,6 @@ BOOLEAN C_process_create_thread(WCHAR *user_name, WCHAR *process, WCHAR *dst_pro
 	return ret;
 }
 
-
-BOOLEAN C_reg_read_key(WCHAR *user_name, WCHAR *process, WCHAR *reg_path){
-	BOOLEAN ret = FALSE;
-	char *uname = NULL;
-	char *proc  = NULL;
-	char *fpath = NULL;
-	
-	uname = WcharToChar(user_name);
-	proc = WcharToChar(process);
-	fpath = WcharToChar(reg_path);
-	
-	ret = Go_reg_read_key(uname, proc, fpath);
-	if(uname != NULL){
-		free(uname);	
-	}
-	if(proc != NULL){
-		free(proc);	
-	}
-	if(fpath != NULL){
-		free(fpath);	
-	}
-	return ret;
-}
-
 BOOLEAN C_service_create(WCHAR *user_name, WCHAR *process, WCHAR *service_name, WCHAR *bin_path){
 	BOOLEAN ret = FALSE;
 	char *uname = NULL;
@@ -447,13 +423,12 @@ BOOLEAN C_SewinRegOps(){
 	ops.dir_unlink  = C_dir_unlink;
 	ops.dir_rename  = C_dir_rename;	
 	
-	ops.process_create_thread  = C_process_create_thread;	
+	ops.process_create_thread  = C_process_create_thread;
+	ops.process_kill  = C_process_kill;
 	
 	ops.disk_read   = C_disk_read;
 	ops.disk_write  = C_disk_write;
 	ops.disk_format = C_disk_format;
-	
-	ops.reg_read_key   = C_reg_read_key;
 	
 	ops.service_create = C_service_create;
 	ops.service_delete = C_service_delete;

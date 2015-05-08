@@ -95,7 +95,7 @@
       Response:{"Status":1,"Errmsg":"查询:系统日志数量成功","Count":10}
 
       -- 获取日志
-      Request : http://127.0.0.1:8080/log/sysquery?UserTokey="f5ab1c6a"&data={"KeyWord":"查询:系统日志","TimeStart":"2015-01-01 12:12:12","TimeStop":"2015-06-01 12:12:12"}
+      Request : http://127.0.0.1:8080/log/sysquery?UserTokey="f5ab1c6a"&data={"KeyWord":"查询","TimeStart":"2015-01-01 12:12:12","TimeStop":"2015-06-01 12:12:12","Start":0,"Length":10}
       Response:{"Status":1,"Errmsg":"查询:系统日志成功","LogArray":[
 	{"Uname":"Admin","Op":"查询:系统日志","Info":"{\"KeyWord\":\"\",\"TimeStart\":\"2015-01-01 12:12:12\",\"TimeStop\":\"2015-06-01 12:12:12\"}","Result":"成功","Time":"2015-05-03 01:13:06"},
 	{"Uname":"Admin","Op":"查询:系统日志","Info":"{\"KeyWord\":\"登录\",\"TimeStart\":\"2015-01-01 12:12:12\",\"TimeStop\":\"2015-06-01 12:12:12\"}","Result":"成功","Time":"2015-05-02 15:38:57"},
@@ -109,5 +109,5 @@
       Response:{"Status":1,"Errmsg":"查询:安全日志数量成功","Count":10}
 
       -- 获取日志
-      Request : http://127.0.0.1:8080/log/eventquery?UserTokey="f5ab1c6a"&data={"KeyWord":"查询:系统日志","TimeStart":"2015-01-01 12:12:12","TimeStop":"2015-06-01 12:12:12"}
+      Request : http://127.0.0.1:8080/log/eventquery?UserTokey="f5ab1c6a"&data={"KeyWord":"","TimeStart":"2015-01-01 12:12:12","TimeStop":"2015-06-01 12:12:12","Start":0,"Length":10}
       Response:{{"Status":1,"Errmsg":"查询:安全日志成功","LogArray":null}

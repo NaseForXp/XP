@@ -105,7 +105,7 @@ func LogWriteCacheToDbExe() (err error) {
 	}
 
 	for _, sql := range logCacheWrite {
-		fmt.Println(sql)
+		//fmt.Println(sql)
 		_, err = tx.Exec(sql)
 		if err != nil {
 			log.Printf("LogWriteCacheToDbExe(user): %s, %s\n", err, sql)
@@ -335,7 +335,7 @@ func IsTimeRangeRight(timeStart string, timeEnd string) bool {
 }
 
 // 查询系统日志
-func LogQuerySys(KeyWord, TimeStart, TimeStop string) (resArray []LogSysQueryRes, err error) {
+func LogQuerySys(KeyWord, TimeStart, TimeStop string, Start, Length int) (resArray []LogSysQueryRes, err error) {
 	if IsTimeRangeRight(TimeStart, TimeStop) == false {
 		return resArray, errors.New("错误:查询时间格式不正确:[" + TimeStart + "~" + TimeStop + "]")
 	}
@@ -354,9 +354,8 @@ func LogQuerySys(KeyWord, TimeStart, TimeStop string) (resArray []LogSysQueryRes
 		"Op like '%" + KeyWord + "%' or " +
 		"Info like '%" + KeyWord + "%' or " +
 		"Result like '%" + KeyWord + "%' ) " +
-		"order by Id desc"
+		fmt.Sprintf("order by Id desc limit %d, %d ", Start, Length)
 
-	fmt.Println(sql)
 	rows, err := db.Query(sql)
 	if err != nil {
 		log.Printf("LogQuerySys(): %s", err)
@@ -383,7 +382,7 @@ func LogQuerySys(KeyWord, TimeStart, TimeStop string) (resArray []LogSysQueryRes
 }
 
 // 查询安全日志
-func LogQueryEvent(KeyWord, TimeStart, TimeStop string) (resArray []LogEventQueryRes, err error) {
+func LogQueryEvent(KeyWord, TimeStart, TimeStop string, Start, Length int) (resArray []LogEventQueryRes, err error) {
 	if IsTimeRangeRight(TimeStart, TimeStop) == false {
 		return resArray, errors.New("错误:查询时间格式不正确:[" + TimeStart + "~" + TimeStop + "]")
 	}
@@ -405,7 +404,7 @@ func LogQueryEvent(KeyWord, TimeStart, TimeStop string) (resArray []LogEventQuer
 		"Obj like '%" + KeyWord + "%' or " +
 		"Op like '%" + KeyWord + "%' or " +
 		"Ret like '%" + KeyWord + "%' ) " +
-		"order by Id desc"
+		fmt.Sprintf("order by Id desc limit %d, %d ", Start, Length)
 
 	rows, err := db.Query(sql)
 	if err != nil {

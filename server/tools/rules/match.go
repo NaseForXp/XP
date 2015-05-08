@@ -12,7 +12,6 @@ package rules
 import "C"
 import (
 	"errors"
-	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -197,24 +196,6 @@ func Go_process_create_thread(user_name, process, file_path *C.char) C.BOOLEAN {
 	fpath = decoder.ConvertString(fpath)
 
 	bret := RuleMatchProcessInject(uname, proc, fpath)
-	if bret {
-		return C.TRUE
-	}
-	return C.FALSE
-}
-
-//export Go_reg_read_key
-func Go_reg_read_key(user_name, process, reg_path *C.char) C.BOOLEAN {
-	decoder := mahonia.NewDecoder("GBK")
-	uname := C.GoString(user_name)
-	proc := C.GoString(process)
-	fpath := C.GoString(reg_path)
-
-	uname = decoder.ConvertString(uname)
-	proc = decoder.ConvertString(proc)
-	fpath = decoder.ConvertString(fpath)
-
-	bret := RuleMatchRegRead(uname, proc, fpath)
 	if bret {
 		return C.TRUE
 	}
@@ -455,9 +436,7 @@ func RuleMatchFileRead(uname, proc, file string) bool {
 	// 自动运行
 	if hMemRules.SafeHighCfg.AutoRun == 1 {
 		// 功能开启
-
 		if strings.Index(file, "autorun.inf") > 0 {
-			fmt.Println(strings.Index(file, "autorun.inf"))
 			if hMemRules.SafeHighCfg.Mode == 0 {
 				xplog.LogInsertEvent("增强防护-防止自动运行", "监视模式", uname, proc, file, "自动运行", "拒绝")
 				return true
@@ -868,7 +847,7 @@ func RuleMatchServiceAdd(uname, process, service_name, binPath string) bool {
 	rwLockRule.RLock()
 	defer rwLockRule.RUnlock()
 
-	logdst := "[]" + service_name + "]" + binPath
+	logdst := "[" + service_name + "]" + binPath
 
 	// 白名单放行
 	_, ok := hMemRules.White[process]
@@ -906,7 +885,7 @@ func RuleMatchDriveLoad(uname, process, service_name, binPath string) bool {
 	rwLockRule.RLock()
 	defer rwLockRule.RUnlock()
 
-	logdst := "[]" + service_name + "]" + binPath
+	logdst := "[" + service_name + "]" + binPath
 
 	// 白名单放行
 	_, ok := hMemRules.White[process]
@@ -931,36 +910,6 @@ func RuleMatchDriveLoad(uname, process, service_name, binPath string) bool {
 		} else {
 			xplog.LogInsertEvent("增强防护-防止驱动程序被加载", "防护模式", uname, process, logdst, "驱动加载", "拒绝")
 			return false
-		}
-	}
-	return true
-}
-
-// 规则匹配 - 自动运行
-func RuleMatchRegRead(uname, process, reg_path string) bool {
-	process = strings.ToUpper(process)
-	reg_path = strings.ToUpper(reg_path)
-
-	rwLockRule.RLock()
-	defer rwLockRule.RUnlock()
-	/*
-		fmt.Println("RuleMatchRegRead", uname, process, reg_path)
-		fmt.Println("Mode:", hMemRules.SafeHighCfg.Mode)
-		fmt.Println("Winproc:", hMemRules.SafeHighCfg.AutoRun)
-		fmt.Println(hMemRules.SafeHighCfg)
-	*/
-	// 防止自动运行
-	if hMemRules.SafeHighCfg.LoadSys == 1 {
-		_, ok := hMemRules.AutoRunReg[reg_path]
-		if ok {
-			// 功能开启
-			if hMemRules.SafeHighCfg.Mode == 0 {
-				xplog.LogInsertEvent("增强防护-防止自动运行", "监视模式", uname, process, reg_path, "自动运行", "拒绝")
-				return true
-			} else {
-				xplog.LogInsertEvent("增强防护-防止自动运行", "防护模式", uname, process, reg_path, "自动运行", "拒绝")
-				return false
-			}
 		}
 	}
 	return true

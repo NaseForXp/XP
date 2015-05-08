@@ -30,6 +30,6 @@ func main() {
 		rules.RulesRelease()
 		return
 	}
-	rules.RulesMemPrint()
+
 	beego.Run()
 }

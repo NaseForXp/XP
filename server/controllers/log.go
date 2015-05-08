@@ -21,6 +21,8 @@ type LogQuerySysRequest struct {
 	KeyWord   string // 关键词
 	TimeStart string // 起始时间
 	TimeStop  string // 结束时间
+	Start     int    // 日志起始位置
+	Length    int    // 日志条数
 }
 
 // 系统日志 - 查询 - 响应
@@ -35,6 +37,8 @@ type LogQueryEventRequest struct {
 	KeyWord   string // 关键词
 	TimeStart string // 起始时间
 	TimeStop  string // 结束时间
+	Start     int    // 日志起始位置
+	Length    int    // 日志条数
 }
 
 // 安全日志 - 查询 - 响应
@@ -156,7 +160,7 @@ func (c *LogController) LogSysQuery() {
 			res.Errmsg = "错误:参数格式错误" + data
 		} else {
 			//正常
-			array, err := xplog.LogQuerySys(req.KeyWord, req.TimeStart, req.TimeStop)
+			array, err := xplog.LogQuerySys(req.KeyWord, req.TimeStart, req.TimeStop, req.Start, req.Length)
 			if err != nil {
 				res.Status = 2
 				res.Errmsg = err.Error()
@@ -209,7 +213,7 @@ func (c *LogController) LogEventQuery() {
 			res.Errmsg = "错误:参数格式错误" + data
 		} else {
 			//正常
-			array, err := xplog.LogQueryEvent(req.KeyWord, req.TimeStart, req.TimeStop)
+			array, err := xplog.LogQueryEvent(req.KeyWord, req.TimeStart, req.TimeStop, req.Start, req.Length)
 			if err != nil {
 				res.Status = 2
 				res.Errmsg = err.Error()
