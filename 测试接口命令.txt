@@ -78,12 +78,12 @@
 
    8、账户安全
       -- 设置
-      Request : http://127.0.0.1:8080/account/set?UserTokey="f5ab1c6a"&data={"Mode":0,"SafeLev":0,"PwdComplex":0,"PwdMinLen":0,"PwdUsedMin":0,"PwdUsedMax":0,"PwdOldNum":0,"AccountTimes":0,"AccountMinute":0}
+      Request : http://127.0.0.1:8080/account/set?UserTokey="f5ab1c6a"&data={"Mode":0,"SafeLev":0,"PasswordComplexity":0,"MinimumPasswordLength":0,"MinimumPasswordAge":0,"MaximumPasswordAge":42,"PasswordHistorySize":0,"LockoutBadCount":0,"LockoutDuration":0}
       Response:{"Status":1,"Errmsg":"账户安全设置成功"}
 
       -- 获取设置
       Request : http://127.0.0.1:8080/account/get?UserTokey="f5ab1c6a"
-      Response:{"Status":1,"Errmsg":"获取账户安全设置成功","Mode":0,"SafeLev":0,"PwdComplex":0,"PwdMinLen":0,"PwdUsedMin":0,"PwdUsedMax":0,"PwdOldNum":0,"AccountTimes":0,"AccountMinute":0}
+      Response:{"Status":1,"Errmsg":"获取账户安全设置成功","Mode":0,"SafeLev":0,"PasswordComplexity":0,"MinimumPasswordLength":0,"MinimumPasswordAge":0,"MaximumPasswordAge":42,"PasswordHistorySize":0,"LockoutBadCount":0,"LockoutDuration":0}
 
       -- 导出
       Request : http://127.0.0.1:8080/account/save?UserTokey="f5ab1c6a"

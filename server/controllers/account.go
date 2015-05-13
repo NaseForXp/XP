@@ -19,15 +19,15 @@ func (c *AccountController) Get() {
 
 // 账户安全 - 设置 - 请求
 type AccountSetRequest struct {
-	Mode          int // 模式：0:关闭 1:开启
-	SafeLev       int // 账户策略设置 0:自定义 1:低级 2:中级 3:高级
-	PwdComplex    int // 密码复杂度  0:关闭 1:开启
-	PwdMinLen     int // 密码最小长度(字符个数)
-	PwdUsedMin    int // 最短使用期限(天)
-	PwdUsedMax    int // 最长使用期限(天)
-	PwdOldNum     int // 强制密码历史次数(次)
-	AccountTimes  int // 账户锁定次数(无效登录次数)
-	AccountMinute int // 账户锁定时长(分钟)
+	Mode                  int // 模式：0:关闭 1:开启
+	SafeLev               int // 账户策略设置 0:自定义 1:低级 2:中级 3:高级
+	PasswordComplexity    int // 密码复杂度  0:关闭 1:开启
+	MinimumPasswordLength int // 密码最小长度(字符个数)
+	MinimumPasswordAge    int // 最短使用期限(天)
+	MaximumPasswordAge    int // 最长使用期限(天)
+	PasswordHistorySize   int // 强制密码历史次数(次)
+	LockoutBadCount       int // 账户锁定次数(无效登录次数)
+	LockoutDuration       int // 账户锁定时长(分钟)
 }
 
 // 账户安全 - 设置 - 响应
@@ -38,17 +38,17 @@ type AccountSetResponse struct {
 
 // 账户安全 - 获取设置 - 响应
 type AccountGetResponse struct {
-	Status        int    // 1:成功 其他:失败
-	Errmsg        string // 错误原因
-	Mode          int    // 模式：0:关闭 1:开启
-	SafeLev       int    // 账户策略设置 0:自定义 1:低级 2:中级 3:高级
-	PwdComplex    int    // 密码复杂度  0:关闭 1:开启
-	PwdMinLen     int    // 密码最小长度(字符个数)
-	PwdUsedMin    int    // 最短使用期限(天)
-	PwdUsedMax    int    // 最长使用期限(天)
-	PwdOldNum     int    // 强制密码历史次数(次)
-	AccountTimes  int    // 账户锁定次数(无效登录次数)
-	AccountMinute int    // 账户锁定时长(分钟)
+	Status                int    // 1:成功 其他:失败
+	Errmsg                string // 错误原因
+	Mode                  int    // 模式：0:关闭 1:开启
+	SafeLev               int    // 账户策略设置 0:自定义 1:低级 2:中级 3:高级
+	PasswordComplexity    int    // 密码复杂度  0:关闭 1:开启
+	MinimumPasswordLength int    // 密码最小长度(字符个数)
+	MinimumPasswordAge    int    // 最短使用期限(天)
+	MaximumPasswordAge    int    // 最长使用期限(天)
+	PasswordHistorySize   int    // 强制密码历史次数(次)
+	LockoutBadCount       int    // 账户锁定次数(无效登录次数)
+	LockoutDuration       int    // 账户锁定时长(分钟)
 }
 
 // 账户安全 - 导出 - ini配置文件的内容
@@ -86,15 +86,16 @@ func (c *AccountController) AccountSet() {
 		} else {
 			//正常
 			var account rules.AccountConfig
+
 			account.Mode = req.Mode
 			account.SafeLev = req.SafeLev
-			account.PwdComplex = req.PwdComplex
-			account.PwdMinLen = req.PwdMinLen
-			account.PwdUsedMin = req.PwdUsedMin
-			account.PwdUsedMax = req.PwdUsedMax
-			account.PwdOldNum = req.PwdOldNum
-			account.AccountTimes = req.AccountTimes
-			account.AccountMinute = req.AccountMinute
+			account.PasswordComplexity = req.PasswordComplexity
+			account.MinimumPasswordLength = req.MinimumPasswordLength
+			account.MinimumPasswordAge = req.MinimumPasswordAge
+			account.MaximumPasswordAge = req.MaximumPasswordAge
+			account.PasswordHistorySize = req.PasswordHistorySize
+			account.LockoutBadCount = req.LockoutBadCount
+			account.LockoutDuration = req.LockoutDuration
 
 			err := rules.RulesAccountSet(account)
 			if err != nil {
@@ -144,13 +145,13 @@ func (c *AccountController) AccountGet() {
 
 			res.Mode = account.Mode
 			res.SafeLev = account.SafeLev
-			res.PwdComplex = account.PwdComplex
-			res.PwdMinLen = account.PwdMinLen
-			res.PwdUsedMin = account.PwdUsedMin
-			res.PwdUsedMax = account.PwdUsedMax
-			res.PwdOldNum = account.PwdOldNum
-			res.AccountTimes = account.AccountTimes
-			res.AccountMinute = account.AccountMinute
+			res.PasswordComplexity = account.PasswordComplexity
+			res.MinimumPasswordLength = account.MinimumPasswordLength
+			res.MinimumPasswordAge = account.MinimumPasswordAge
+			res.MaximumPasswordAge = account.MaximumPasswordAge
+			res.PasswordHistorySize = account.PasswordHistorySize
+			res.LockoutBadCount = account.LockoutBadCount
+			res.LockoutDuration = account.LockoutDuration
 		}
 	}
 End:

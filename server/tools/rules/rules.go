@@ -1,5 +1,12 @@
 package rules
 
+/*
+#include <string.h>
+#include <stdlib.h>
+#include "go_account.h"
+*/
+import "C"
+
 import (
 	"crypto/md5"
 	"database/sql"
@@ -47,15 +54,15 @@ type SafeHighConfig struct {
 
 // 账户安全 - 配置
 type AccountConfig struct {
-	Mode          int // 模式：0:关闭 1:开启
-	SafeLev       int // 账户策略设置 0:自定义 1:低级 2:中级 3:高级
-	PwdComplex    int // 密码复杂度  0:关闭 1:开启
-	PwdMinLen     int // 密码最小长度(字符个数)
-	PwdUsedMin    int // 最短使用期限(天)
-	PwdUsedMax    int // 最长使用期限(天)
-	PwdOldNum     int // 强制密码历史次数(次)
-	AccountTimes  int // 账户锁定次数(无效登录次数)
-	AccountMinute int // 账户锁定时长(分钟)
+	Mode                  int // 模式：0:关闭 1:开启
+	SafeLev               int // 账户策略设置 0:自定义 1:低级 2:中级 3:高级
+	PasswordComplexity    int // 密码复杂度  0:关闭 1:开启
+	MinimumPasswordLength int // 密码最小长度(字符个数)
+	MinimumPasswordAge    int // 最短使用期限(天)
+	MaximumPasswordAge    int // 最长使用期限(天)
+	PasswordHistorySize   int // 强制密码历史次数(次)
+	LockoutBadCount       int // 账户锁定次数(无效登录次数)
+	LockoutDuration       int // 账户锁定时长(分钟)
 }
 
 // 模块初始化
@@ -1216,7 +1223,7 @@ func RulesAccountGet() (cfg AccountConfig, err error) {
 		return cfg, err
 	}
 
-	sql := fmt.Sprintf("select Mode, SafeLev, PwdComplex, PwdMinLen, PwdUsedMin, PwdUsedMax, PwdOldNum, AccountTimes, AccountMinute from safe_account where id = 1")
+	sql := fmt.Sprintf("select Mode, SafeLev from safe_account where id = 1")
 	rows, err := db.Query(sql)
 	if err != nil {
 		log.Printf("RulesAccountGet(): %s", err)
@@ -1225,7 +1232,7 @@ func RulesAccountGet() (cfg AccountConfig, err error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		rows.Scan(&cfg.Mode, &cfg.SafeLev, &cfg.PwdComplex, &cfg.PwdMinLen, &cfg.PwdUsedMin, &cfg.PwdUsedMax, &cfg.PwdOldNum, &cfg.AccountTimes, &cfg.AccountMinute)
+		rows.Scan(&cfg.Mode, &cfg.SafeLev)
 		break
 	}
 	rows.Close()
@@ -1237,6 +1244,22 @@ func RulesAccountGet() (cfg AccountConfig, err error) {
 		tx.Rollback()
 		return cfg, err
 	}
+
+	// 获取配置
+	var set C.security_set
+	ret := C.get_account_security_set(&set)
+	if ret != 1 {
+		return cfg, errors.New("错误:获取账户安全配置失败")
+	}
+
+	cfg.PasswordComplexity = int(set.PasswordComplexity)
+	cfg.MinimumPasswordLength = int(set.MinimumPasswordLength)
+	cfg.MinimumPasswordAge = int(set.MinimumPasswordAge)
+	cfg.MaximumPasswordAge = int(set.MaximumPasswordAge)
+	cfg.PasswordHistorySize = int(set.PasswordHistorySize)
+	cfg.LockoutBadCount = int(set.LockoutBadCount)
+	cfg.LockoutDuration = int(set.LockoutDuration)
+
 	return cfg, nil
 }
 
@@ -1249,7 +1272,7 @@ func RulesAccountSet(cfg AccountConfig) (err error) {
 		return err
 	}
 
-	sql := fmt.Sprintf("update safe_account set Mode = %d, SafeLev = %d, PwdComplex = %d, PwdMinLen = %d, PwdUsedMin = %d, PwdUsedMax = %d, PwdOldNum = %d, AccountTimes = %d, AccountMinute = %d where id = 1", cfg.Mode, cfg.SafeLev, cfg.PwdComplex, cfg.PwdMinLen, cfg.PwdUsedMin, cfg.PwdUsedMax, cfg.PwdOldNum, cfg.AccountTimes, cfg.AccountMinute)
+	sql := fmt.Sprintf("update safe_account set Mode = %d, SafeLev = %d where id = 1", cfg.Mode, cfg.SafeLev)
 	_, err = tx.Exec(sql)
 	if err != nil {
 		log.Printf("RulesAccountSet(): %s", err)
@@ -1265,35 +1288,25 @@ func RulesAccountSet(cfg AccountConfig) (err error) {
 		return err
 	}
 
-	// 更新系统配置
+	// 修改配置
+	var set C.security_set
+	set.PasswordComplexity = (C.int)(cfg.PasswordComplexity)
+	set.MinimumPasswordLength = (C.int)(cfg.MinimumPasswordLength)
+	set.MinimumPasswordAge = (C.int)(cfg.MinimumPasswordAge)
+	set.MaximumPasswordAge = (C.int)(cfg.MaximumPasswordAge)
+	set.PasswordHistorySize = (C.int)(cfg.PasswordHistorySize)
+	set.LockoutBadCount = (C.int)(cfg.LockoutBadCount)
+	set.LockoutDuration = (C.int)(cfg.LockoutDuration)
+
+	ret := C.set_account_security_set(&set)
+	if ret != 1 {
+		return errors.New("错误:设置账户安全配置失败")
+	}
 	return nil
 }
 
 // 导出账户安全配置 ini
 func RulesAccountSave() (saveString string, err error) {
-	acc, err := RulesAccountGet()
-	if err != nil {
-		return saveString, err
-	}
-
-	saveString = ""
-	saveString += "### 配置文件\n\n"
-
-	saveString += "[INFO]\n"
-	saveString += "Name = Account\n"
-	saveString += "\n"
-
-	saveString += "[CONFIG]\n"
-	saveString += "Mode = " + string(acc.Mode) + "\n"
-	saveString += "SafeLev = " + string(acc.SafeLev) + "\n"
-	saveString += "PwdComplex = " + string(acc.PwdComplex) + "\n"
-	saveString += "PwdMinLen = " + string(acc.PwdMinLen) + "\n"
-	saveString += "PwdUsedMin = " + string(acc.PwdUsedMin) + "\n"
-	saveString += "PwdUsedMax = " + string(acc.PwdUsedMax) + "\n"
-	saveString += "PwdOldNum = " + string(acc.PwdOldNum) + "\n"
-	saveString += "AccountTimes = " + string(acc.AccountTimes) + "\n"
-	saveString += "AccountMinute = " + string(acc.AccountMinute) + "\n"
-	saveString += "\n"
 
 	return saveString, nil
 }

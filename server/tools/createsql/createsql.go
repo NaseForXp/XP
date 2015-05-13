@@ -173,14 +173,7 @@ func CreateTableSafeAccount(db *sql.DB) (err error) {
 	sql = `create table if not exists safe_account (
 			id integer not null primary key, 
 			Mode          integer default 0,
-			SafeLev       integer default 0,
-			PwdComplex    integer default 0,
-			PwdMinLen     integer default 0,
-			PwdUsedMin    integer default 0,
-			PwdUsedMax    integer default 0,
-			PwdOldNum     integer default 0,
-			AccountTimes  integer default 0,
-			AccountMinute integer default 0
+			SafeLev       integer default 0
 		);`
 	_, err = tx.Exec(sql)
 	if err != nil {
@@ -189,8 +182,8 @@ func CreateTableSafeAccount(db *sql.DB) (err error) {
 		return err
 	}
 
-	sql = `insert into safe_account (id, SafeLev, PwdComplex, PwdMinLen, PwdUsedMin, PwdUsedMax, PwdOldNum, AccountTimes, AccountMinute) values 
-		(1, 0, 0, 0, 0, 0, 0, 0, 0);`
+	sql = `insert into safe_account (id, Mode, SafeLev) values 
+		(1, 0, 0);`
 	_, err = tx.Exec(sql)
 	if err != nil {
 		log.Printf("InsertTable(user): %s, %s\n", err, sql)
