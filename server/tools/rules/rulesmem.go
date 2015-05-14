@@ -151,6 +151,14 @@ func RulesMemInit() (err error) {
 	return err
 }
 
+func RulesMemGetHomeMode() (baseMode, highMode int) {
+	rwLockRule.RLock()
+	baseMode = hMemRules.SafeBaseCfg.Mode
+	highMode = hMemRules.SafeHighCfg.Mode
+	rwLockRule.RUnlock()
+	return baseMode, highMode
+}
+
 func RulesMemPrint() {
 	fmt.Println("SafeBaseCfg:", hMemRules.SafeBaseCfg)
 	fmt.Println("SafeHighCfg:", hMemRules.SafeHighCfg)

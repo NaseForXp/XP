@@ -665,7 +665,7 @@ func RuleMatchFileRename(uname, proc, file, new_file string) bool {
 	// exe文件
 	lens := len(new_file)
 	if lens > 4 {
-		if file[lens-4:] == ".exe" {
+		if new_file[lens-4:] == ".exe" {
 			if hMemRules.SafeHighCfg.Mode == 0 {
 				xplog.LogInsertEvent("增强防护-禁止创建.exe文件", "监视模式", uname, proc, file+"->"+new_file, "移动文件", "拒绝")
 				return true

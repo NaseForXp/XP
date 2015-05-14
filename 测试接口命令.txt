@@ -102,7 +102,6 @@
 	{"Uname":"Admin","Op":"查询:系统日志","Info":"{\"KeyWord\":\"系统日志\",\"TimeStart\":\"2015-01-01 12:12:12\",\"TimeStop\":\"2015-06-01 12:12:12\"}","Result":"成功","Time":"2015-05-02 15:37:36"},
 	]}
 
-
    10、日志 - 安全日志
       -- 获取数量
       Request : http://127.0.0.1:8080/log/eventtotle?UserTokey="f5ab1c6a"
@@ -111,3 +110,8 @@
       -- 获取日志
       Request : http://127.0.0.1:8080/log/eventquery?UserTokey="f5ab1c6a"&data={"KeyWord":"","TimeStart":"2015-01-01 12:12:12","TimeStop":"2015-06-01 12:12:12","Start":0,"Length":10}
       Response:{{"Status":1,"Errmsg":"查询:安全日志成功","LogArray":null}
+
+   11、日志 - 查询首页统计信息
+      -- 获取数量
+      Request : http://127.0.0.1:8080/log/homecount?UserTokey="f5ab1c6a"
+      Response:{"Status":1,"Errmsg":"查询:首页统计信息成功","BaseMode":1,"HighMode":1,"Totle":70,"White":0,"Black":0,"BaseWinDir":65,"BaseWinStart":2,"BaseWinFormat":0,"BaseWinProc":0,"BaseWinService":0,"HighAddService":0,"HighAutoRun":0,"HighAddStart":0,"HighReadWrite":0,"HighCreateExe":0,"HighLoadSys":0,"HighProcInject":0}

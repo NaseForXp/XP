@@ -52,6 +52,25 @@ type LogEventQueryRes struct {
 	Time   string // 时间
 }
 
+// 客户端首页统计信息 - 总量
+type LogHomeCount struct {
+	Totle          int // 总数
+	White          int // 白名单事件数量
+	Black          int // 黑名单事件数量
+	BaseWinDir     int // 基本防护-系统文件及目录保护
+	BaseWinStart   int // 基本防护-系统启动文件保护
+	BaseWinFormat  int // 基本防护-防止格式化系统磁盘
+	BaseWinProc    int // 基本防护-防止系统关键进程被杀死
+	BaseWinService int // 基本防护-防止篡改系统服务
+	HighAddService int // 增强防护-防止服务被添加
+	HighAutoRun    int // 增强防护-防止自动运行
+	HighAddStart   int // 增强防护-防止开机自启动
+	HighReadWrite  int // 增强防护-防止磁盘被直接读写
+	HighCreateExe  int // 增强防护-禁止创建.exe文件
+	HighLoadSys    int // 增强防护-防止驱动程序被加载
+	HighProcInject int // 增强防护-防止进程被注入
+}
+
 func LogInit() (err error) {
 	err = LogConnectSqlite()
 	if err != nil {
@@ -200,7 +219,7 @@ func LogCreateTable() (err error) {
 		);`
 	_, err = tx.Exec(sql)
 	if err != nil {
-		log.Printf("CreateLogTable(user): %s, %s\n", err, sql)
+		log.Printf("CreateLogTable(log_sys): %s, %s\n", err, sql)
 		tx.Rollback()
 		return err
 	}
@@ -219,7 +238,34 @@ func LogCreateTable() (err error) {
 		);`
 	_, err = tx.Exec(sql)
 	if err != nil {
-		log.Printf("CreateLogTable(user): %s, %s\n", err, sql)
+		log.Printf("CreateLogTable(log_event): %s, %s\n", err, sql)
+		tx.Rollback()
+		return err
+	}
+
+	// 统计表
+	sql = `create table if not exists log_count (
+			Id integer not null primary key, 
+			Time date unique,
+			Totle integer default 0,
+			White integer default 0,
+			Black integer default 0,
+			BaseWinDir integer default 0,
+			BaseWinStart integer default 0,
+			BaseWinFormat integer default 0,
+			BaseWinProc integer default 0,
+			BaseWinService integer default 0,
+			HighAddService integer default 0,
+			HighAutoRun integer default 0,
+			HighAddStart integer default 0,
+			HighReadWrite integer default 0,
+			HighCreateExe integer default 0,
+			HighLoadSys integer default 0,
+			HighProcInject integer default 0
+		);`
+	_, err = tx.Exec(sql)
+	if err != nil {
+		log.Printf("CreateLogTable(log_count): %s, %s\n", err, sql)
 		tx.Rollback()
 		return err
 	}
@@ -429,6 +475,107 @@ func LogQueryEvent(KeyWord, TimeStart, TimeStop string, Start, Length int) (resA
 	}
 
 	return resArray, nil
+}
+
+/*
+sql = `create table if not exists log_count (
+			Id integer not null primary key,
+			Time date unique,
+			Totle integer default 0,
+			White integer default 0,
+			Black integer default 0,
+			BaseWinDir     integer default 0,
+			BaseWinStart   integer default 0,
+			BaseWinFormat  integer default 0,
+			BaseWinProc    integer default 0,
+			BaseWinService integer default 0,
+			HighAddService integer default 0,
+			HighAutoRun    integer default 0,
+			HighAddStart   integer default 0,
+			HighReadWrite  integer default 0,
+			HighCreateExe  integer default 0,
+			HighLoadSys    integer default 0,
+			HighProcInject integer default 0
+*/
+// 客户端首页 - 查询统计信息 - 总量
+func LogQueryHomeCount() (homeCnt LogHomeCount, err error) {
+	db := hDBLog
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("LogQueryCount:DB.Begin(): %s\n", err)
+		return homeCnt, err
+	}
+
+	// 查询总数totle
+	sql := "select count(*) from log_event"
+	rows, err := db.Query(sql)
+	if err != nil {
+		log.Printf("LogQueryCount(): %s", err)
+		return homeCnt, errors.New("错误:查询首页统计信息失败")
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		rows.Scan(&homeCnt.Totle)
+		break
+	}
+	rows.Close()
+
+	// 查询单项
+	sql = "select Module, count(*) as cnt from log_event group by Module"
+	rows, err = db.Query(sql)
+	if err != nil {
+		log.Printf("LogQueryCount(): %s", err)
+		return homeCnt, errors.New("错误:查询首页统计信息失败")
+	}
+	defer rows.Close()
+
+	var name string
+	var cnt int
+	for rows.Next() {
+		rows.Scan(&name, &cnt)
+		switch name {
+		case "白名单":
+			homeCnt.White = cnt
+		case "黑名单":
+			homeCnt.Black = cnt
+		case "基本防护-系统文件及目录保护":
+			homeCnt.BaseWinDir = cnt
+		case "基本防护-系统启动文件保护":
+			homeCnt.BaseWinStart = cnt
+		case "基本防护-防止格式化系统磁盘":
+			homeCnt.BaseWinFormat = cnt
+		case "基本防护-防止系统关键进程被杀死":
+			homeCnt.BaseWinProc = cnt
+		case "基本防护-防止篡改系统服务":
+			homeCnt.BaseWinService = cnt
+		case "增强防护-防止服务被添加":
+			homeCnt.HighAddService = cnt
+		case "增强防护-防止自动运行":
+			homeCnt.HighAutoRun = cnt
+		case "增强防护-防止开机自启动":
+			homeCnt.HighAddStart = cnt
+		case "增强防护-防止磁盘被直接读写":
+			homeCnt.HighReadWrite = cnt
+		case "增强防护-禁止创建.exe文件":
+			homeCnt.HighCreateExe = cnt
+		case "增强防护-防止驱动程序被加载":
+			homeCnt.HighLoadSys = cnt
+		case "增强防护-防止进程被注入":
+			homeCnt.HighProcInject = cnt
+		}
+	}
+	rows.Close()
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("LogQueryCount(commit transaction): %s\n", err)
+		tx.Rollback()
+		return homeCnt, err
+	}
+
+	return homeCnt, nil
 }
 
 /*

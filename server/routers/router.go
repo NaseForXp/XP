@@ -45,5 +45,7 @@ func init() {
 	beego.Router("/log/sysquery", &controllers.LogController{}, "get,post:LogSysQuery")
 	beego.Router("/log/eventtotle", &controllers.LogController{}, "get,post:LogEventTotle")
 	beego.Router("/log/eventquery", &controllers.LogController{}, "get,post:LogEventQuery")
+	// 获取首页统计信息
+	beego.Router("/log/homecount", &controllers.LogController{}, "get,post:LogHomeCount")
 
 }

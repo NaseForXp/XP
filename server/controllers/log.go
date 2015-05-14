@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"../tools/rules"
 	"../tools/xplog"
 	"github.com/astaxie/beego"
 )
@@ -53,6 +54,29 @@ type LogTotleResponse struct {
 	Status int    // 1:成功 其他:失败
 	Errmsg string // 错误原因
 	Count  int    // 日志数量
+}
+
+// 日志 - 查询首页统计信息 - 响应
+type LogHomeCountResponse struct {
+	Status         int    // 1:成功 其他:失败
+	Errmsg         string // 错误原因
+	BaseMode       int    // 基础防护模式
+	HighMode       int    // 增强防护模式
+	Totle          int    // 总数
+	White          int    // 白名单事件数量
+	Black          int    // 黑名单事件数量
+	BaseWinDir     int    // 基本防护-系统文件及目录保护
+	BaseWinStart   int    // 基本防护-系统启动文件保护
+	BaseWinFormat  int    // 基本防护-防止格式化系统磁盘
+	BaseWinProc    int    // 基本防护-防止系统关键进程被杀死
+	BaseWinService int    // 基本防护-防止篡改系统服务
+	HighAddService int    // 增强防护-防止服务被添加
+	HighAutoRun    int    // 增强防护-防止自动运行
+	HighAddStart   int    // 增强防护-防止开机自启动
+	HighReadWrite  int    // 增强防护-防止磁盘被直接读写
+	HighCreateExe  int    // 增强防护-禁止创建.exe文件
+	HighLoadSys    int    // 增强防护-防止驱动程序被加载
+	HighProcInject int    // 增强防护-防止进程被注入
 }
 
 // 日志 - 查询 - 系统日志数量
@@ -233,6 +257,60 @@ End:
 	}
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", err)
+	c.Data["Log_ret"] = string(jres)
+
+	c.TplNames = "logcontroller/log.tpl"
+}
+
+// 日志 - 查询 - 首页统计信息
+func (c *LogController) LogHomeCount() {
+	var res LogHomeCountResponse
+
+	usertokey := c.GetString("UserTokey")
+
+	fmt.Println("---LogHomeCount")
+	fmt.Println("request :", usertokey)
+
+	if LoginCheckTokeyJson(usertokey) == false {
+		res.Status = 2
+		res.Errmsg = "错误:请登录后操作"
+		goto End
+	} else {
+		//正常
+		homeCnt, err := xplog.LogQueryHomeCount()
+		if err != nil {
+			res.Status = 2
+			res.Errmsg = err.Error()
+		} else {
+			// 成功
+			res.Totle = homeCnt.Totle
+			res.White = homeCnt.White
+			res.Black = homeCnt.Black
+			res.BaseWinDir = homeCnt.BaseWinDir
+			res.BaseWinStart = homeCnt.BaseWinStart
+			res.BaseWinFormat = homeCnt.BaseWinFormat
+			res.BaseWinProc = homeCnt.BaseWinProc
+			res.BaseWinService = homeCnt.BaseWinService
+			res.HighAddService = homeCnt.HighAddService
+			res.HighAutoRun = homeCnt.HighAutoRun
+			res.HighAddStart = homeCnt.HighAddStart
+			res.HighReadWrite = homeCnt.HighReadWrite
+			res.HighCreateExe = homeCnt.HighCreateExe
+			res.HighLoadSys = homeCnt.HighLoadSys
+			res.HighProcInject = homeCnt.HighProcInject
+			res.BaseMode, res.HighMode = rules.RulesMemGetHomeMode()
+			res.Status = 1
+			res.Errmsg = "查询:首页统计信息成功"
+		}
+	}
+End:
+	if res.Status == 1 {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "查询:首页统计信息", "", "成功")
+	} else {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "查询:首页统计信息", "", "失败")
+	}
+	jres, err := json.Marshal(res)
+	fmt.Println("response:", string(jres), err)
 	c.Data["Log_ret"] = string(jres)
 
 	c.TplNames = "logcontroller/log.tpl"
