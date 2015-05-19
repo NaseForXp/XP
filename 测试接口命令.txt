@@ -116,3 +116,12 @@
       --策略导入
       Request : http://127.0.0.1:8080/policy/load?UserTokey="f5ab1c6a"&data={"FileSize":1003,"FileText":"{\"SafeBaseCfg\":{\"Mode\":1,\"WinDir\":1,\"WinStart\":1,\"WinFormat\":1,\"WinProc\":1,\"WinService\":1},\"SafeHighCfg\":{\"Mode\":1,\"AddService\":1,\"AutoRun\":1,\"AddStart\":1,\"ReadWrite\":1,\"CreateExe\":1,\"LoadSys\":1,\"ProcInject\":0},\"AccountCfg\":{\"Mode\":1,\"SafeLev\":2,\"PasswordComplexity\":1,\"MinimumPasswordLength\":3,\"MinimumPasswordAge\":4,\"MaximumPasswordAge\":45,\"PasswordHistorySize\":6,\"LockoutBadCount\":7,\"LockoutDuration\":38},\"White\":[\"c:\\\\\\\\windows\\\\\\\\pchealth\\\\\\\\helpctr\\\\\\\\binaries\\\\\\\\msconfig.exe\"],\"Black\":null,\"WinDir\":[\"C:\\\\\\\\Windows\\\\\\\\\"],\"WinStart\":[\"C:\\\\\\\\boot.ini\",\"C:\\\\\\\\Ntldr\"],\"WinProc\":[\"C:\\\\\\\\Windows\\\\\\\\System32\\\\\\\\csrss.exe\",\"C:\\\\\\\\Windows\\\\\\\\System32\\\\\\\\lsass.exe\",\"C:\\\\\\\\Windows\\\\\\\\System32\\\\\\\\services.exe\",\"C:\\\\\\\\Windows\\\\\\\\System32\\\\\\\\smss.exe\",\"C:\\\\\\\\Windows\\\\\\\\System32\\\\\\\\svchost.exe\",\"C:\\\\\\\\Windows\\\\\\\\System32\\\\\\\\winlogon.exe\"],\"HighWinStart\":[\"HKEY_LOCAL_MACHINE\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Run\",\"HKEY_LOCAL_MACHINE\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\RunOnce\"]}"}
       Response:{"Status":1,"Errmsg":"导入配置成功"}
+
+   13、授权
+      -- 注册
+      Request : http://127.0.0.1:8080/serial/regist?UserTokey="f5ab1c6a"&data={"SerialNo":"MDEwMDIwMTUwNjIwYAL8sOG1A2CTi9oek2Z99BZWtBWp4kNP7wtVfiqeRFI%3d"}
+      Response:{"Status":1,"Errmsg":"注册成功"}
+
+      -- 获取注册信息
+      Request : http://127.0.0.1:8080/serial/getcode?UserTokey="f5ab1c6a"
+      Response:{"Status":1,"Errmsg":"获取授权信息成功","HardCode":"04291F39-C26B2600-C07A9F32","SerialNo":"MDEwMDIwMTUwNjIwYAL8sOG1A2CTi9oek2Z99BZWtBWp4kNP7wtVfiqeRFI=","ValidDate":"2015-06-20"}
