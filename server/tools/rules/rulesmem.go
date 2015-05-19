@@ -15,7 +15,7 @@ type RuleMemHandle struct {
 	WinDir       StringStr      // 受保护的系统目录
 	WinStart     StringStr      // 受保护的系统启动项
 	WinProc      StringInt      // 受保护的系统进程
-	HighWinStart StringStr      // 增强防护 - 开机启动项
+	HighWinStart StringStr      // 增强防护_开机启动项
 	SafeBaseCfg  SafeBaseConfig // 系统防护_基本防护配置
 	SafeHighCfg  SafeHighConfig // 系统防护_增强防护配置
 	AccountCfg   AccountConfig  // 账户安全配置
@@ -130,6 +130,12 @@ func RulesMemInit() (err error) {
 	}
 	rwLockRule.Unlock()
 
+	// 获取账户防护 设置
+	hMemRules.AccountCfg, err = RulesAccountGet()
+	if err != nil {
+		return err
+	}
+
 	// 获取系统防护 - 基本防护 设置
 	hMemRules.SafeBaseCfg, err = RulesSafeBaseGet()
 	if err != nil {
@@ -142,24 +148,20 @@ func RulesMemInit() (err error) {
 		return err
 	}
 
-	// 获取账户防护 设置
-	hMemRules.AccountCfg, err = RulesAccountGet()
-	if err != nil {
-		return err
-	}
-
 	return err
 }
 
 func RulesMemGetHomeMode() (baseMode, highMode int) {
-	rwLockRule.RLock()
+	rwLockRule.Lock()
 	baseMode = hMemRules.SafeBaseCfg.Mode
 	highMode = hMemRules.SafeHighCfg.Mode
-	rwLockRule.RUnlock()
+	rwLockRule.Unlock()
 	return baseMode, highMode
 }
 
 func RulesMemPrint() {
+	rwLockRule.Lock()
+	defer rwLockRule.Unlock()
 	fmt.Println("SafeBaseCfg:", hMemRules.SafeBaseCfg)
 	fmt.Println("SafeHighCfg:", hMemRules.SafeHighCfg)
 	fmt.Println("AccountCfg:", hMemRules.AccountCfg)

@@ -24,7 +24,7 @@ import (
 
 // 全局变量定义
 var (
-	rwLockRule sync.RWMutex                 // 全局读写锁 - 内存中的规则
+	rwLockRule sync.Mutex                   // 全局读写锁 - 内存中的规则
 	hMemRules  RuleMemHandle                // 规则内存句柄
 	configFile string        = "config.ini" // 配置文件相对路径
 	hDbRules   *sql.DB                      // 规则数据库句柄
@@ -670,32 +670,6 @@ func RulesSafeBaseSet(cfg SafeBaseConfig) (err error) {
 	return nil
 }
 
-// 导出系统基本防护配置 ini
-func RulesSafeBaseSave() (saveString string, err error) {
-	base, err := RulesSafeBaseGet()
-	if err != nil {
-		return saveString, err
-	}
-
-	saveString = ""
-	saveString += "### 配置文件\n\n"
-
-	saveString += "[INFO]\n"
-	saveString += "Name = SafeBase\n"
-	saveString += "\n"
-
-	saveString += "[CONFIG]\n"
-	saveString += "Mode = " + string(base.Mode) + "\n"
-	saveString += "WinDir = " + string(base.WinDir) + "\n"
-	saveString += "WinStart = " + string(base.WinStart) + "\n"
-	saveString += "WinFormat = " + string(base.WinFormat) + "\n"
-	saveString += "WinProc = " + string(base.WinProc) + "\n"
-	saveString += "WinService = " + string(base.WinService) + "\n"
-	saveString += "\n"
-
-	return saveString, nil
-}
-
 // 获取系统增强防护配置
 func RulesSafeHighGet() (cfg SafeHighConfig, err error) {
 	db := hDbRules
@@ -766,34 +740,6 @@ func RulesSafeHighSet(cfg SafeHighConfig) (err error) {
 	hMemRules.SafeHighCfg.ProcInject = cfg.ProcInject
 	rwLockRule.Unlock()
 	return nil
-}
-
-// 导出系统增强防护配置 ini
-func RulesSafeHighSave() (saveString string, err error) {
-	base, err := RulesSafeHighGet()
-	if err != nil {
-		return saveString, err
-	}
-
-	saveString = ""
-	saveString += "### 配置文件\n\n"
-
-	saveString += "[INFO]\n"
-	saveString += "Name = SafeHigh\n"
-	saveString += "\n"
-
-	saveString += "[CONFIG]\n"
-	saveString += "Mode = " + string(base.Mode) + "\n"
-	saveString += "AddService = " + string(base.AddService) + "\n"
-	saveString += "AutoRun = " + string(base.AutoRun) + "\n"
-	saveString += "AddStart = " + string(base.AddStart) + "\n"
-	saveString += "ReadWrite = " + string(base.ReadWrite) + "\n"
-	saveString += "CreateExe = " + string(base.CreateExe) + "\n"
-	saveString += "LoadSys = " + string(base.LoadSys) + "\n"
-	saveString += "ProcInject = " + string(base.ProcInject) + "\n"
-	saveString += "\n"
-
-	return saveString, nil
 }
 
 // 添加系统目录及文件 WinDir
@@ -1302,11 +1248,258 @@ func RulesAccountSet(cfg AccountConfig) (err error) {
 	if ret != 1 {
 		return errors.New("错误:设置账户安全配置失败")
 	}
+
+	// 更新内存
+	rwLockRule.Lock()
+	hMemRules.AccountCfg.PasswordComplexity = cfg.PasswordComplexity
+	hMemRules.AccountCfg.MinimumPasswordLength = cfg.MinimumPasswordLength
+	hMemRules.AccountCfg.MinimumPasswordAge = cfg.MinimumPasswordAge
+	hMemRules.AccountCfg.MaximumPasswordAge = cfg.MaximumPasswordAge
+	hMemRules.AccountCfg.PasswordHistorySize = cfg.PasswordHistorySize
+	hMemRules.AccountCfg.LockoutBadCount = cfg.LockoutBadCount
+	hMemRules.AccountCfg.LockoutDuration = cfg.LockoutDuration
+	rwLockRule.Unlock()
 	return nil
 }
 
-// 导出账户安全配置 ini
-func RulesAccountSave() (saveString string, err error) {
+// 策略导出结构体
+type RulesPolicyDumpSt struct {
+	SafeBaseCfg  SafeBaseConfig // 系统防护_基本防护配置
+	SafeHighCfg  SafeHighConfig // 系统防护_增强防护配置
+	AccountCfg   AccountConfig  // 账户安全配置
+	White        []string       // 白名单的程序和目录
+	Black        []string       // 黑名单的程序和目录
+	WinDir       []string       // 受保护的系统目录
+	WinStart     []string       // 受保护的系统启动项
+	WinProc      []string       // 受保护的系统进程
+	HighWinStart []string       // 增强防护_开机启动项
+}
 
-	return saveString, nil
+// 策略导出
+func RulesPolicyDump() (policy RulesPolicyDumpSt, err error) {
+	rwLockRule.Lock()
+	policy.SafeBaseCfg = hMemRules.SafeBaseCfg
+	policy.SafeHighCfg = hMemRules.SafeHighCfg
+	policy.AccountCfg = hMemRules.AccountCfg
+	rwLockRule.Unlock()
+
+	// 获取白名单
+	totCnt, err := RulesGetWhiteTotle()
+	if err != nil {
+		return policy, err
+	}
+
+	if totCnt > 0 {
+		ws, err := RulesQueryWhite(0, totCnt)
+		if err != nil {
+			return policy, err
+		}
+
+		for _, f := range ws {
+			policy.White = append(policy.White, f)
+		}
+	}
+
+	// 获取黑名单
+	totCnt, err = RulesGetBlackTotle()
+	if err != nil {
+		return policy, err
+	}
+
+	if totCnt > 0 {
+		bs, err := RulesQueryBlack(0, totCnt)
+		if err != nil {
+			return policy, err
+		}
+
+		for _, f := range bs {
+			policy.Black = append(policy.Black, f)
+		}
+	}
+
+	// 获取受保护系统目录及文件
+	windir, err := RulesQuerySafeBaseWinDir()
+	if err != nil {
+		return policy, err
+	}
+
+	for f, _ := range windir {
+		policy.WinDir = append(policy.WinDir, f)
+	}
+
+	// 获取受保护系统启动文件
+	winstart, err := RulesQuerySafeBaseWinStart()
+	if err != nil {
+		return policy, err
+	}
+
+	for f, _ := range winstart {
+		policy.WinStart = append(policy.WinStart, f)
+	}
+
+	// 获取受保护系统关键进程
+	winsproc, err := RulesQuerySafeBaseWinProc()
+	if err != nil {
+		return policy, err
+	}
+
+	for _, f := range winsproc {
+		policy.WinProc = append(policy.WinProc, f)
+	}
+
+	// 获取开机启动注册表项
+	startRegs, err := RulesQuerySafeHighWinStart()
+	if err != nil {
+		return policy, err
+	}
+
+	for f, _ := range startRegs {
+		policy.HighWinStart = append(policy.HighWinStart, f)
+	}
+
+	return policy, err
+}
+
+// 策略导入
+func RulesPolicyLoad(policy RulesPolicyDumpSt) (err error) {
+	// 1.暂停保护
+	rwLockRule.Lock()
+	hMemRules.SafeBaseCfg.Mode = 0
+	hMemRules.SafeHighCfg.Mode = 0
+	rwLockRule.Unlock()
+
+	// 2.清空数据库
+	db := hDbRules
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("RulesPolicyLoad: %s\n", err)
+		return err
+	}
+
+	sql := `delete from win_dir;`
+	_, err = tx.Exec(sql)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	sql = `delete from win_start;`
+	_, err = tx.Exec(sql)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	sql = `delete from win_proc;`
+	_, err = tx.Exec(sql)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	sql = `delete from high_winstart;`
+	_, err = tx.Exec(sql)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	sql = `delete from whitelist;`
+	_, err = tx.Exec(sql)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	sql = `delete from blacklist;`
+	_, err = tx.Exec(sql)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// 3.逐条添加规则
+	for _, f := range policy.White {
+		sql = fmt.Sprintf("insert into whitelist (id, path) values 	(null, '%s');", f)
+		_, err = tx.Exec(sql)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	for _, f := range policy.Black {
+		sql = fmt.Sprintf("insert into blacklist (id, path) values 	(null, '%s');", f)
+		_, err = tx.Exec(sql)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	for _, f := range policy.WinDir {
+		sql = fmt.Sprintf("insert into win_dir (id, path, perm) values (null, '%s', 'r');", f)
+		_, err = tx.Exec(sql)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	for _, f := range policy.WinStart {
+		sql = fmt.Sprintf("insert into win_start (id, path, perm) values (null, '%s', 'r');", f)
+		_, err = tx.Exec(sql)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	for _, f := range policy.WinProc {
+		sql = fmt.Sprintf("insert into win_proc (id, path) values (null, '%s')", f)
+		_, err = tx.Exec(sql)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	for _, f := range policy.HighWinStart {
+		sql = fmt.Sprintf("insert into high_winstart (id, path) values (null, '%s')", f)
+		_, err = tx.Exec(sql)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("RulesPolicyLoad(commit transaction): %s\n", err)
+		tx.Rollback()
+		return err
+	}
+
+	// 4.设置三种配置
+	err = RulesAccountSet(policy.AccountCfg)
+	if err != nil {
+		return err
+	}
+
+	err = RulesSafeBaseSet(policy.SafeBaseCfg)
+	if err != nil {
+		return err
+	}
+
+	err = RulesSafeHighSet(policy.SafeHighCfg)
+	if err != nil {
+		return err
+	}
+
+	// 5.重新加载
+	RulesMemInit()
+
+	RulesMemPrint()
+	return nil
 }

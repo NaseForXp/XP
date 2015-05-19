@@ -180,45 +180,6 @@ End:
 	c.TplNames = "safecontroller/safe.tpl"
 }
 
-// 基本防护 - 导出
-func (c *SafeController) SafeBaseSave() {
-	var res SafeSaveResponse
-
-	usertokey := c.GetString("UserTokey")
-
-	fmt.Println("---SafeBaseSave")
-	fmt.Println("request :", usertokey)
-
-	if LoginCheckTokeyJson(usertokey) == false {
-		res.Status = 2
-		res.Errmsg = "错误:请登录后操作"
-		goto End
-	} else {
-		saveString, err := rules.RulesSafeBaseSave()
-		if err != nil {
-			res.Status = 2
-			res.Errmsg = err.Error()
-		} else {
-			//正常
-			res.Status = 1
-			res.Errmsg = "基本防护规则导出成功"
-			res.Config = saveString
-		}
-	}
-End:
-
-	if res.Status == 1 {
-		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "导出基本防护配置", "", "成功")
-	} else {
-		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "导出基本防护配置", "", "失败")
-	}
-
-	jres, err := json.Marshal(res)
-	fmt.Println("response:", string(jres), err)
-	c.Data["Safe_ret"] = string(jres)
-	c.TplNames = "safecontroller/safe.tpl"
-}
-
 // 增强防护 - 设置
 func (c *SafeController) SafeHighSet() {
 	var req SafeHighSetRequest
@@ -318,43 +279,6 @@ End:
 		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "获取增强防护配置", "", "成功")
 	} else {
 		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "获取增强防护配置", "", "失败")
-	}
-	jres, err := json.Marshal(res)
-	fmt.Println("response:", string(jres), err)
-	c.Data["Safe_ret"] = string(jres)
-	c.TplNames = "safecontroller/safe.tpl"
-}
-
-// 增强防护 - 导出
-func (c *SafeController) SafeHighSave() {
-	var res SafeSaveResponse
-
-	usertokey := c.GetString("UserTokey")
-
-	fmt.Println("---SafeHighSave")
-	fmt.Println("request :", usertokey)
-
-	if LoginCheckTokeyJson(usertokey) == false {
-		res.Status = 2
-		res.Errmsg = "错误:请登录后操作"
-		goto End
-	} else {
-		saveString, err := rules.RulesSafeHighSave()
-		if err != nil {
-			res.Status = 2
-			res.Errmsg = err.Error()
-		} else {
-			//正常
-			res.Status = 1
-			res.Errmsg = "导出增强防护配置成功"
-			res.Config = saveString
-		}
-	}
-End:
-	if res.Status == 1 {
-		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "导出增强防护配置", "", "成功")
-	} else {
-		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "导出增强防护配置", "", "失败")
 	}
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)

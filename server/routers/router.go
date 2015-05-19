@@ -25,20 +25,21 @@ func init() {
 	beego.Router("/sys/queryblack", &controllers.SysController{}, "get,post:SysQueryBlack")
 	beego.Router("/sys/totleblack", &controllers.SysController{}, "get,post:SysTotleBlack")
 
-	// 安全防护
 	// 基本防护 - 获取状态 - 设置状态 - 导出
 	beego.Router("/safe/baseget", &controllers.SafeController{}, "get,post:SafeBaseGet")
 	beego.Router("/safe/baseset", &controllers.SafeController{}, "get,post:SafeBaseSet")
-	beego.Router("/safe/basesave", &controllers.SafeController{}, "get,post:SafeBaseSave")
 	// 增强防护 - 获取状态 - 设置状态 - 导出
 	beego.Router("/safe/highget", &controllers.SafeController{}, "get,post:SafeHighGet")
 	beego.Router("/safe/highset", &controllers.SafeController{}, "get,post:SafeHighSet")
-	beego.Router("/safe/highsave", &controllers.SafeController{}, "get,post:SafeHighSave")
 
 	// 账户安全
 	beego.Router("/account/get", &controllers.AccountController{}, "get,post:AccountGet")
 	beego.Router("/account/set", &controllers.AccountController{}, "get,post:AccountSet")
-	beego.Router("/account/save", &controllers.AccountController{}, "get,post:AccountSave")
+
+	// 规则导出
+	beego.Router("/policy/dump", &controllers.PolicyController{}, "get,post:PolicyDump")
+	// 规则导入
+	beego.Router("/policy/load", &controllers.PolicyController{}, "get,post:PolicyLoad")
 
 	// 获取日志
 	beego.Router("/log/systotle", &controllers.LogController{}, "get,post:LogSysTotle")

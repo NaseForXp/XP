@@ -44,13 +44,15 @@ func LoginCheckTokey(tokey string) (isOk bool) {
 	defer rwLockUserTokey.RUnlock()
 	_, isOk = gUserTokey[tokey]
 
-	// 暂时全返回成功
-	return true
-	//return isOk
+	return isOk
 }
 
 func LoginCheckTokeyJson(jtokey string) (isOk bool) {
 	var tokey string
+
+	// 暂时全返回成功
+	return true
+
 	if jtokey == "" {
 		return false
 	} else {

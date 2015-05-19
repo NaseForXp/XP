@@ -362,8 +362,8 @@ func RuleMatchDiskReadWrite(uname, proc, file, opStr string) bool {
 	proc, _ = filepath.Abs(strings.ToLower(proc))
 	file, _ = filepath.Abs(strings.ToLower(file))
 
-	rwLockRule.RLock()
-	defer rwLockRule.RUnlock()
+	rwLockRule.Lock()
+	defer rwLockRule.Unlock()
 
 	// 白名单放行
 	_, ok := hMemRules.White[proc]
@@ -401,8 +401,8 @@ func RuleMatchDiskFormat(uname, proc, file string) bool {
 
 	opStr := "格式化磁盘"
 
-	rwLockRule.RLock()
-	defer rwLockRule.RUnlock()
+	rwLockRule.Lock()
+	defer rwLockRule.Unlock()
 
 	// 白名单放行
 	_, ok := hMemRules.White[proc]
@@ -437,8 +437,8 @@ func RuleMatchFileRead(uname, proc, file string) bool {
 	proc, _ = filepath.Abs(strings.ToLower(proc))
 	file = strings.ToLower(file)
 
-	rwLockRule.RLock()
-	defer rwLockRule.RUnlock()
+	rwLockRule.Lock()
+	defer rwLockRule.Unlock()
 
 	// 白名单放行
 	_, ok := hMemRules.White[proc]
@@ -476,8 +476,8 @@ func RuleMatchFileWrite(uname, proc, file string) bool {
 	proc, _ = filepath.Abs(strings.ToLower(proc))
 	file, _ = filepath.Abs(strings.ToLower(file))
 
-	rwLockRule.RLock()
-	defer rwLockRule.RUnlock()
+	rwLockRule.Lock()
+	defer rwLockRule.Unlock()
 
 	// 白名单放行
 	_, ok := hMemRules.White[proc]
@@ -532,8 +532,8 @@ func RuleMatchFileUnlink(uname, proc, file string) bool {
 	proc, _ = filepath.Abs(strings.ToLower(proc))
 	file, _ = filepath.Abs(strings.ToLower(file))
 
-	rwLockRule.RLock()
-	defer rwLockRule.RUnlock()
+	rwLockRule.Lock()
+	defer rwLockRule.Unlock()
 
 	// 白名单放行
 	_, ok := hMemRules.White[proc]
@@ -589,8 +589,8 @@ func RuleMatchFileRename(uname, proc, file, new_file string) bool {
 	file, _ = filepath.Abs(strings.ToLower(file))
 	new_file, _ = filepath.Abs(strings.ToLower(new_file))
 
-	rwLockRule.RLock()
-	defer rwLockRule.RUnlock()
+	rwLockRule.Lock()
+	defer rwLockRule.Unlock()
 
 	// 白名单放行
 	_, ok := hMemRules.White[proc]
@@ -684,8 +684,8 @@ func RuleMatchFileCreate(uname, proc, file string) bool {
 	proc, _ = filepath.Abs(strings.ToLower(proc))
 	file, _ = filepath.Abs(strings.ToLower(file))
 
-	rwLockRule.RLock()
-	defer rwLockRule.RUnlock()
+	rwLockRule.Lock()
+	defer rwLockRule.Unlock()
 
 	// 白名单放行
 	_, ok := hMemRules.White[proc]
@@ -753,8 +753,8 @@ func RuleMatchProcessKill(uname, process, dst_proc string) bool {
 	process, _ = filepath.Abs(strings.ToLower(process))
 	dst_proc, _ = filepath.Abs(strings.ToLower(dst_proc))
 
-	rwLockRule.RLock()
-	defer rwLockRule.RUnlock()
+	rwLockRule.Lock()
+	defer rwLockRule.Unlock()
 
 	// 白名单放行
 	_, ok := hMemRules.White[process]
@@ -793,8 +793,8 @@ func RuleMatchProcessInject(uname, process, dst_proc string) bool {
 	process, _ = filepath.Abs(strings.ToLower(process))
 	dst_proc, _ = filepath.Abs(strings.ToLower(dst_proc))
 
-	rwLockRule.RLock()
-	defer rwLockRule.RUnlock()
+	rwLockRule.Lock()
+	defer rwLockRule.Unlock()
 
 	// 白名单放行
 	_, ok := hMemRules.White[process]
@@ -829,8 +829,8 @@ func RuleMatchProcessInject(uname, process, dst_proc string) bool {
 func RuleMatchServiceChange(uname, process, service_name, op string) bool {
 	process, _ = filepath.Abs(strings.ToLower(process))
 
-	rwLockRule.RLock()
-	defer rwLockRule.RUnlock()
+	rwLockRule.Lock()
+	defer rwLockRule.Unlock()
 
 	// 白名单放行
 	_, ok := hMemRules.White[process]
@@ -865,8 +865,8 @@ func RuleMatchServiceAdd(uname, process, service_name, binPath string) bool {
 	process, _ = filepath.Abs(strings.ToLower(process))
 	binPath, _ = filepath.Abs(strings.ToLower(binPath))
 
-	rwLockRule.RLock()
-	defer rwLockRule.RUnlock()
+	rwLockRule.Lock()
+	defer rwLockRule.Unlock()
 
 	logdst := "[" + service_name + "]" + binPath
 
@@ -903,8 +903,8 @@ func RuleMatchDriveLoad(uname, process, service_name, binPath string) bool {
 	process, _ = filepath.Abs(strings.ToLower(process))
 	binPath, _ = filepath.Abs(strings.ToLower(binPath))
 
-	rwLockRule.RLock()
-	defer rwLockRule.RUnlock()
+	rwLockRule.Lock()
+	defer rwLockRule.Unlock()
 
 	logdst := "[" + service_name + "]" + binPath
 
@@ -941,8 +941,8 @@ func RuleMatchRegSetValue(uname, process, regpath, regvalue string) bool {
 	process, _ = filepath.Abs(strings.ToLower(process))
 	regpath = strings.ToUpper(regpath)
 
-	rwLockRule.RLock()
-	defer rwLockRule.RUnlock()
+	rwLockRule.Lock()
+	defer rwLockRule.Unlock()
 
 	logdst := "[" + regvalue + "]" + regpath
 	// 防止驱动程序被加载
