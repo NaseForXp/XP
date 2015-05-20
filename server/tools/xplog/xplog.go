@@ -477,26 +477,6 @@ func LogQueryEvent(KeyWord, TimeStart, TimeStop string, Start, Length int) (resA
 	return resArray, nil
 }
 
-/*
-sql = `create table if not exists log_count (
-			Id integer not null primary key,
-			Time date unique,
-			Totle integer default 0,
-			White integer default 0,
-			Black integer default 0,
-			BaseWinDir     integer default 0,
-			BaseWinStart   integer default 0,
-			BaseWinFormat  integer default 0,
-			BaseWinProc    integer default 0,
-			BaseWinService integer default 0,
-			HighAddService integer default 0,
-			HighAutoRun    integer default 0,
-			HighAddStart   integer default 0,
-			HighReadWrite  integer default 0,
-			HighCreateExe  integer default 0,
-			HighLoadSys    integer default 0,
-			HighProcInject integer default 0
-*/
 // 客户端首页 - 查询统计信息 - 总量
 func LogQueryHomeCount() (homeCnt LogHomeCount, err error) {
 	db := hDBLog
@@ -576,6 +556,213 @@ func LogQueryHomeCount() (homeCnt LogHomeCount, err error) {
 	}
 
 	return homeCnt, nil
+}
+
+func LogQueryDayInMonth() (dayInMon map[string]int, err error) {
+	dayInMon = make(map[string]int)
+	db := hDBLog
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("LogQueryDayInMonth:DB.Begin(): %s\n", err)
+		return dayInMon, err
+	}
+
+	tm := time.Now()
+	Year := int(tm.Year())
+	Mon := int(tm.Month())
+	Day := 0
+
+	// 查询当月中每天的总数
+	for Day = 1; Day <= 31; Day++ {
+		sql := fmt.Sprintf("select count(*) from log_event where Time like '%04d-%02d-%02d%%';", Year, Mon, Day)
+		rows, err := db.Query(sql)
+		defer rows.Close()
+		if err != nil {
+			log.Printf("LogQueryDayInMonth: %s\n", err)
+			return dayInMon, errors.New("错误:查询当月每天总数失败")
+		}
+		var cnt int
+		for rows.Next() {
+			rows.Scan(&cnt)
+			dayInMon[fmt.Sprintf("%02d", Day)] = cnt
+			break
+		}
+		rows.Close()
+	}
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("LogQueryDayInMonth(commit transaction): %s\n", err)
+		tx.Rollback()
+		return dayInMon, err
+	}
+	return dayInMon, err
+}
+
+func LogQueryMonthEventTot() (MonTop map[string]int, err error) {
+	// 初始化
+	MonTop = make(map[string]int)
+	MonTop["白名单"] = 0
+	MonTop["黑名单"] = 0
+	MonTop["系统文件及目录保护"] = 0
+	MonTop["系统启动文件保护"] = 0
+	MonTop["防止格式化系统磁盘"] = 0
+	MonTop["防止系统关键进程被杀死"] = 0
+	MonTop["防止篡改系统服务"] = 0
+	MonTop["防止服务被添加"] = 0
+	MonTop["防止自动运行"] = 0
+	MonTop["防止开机自启动"] = 0
+	MonTop["防止磁盘被直接读写"] = 0
+	MonTop["禁止创建exe文件"] = 0
+	MonTop["防止驱动程序被加载"] = 0
+	MonTop["防止进程被注入"] = 0
+
+	db := hDBLog
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("LogQueryMonthTop:DB.Begin(): %s\n", err)
+		return MonTop, err
+	}
+
+	tm := time.Now()
+	Year := int(tm.Year())
+	Mon := int(tm.Month())
+
+	// 查询当月分类统计TOP
+	sql := fmt.Sprintf("select count(*) as cnt, Module from log_event where Time like '%04d-%02d%%' group by Module;", Year, Mon)
+	rows, err := db.Query(sql)
+	defer rows.Close()
+	if err != nil {
+		log.Printf("LogQueryMonthTop: %s\n", err)
+		return MonTop, errors.New("错误:查询当月分类统计失败")
+	}
+	var cnt int
+	var name string
+	for rows.Next() {
+		rows.Scan(&cnt, &name)
+		switch name {
+		case "白名单":
+			MonTop["白名单"] = cnt
+		case "黑名单":
+			MonTop["黑名单"] = cnt
+		case "基本防护-系统文件及目录保护":
+			MonTop["系统文件及目录保护"] = cnt
+		case "基本防护-系统启动文件保护":
+			MonTop["系统启动文件保护"] = cnt
+		case "基本防护-防止格式化系统磁盘":
+			MonTop["防止格式化系统磁盘"] = cnt
+		case "基本防护-防止系统关键进程被杀死":
+			MonTop["防止系统关键进程被杀死"] = cnt
+		case "基本防护-防止篡改系统服务":
+			MonTop["防止篡改系统服务"] = cnt
+		case "增强防护-防止服务被添加":
+			MonTop["防止服务被添加"] = cnt
+		case "增强防护-防止自动运行":
+			MonTop["防止自动运行"] = cnt
+		case "增强防护-防止开机自启动":
+			MonTop["防止开机自启动"] = cnt
+		case "增强防护-防止磁盘被直接读写":
+			MonTop["防止磁盘被直接读写"] = cnt
+		case "增强防护-禁止创建.exe文件":
+			MonTop["禁止创建exe文件"] = cnt
+		case "增强防护-防止驱动程序被加载":
+			MonTop["防止驱动程序被加载"] = cnt
+		case "增强防护-防止进程被注入":
+			MonTop["防止进程被注入"] = cnt
+		}
+	}
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("LogQueryMonthTop(commit transaction): %s\n", err)
+		tx.Rollback()
+		return MonTop, err
+	}
+	return MonTop, err
+}
+
+func LogQueryYearEventTot() (YearTop map[string]int, err error) {
+	// 初始化
+	YearTop = make(map[string]int)
+	YearTop["白名单"] = 0
+	YearTop["黑名单"] = 0
+	YearTop["系统文件及目录保护"] = 0
+	YearTop["系统启动文件保护"] = 0
+	YearTop["防止格式化系统磁盘"] = 0
+	YearTop["防止系统关键进程被杀死"] = 0
+	YearTop["防止篡改系统服务"] = 0
+	YearTop["防止服务被添加"] = 0
+	YearTop["防止自动运行"] = 0
+	YearTop["防止开机自启动"] = 0
+	YearTop["防止磁盘被直接读写"] = 0
+	YearTop["禁止创建exe文件"] = 0
+	YearTop["防止驱动程序被加载"] = 0
+	YearTop["防止进程被注入"] = 0
+
+	db := hDBLog
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("LogQueryYearEventTot:DB.Begin(): %s\n", err)
+		return YearTop, err
+	}
+
+	tm := time.Now()
+	Year := int(tm.Year())
+
+	// 查询当月分类统计TOP
+	sql := fmt.Sprintf("select count(*) as cnt, Module from log_event where Time like '%04d-%%' group by Module;", Year)
+	rows, err := db.Query(sql)
+	defer rows.Close()
+	if err != nil {
+		log.Printf("LogQueryYearEventTot: %s\n", err)
+		return YearTop, errors.New("错误:查询当年分类统计失败")
+	}
+	var cnt int
+	var name string
+	for rows.Next() {
+		rows.Scan(&cnt, &name)
+		switch name {
+		case "白名单":
+			YearTop["白名单"] = cnt
+		case "黑名单":
+			YearTop["黑名单"] = cnt
+		case "基本防护-系统文件及目录保护":
+			YearTop["系统文件及目录保护"] = cnt
+		case "基本防护-系统启动文件保护":
+			YearTop["系统启动文件保护"] = cnt
+		case "基本防护-防止格式化系统磁盘":
+			YearTop["防止格式化系统磁盘"] = cnt
+		case "基本防护-防止系统关键进程被杀死":
+			YearTop["防止系统关键进程被杀死"] = cnt
+		case "基本防护-防止篡改系统服务":
+			YearTop["防止篡改系统服务"] = cnt
+		case "增强防护-防止服务被添加":
+			YearTop["防止服务被添加"] = cnt
+		case "增强防护-防止自动运行":
+			YearTop["防止自动运行"] = cnt
+		case "增强防护-防止开机自启动":
+			YearTop["防止开机自启动"] = cnt
+		case "增强防护-防止磁盘被直接读写":
+			YearTop["防止磁盘被直接读写"] = cnt
+		case "增强防护-禁止创建.exe文件":
+			YearTop["禁止创建exe文件"] = cnt
+		case "增强防护-防止驱动程序被加载":
+			YearTop["防止驱动程序被加载"] = cnt
+		case "增强防护-防止进程被注入":
+			YearTop["防止进程被注入"] = cnt
+		}
+	}
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("LogQueryYearEventTot(commit transaction): %s\n", err)
+		tx.Rollback()
+		return YearTop, err
+	}
+	return YearTop, err
 }
 
 /*

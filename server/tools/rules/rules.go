@@ -65,6 +65,19 @@ type AccountConfig struct {
 	LockoutDuration       int // 账户锁定时长(分钟)
 }
 
+// 策略导出结构体
+type RulesPolicyDumpSt struct {
+	SafeBaseCfg  SafeBaseConfig // 系统防护_基本防护配置
+	SafeHighCfg  SafeHighConfig // 系统防护_增强防护配置
+	AccountCfg   AccountConfig  // 账户安全配置
+	White        []string       // 白名单的程序和目录
+	Black        []string       // 黑名单的程序和目录
+	WinDir       []string       // 受保护的系统目录
+	WinStart     []string       // 受保护的系统启动项
+	WinProc      []string       // 受保护的系统进程
+	HighWinStart []string       // 增强防护_开机启动项
+}
+
 // 模块初始化
 func RulesInit() (err error) {
 	//连接数据库
@@ -1260,19 +1273,6 @@ func RulesAccountSet(cfg AccountConfig) (err error) {
 	hMemRules.AccountCfg.LockoutDuration = cfg.LockoutDuration
 	rwLockRule.Unlock()
 	return nil
-}
-
-// 策略导出结构体
-type RulesPolicyDumpSt struct {
-	SafeBaseCfg  SafeBaseConfig // 系统防护_基本防护配置
-	SafeHighCfg  SafeHighConfig // 系统防护_增强防护配置
-	AccountCfg   AccountConfig  // 账户安全配置
-	White        []string       // 白名单的程序和目录
-	Black        []string       // 黑名单的程序和目录
-	WinDir       []string       // 受保护的系统目录
-	WinStart     []string       // 受保护的系统启动项
-	WinProc      []string       // 受保护的系统进程
-	HighWinStart []string       // 增强防护_开机启动项
 }
 
 // 策略导出

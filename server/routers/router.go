@@ -49,6 +49,8 @@ func init() {
 
 	// 获取首页统计信息
 	beego.Router("/log/homecount", &controllers.LogController{}, "get,post:LogHomeCount")
+	// 获取审计页面数据
+	beego.Router("/audit/report", &controllers.AuditController{}, "get,post:AuditReport")
 
 	// 授权
 	beego.Router("/serial/regist", &controllers.SerialController{}, "get,post:SerialRegist")
