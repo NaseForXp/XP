@@ -484,7 +484,7 @@ func RulesAddBlack(fpath string) (err error) {
 	if err != nil {
 		log.Printf("RulesAddBlack(): %s", err)
 		tx.Rollback()
-		return errors.New("错误:添加白名单失败")
+		return errors.New("错误:添加黑名单失败")
 	}
 
 	// 事务提交
