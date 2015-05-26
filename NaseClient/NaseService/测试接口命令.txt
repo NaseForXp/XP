@@ -1,0 +1,132 @@
+[运行]
+   进入server目录下，运行server.exe
+
+[接口]
+   1、获取管理中心IP端口
+      Request : http://127.0.0.1:8080/center/getaddr
+      Response: {"CenterIP":"192.168.1.2","CenterPort":8081}
+
+   2、登录
+      Request : http://127.0.0.1:8080/login?data={"User":"admin","Password":"123456","CenterIPPort":"192.168.1.2:8081"}
+      Response: {"Status":1,"Errmsg":"登录成功","User":"admin","Usertype":2,"UserTokey":"f5ab1c6a"}
+      [注]：
+         参数有简单校验，可能会返回其他错误情况
+
+   3、系统设置-修改密码
+      Request : http://127.0.0.1:8080/sys/changepassword?UserTokey="f5ab1c6a"&data={"User":"Admin","OldPwd":"123456","NewPwd":"654321"}
+      Response:{"Status":1,"Errmsg":"密码修改成功"}
+
+   4、系统设置 - 白名单
+      --白名单添加：
+      Request : http://127.0.0.1:8080/sys/addwhite?UserTokey="f5ab1c6a"&data={"File":"C://test"}
+      Response:{"Status":1,"Errmsg":"添加白名单成功"}
+
+      --白名单删除
+      Request : http://127.0.0.1:8080/sys/delwhite?UserTokey="f5ab1c6a"&data={"File":"C://test"}
+      Response:{"Status":1,"Errmsg":"删除白名单成功"}
+
+      --获取白名单数量
+      Request : http://127.0.0.1:8080/sys/totlewhite?UserTokey="f5ab1c6a"
+      Response:{"Status":1,"Errmsg":"查询白名单总数成功","TotCnt":10}
+
+      --查询白名单内容
+      Request : http://127.0.0.1:8080/sys/querywhite?UserTokey="f5ab1c6a"&data={"Start":0,"Length":10}
+      Response:{"Status":1,"Errmsg":"查询白名单成功","Files":["C:\\test","C:\\test\\dd"]}
+
+   5、系统设置 - 黑名单
+      --黑名单添加：
+      Request : http://127.0.0.1:8080/sys/addblack?UserTokey="f5ab1c6a"&data={"File":"C://test"}
+      Response:{"Status":1,"Errmsg":"添加黑名单成功"}
+
+      --黑名单删除
+      Request : http://127.0.0.1:8080/sys/delblack?UserTokey="f5ab1c6a"&data={"File":"C://test"}
+      Response:{"Status":1,"Errmsg":"删除黑名单成功"}
+
+      --获取黑名单数量
+      Request : http://127.0.0.1:8080/sys/totleblack?UserTokey="f5ab1c6a"
+      Response:{"Status":1,"Errmsg":"查询黑名单总数成功","TotCnt":10}
+
+      --查询黑名单内容
+      Request : http://127.0.0.1:8080/sys/queryblack?UserTokey="f5ab1c6a"&data={"Start":0,"Length":10}
+      Response:{"Status":1,"Errmsg":"查询黑名单成功","Files":["C:\\test","C:\\test\\dd"]}   
+
+   6、系统防护 - 基础防护
+      -- 设置
+      Request : http://127.0.0.1:8080/safe/baseset?UserTokey="f5ab1c6a"&data={"Mode":0,"WinDir":0,"WinStart":0,"WinFormat":0,"WinProc":0,"WinService":0}
+      Response:{"Status":1,"Errmsg":"基本防护设置成功"}
+
+      -- 获取设置
+      Request : http://127.0.0.1:8080/safe/baseget?UserTokey="f5ab1c6a"
+      Response:{"Status":1,"Errmsg":"获取基本防护设置成功","Mode":0,"WinDir":0,"WinStart":0,"WinFormat":0,"WinProc":0,"WinService":0}
+
+
+   7、系统防护 - 增强防护
+      -- 设置
+      Request : http://127.0.0.1:8080/safe/highset?UserTokey="f5ab1c6a"&data={"Mode":0,"AddService":0,"AutoRun":0,"AddStart":0,"ReadWrite":0,"CreateExe":0,"LoadSys":0,"ProcInject":0}
+      Response:{"Status":1,"Errmsg":"增强防护设置成功"}
+
+      -- 获取设置
+      Request : http://127.0.0.1:8080/safe/highget?UserTokey="f5ab1c6a"
+      Response:{"Status":1,"Errmsg":"获取增强防护设置成功","Mode":0,"AddService":0,"AutoRun":0,"AddStart":0,"ReadWrite":0,"CreateExe":0,"LoadSys":0,"ProcInject":0}
+
+
+   8、账户安全
+      -- 设置
+      Request : http://127.0.0.1:8080/account/set?UserTokey="f5ab1c6a"&data={"Mode":0,"SafeLev":0,"PasswordComplexity":0,"MinimumPasswordLength":0,"MinimumPasswordAge":0,"MaximumPasswordAge":42,"PasswordHistorySize":0,"LockoutBadCount":0,"LockoutDuration":0}
+      Response:{"Status":1,"Errmsg":"账户安全设置成功"}
+
+      -- 获取设置
+      Request : http://127.0.0.1:8080/account/get?UserTokey="f5ab1c6a"
+      Response:{"Status":1,"Errmsg":"获取账户安全设置成功","Mode":0,"SafeLev":0,"PasswordComplexity":0,"MinimumPasswordLength":0,"MinimumPasswordAge":0,"MaximumPasswordAge":42,"PasswordHistorySize":0,"LockoutBadCount":0,"LockoutDuration":0}
+
+ 
+   9、日志 - 系统运行日志
+      -- 获取数量
+      Request : http://127.0.0.1:8080/log/systotle?UserTokey="f5ab1c6a"
+      Response:{"Status":1,"Errmsg":"查询:系统日志数量成功","Count":10}
+
+      -- 获取日志
+      Request : http://127.0.0.1:8080/log/sysquery?UserTokey="f5ab1c6a"&data={"KeyWord":"查询","TimeStart":"2015-01-01 12:12:12","TimeStop":"2015-06-01 12:12:12","Start":0,"Length":10}
+      Response:{"Status":1,"Errmsg":"查询:系统日志成功","LogArray":[
+	{"Uname":"Admin","Op":"查询:系统日志","Info":"{\"KeyWord\":\"\",\"TimeStart\":\"2015-01-01 12:12:12\",\"TimeStop\":\"2015-06-01 12:12:12\"}","Result":"成功","Time":"2015-05-03 01:13:06"},
+	{"Uname":"Admin","Op":"查询:系统日志","Info":"{\"KeyWord\":\"登录\",\"TimeStart\":\"2015-01-01 12:12:12\",\"TimeStop\":\"2015-06-01 12:12:12\"}","Result":"成功","Time":"2015-05-02 15:38:57"},
+	{"Uname":"Admin","Op":"查询:系统日志","Info":"{\"KeyWord\":\"系统日志\",\"TimeStart\":\"2015-01-01 12:12:12\",\"TimeStop\":\"2015-06-01 12:12:12\"}","Result":"成功","Time":"2015-05-02 15:37:36"},
+	]}
+
+   10、日志 - 安全日志
+      -- 获取数量
+      Request : http://127.0.0.1:8080/log/eventtotle?UserTokey="f5ab1c6a"
+      Response:{"Status":1,"Errmsg":"查询:安全日志数量成功","Count":10}
+
+      -- 获取日志
+      Request : http://127.0.0.1:8080/log/eventquery?UserTokey="f5ab1c6a"&data={"KeyWord":"","TimeStart":"2015-01-01 12:12:12","TimeStop":"2015-06-01 12:12:12","Start":0,"Length":10}
+      Response:{{"Status":1,"Errmsg":"查询:安全日志成功","LogArray":null}
+
+
+   11、日志 - 查询首页统计信息
+      -- 获取数量
+      Request : http://127.0.0.1:8080/log/homecount?UserTokey="f5ab1c6a"
+      Response:{"Status":1,"Errmsg":"查询:首页统计信息成功","BaseMode":1,"HighMode":1,"Totle":70,"White":0,"Black":0,"BaseWinDir":65,"BaseWinStart":2,"BaseWinFormat":0,"BaseWinProc":0,"BaseWinService":0,"HighAddService":0,"HighAutoRun":0,"HighAddStart":0,"HighReadWrite":0,"HighCreateExe":0,"HighLoadSys":0,"HighProcInject":0}
+
+   12、策略导出\导入
+      --策略导出
+      Request : http://127.0.0.1:8080/policy/dump?UserTokey="f5ab1c6a"
+      Response:{"Status":1,"Errmsg":"导出配置成功","FileSize":1003,"FileText":"{\"SafeBaseCfg\":{\"Mode\":0,\"WinDir\":0,\"WinStart\":0,\"WinFormat\":0,\"WinProc\":0,\"WinService\":0},\"SafeHighCfg\":{\"Mode\":0,\"AddService\":0,\"AutoRun\":0,\"AddStart\":0,\"ReadWrite\":0,\"CreateExe\":0,\"LoadSys\":0,\"ProcInject\":0},\"AccountCfg\":{\"Mode\":0,\"SafeLev\":0,\"PasswordComplexity\":0,\"MinimumPasswordLength\":0,\"MinimumPasswordAge\":0,\"MaximumPasswordAge\":42,\"PasswordHistorySize\":0,\"LockoutBadCount\":0,\"LockoutDuration\":30},\"White\":[\"c:\\\\\\\\windows\\\\\\\\pchealth\\\\\\\\helpctr\\\\\\\\binaries\\\\\\\\msconfig.exe\"],\"Black\":null,\"WinDir\":[\"C:\\\\\\\\Windows\\\\\\\\\"],\"WinStart\":[\"C:\\\\\\\\boot.ini\",\"C:\\\\\\\\Ntldr\"],\"WinProc\":[\"C:\\\\\\\\Windows\\\\\\\\System32\\\\\\\\csrss.exe\",\"C:\\\\\\\\Windows\\\\\\\\System32\\\\\\\\lsass.exe\",\"C:\\\\\\\\Windows\\\\\\\\System32\\\\\\\\services.exe\",\"C:\\\\\\\\Windows\\\\\\\\System32\\\\\\\\smss.exe\",\"C:\\\\\\\\Windows\\\\\\\\System32\\\\\\\\svchost.exe\",\"C:\\\\\\\\Windows\\\\\\\\System32\\\\\\\\winlogon.exe\"],\"HighWinStart\":[\"HKEY_LOCAL_MACHINE\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\RunOnce\",\"HKEY_LOCAL_MACHINE\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Run\"]}"}
+
+      --策略导入
+      Request : http://127.0.0.1:8080/policy/load?UserTokey="f5ab1c6a"&data={"FileSize":1003,"FileText":"{\"SafeBaseCfg\":{\"Mode\":1,\"WinDir\":1,\"WinStart\":1,\"WinFormat\":1,\"WinProc\":1,\"WinService\":1},\"SafeHighCfg\":{\"Mode\":1,\"AddService\":1,\"AutoRun\":1,\"AddStart\":1,\"ReadWrite\":1,\"CreateExe\":1,\"LoadSys\":1,\"ProcInject\":0},\"AccountCfg\":{\"Mode\":1,\"SafeLev\":2,\"PasswordComplexity\":1,\"MinimumPasswordLength\":3,\"MinimumPasswordAge\":4,\"MaximumPasswordAge\":45,\"PasswordHistorySize\":6,\"LockoutBadCount\":7,\"LockoutDuration\":38},\"White\":[\"c:\\\\\\\\windows\\\\\\\\pchealth\\\\\\\\helpctr\\\\\\\\binaries\\\\\\\\msconfig.exe\"],\"Black\":null,\"WinDir\":[\"C:\\\\\\\\Windows\\\\\\\\\"],\"WinStart\":[\"C:\\\\\\\\boot.ini\",\"C:\\\\\\\\Ntldr\"],\"WinProc\":[\"C:\\\\\\\\Windows\\\\\\\\System32\\\\\\\\csrss.exe\",\"C:\\\\\\\\Windows\\\\\\\\System32\\\\\\\\lsass.exe\",\"C:\\\\\\\\Windows\\\\\\\\System32\\\\\\\\services.exe\",\"C:\\\\\\\\Windows\\\\\\\\System32\\\\\\\\smss.exe\",\"C:\\\\\\\\Windows\\\\\\\\System32\\\\\\\\svchost.exe\",\"C:\\\\\\\\Windows\\\\\\\\System32\\\\\\\\winlogon.exe\"],\"HighWinStart\":[\"HKEY_LOCAL_MACHINE\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Run\",\"HKEY_LOCAL_MACHINE\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\RunOnce\"]}"}
+      Response:{"Status":1,"Errmsg":"导入配置成功"}
+
+   13、授权
+      -- 注册
+      Request : http://127.0.0.1:8080/serial/regist?UserTokey="f5ab1c6a"&data={"SerialNo":"MDEwMDIwMTUwNjIwYAL8sOG1A2CTi9oek2Z99BZWtBWp4kNP7wtVfiqeRFI%3d"}
+      Response:{"Status":1,"Errmsg":"注册成功"}
+
+      -- 获取注册信息
+      Request : http://127.0.0.1:8080/serial/getcode?UserTokey="f5ab1c6a"
+      Response:{"Status":1,"Errmsg":"获取授权信息成功","HardCode":"04291F39-C26B2600-C07A9F32","SerialNo":"MDEwMDIwMTUwNjIwYAL8sOG1A2CTi9oek2Z99BZWtBWp4kNP7wtVfiqeRFI=","ValidDate":"2015-06-20"}
+
+   13、审计报表
+      -- 报表数据获取
+      Request : http://127.0.0.1:8080/audit/report?UserTokey="f5ab1c6a"
+      Response:{"Status":1,"Errmsg":"生成报表成功","DayInMonth":{"01":0,"02":0,"03":0,"04":0,"05":0,"06":0,"07":0,"08":0,"09":0,"10":0,"11":0,"12":0,"13":0,"14":0,"15":0,"16":0,"17":0,"18":0,"19":37,"20":1,"21":0,"22":0,"23":0,"24":0,"25":0,"26":0,"27":0,"28":0,"29":0,"30":0,"31":0},"MonthEventTot":{"白名单":0,"禁止创建exe文件":1,"系统启动文件保护":0,"系统文件及目录保护":11,"防止开机自启动":0,"防止服务被添加":0,"防止格式化系统磁盘":0,"防止磁盘被直接读写":0,"防止篡改系统服务":0,"防止系统关键进程被杀死":0,"防止自动运行":0,"防止进程被注入":26,"防止驱动程序被加载":0,"黑名单":0},"YearEventTot":{"白名单":0,"禁止创建exe文件":1,"系统启动文件保护":0,"系统文件及目录保护":11,"防止开机自启动":0,"防止服务被添加":0,"防止格式化系统磁盘":0,"防止磁盘被直接读写":0,"防止篡改系统服务":0,"防止系统关键进程被杀死":0,"防止自动运行":0,"防止进程被注入":26,"防止驱动程序被加载":0,"黑名单":0}}
