@@ -315,3 +315,84 @@ End:
 
 	c.TplNames = "logcontroller/log.tpl"
 }
+
+// 日志 - 查询 - 首页统计信息FushionCharts画图
+func (c *LogController) LogHomeCountCharts() {
+	type LableValue struct {
+		Label string
+		Value int
+	}
+
+	var res LogHomeCountResponse
+	var xmldata map[string]string
+	var data []LableValue
+	xmldata = make(map[string]string)
+
+	usertokey := c.GetString("UserTokey")
+
+	fmt.Println("---LogHomeCount")
+	fmt.Println("request :", usertokey)
+
+	if LoginCheckTokeyJson(usertokey) == false {
+		res.Status = 2
+		res.Errmsg = "错误:请登录后操作"
+		goto End
+	} else {
+		//正常
+		homeCnt, err := xplog.LogQueryHomeCount()
+		if err != nil {
+			res.Status = 2
+			res.Errmsg = err.Error()
+		} else {
+			// 成功
+			res.Totle = homeCnt.Totle
+			res.BaseMode, res.HighMode = rules.RulesMemGetHomeMode()
+			res.Status = 1
+			res.Errmsg = "查询:首页统计信息成功"
+
+			data = append(data, LableValue{"白名单", homeCnt.White})
+			data = append(data, LableValue{"黑名单", homeCnt.Black})
+			data = append(data, LableValue{"系统文件及目录保护", homeCnt.BaseWinDir})
+			data = append(data, LableValue{"系统启动文件保护", homeCnt.BaseWinStart})
+			data = append(data, LableValue{"防止格式化系统磁盘", homeCnt.BaseWinFormat})
+			data = append(data, LableValue{"防止系统关键进程被杀死", homeCnt.BaseWinProc})
+			data = append(data, LableValue{"防止篡改系统服务", homeCnt.BaseWinService})
+			data = append(data, LableValue{"防止服务被添加", homeCnt.HighAddService})
+			data = append(data, LableValue{"防止自动运行", homeCnt.HighAutoRun})
+			data = append(data, LableValue{"防止开机自启动", homeCnt.HighAddStart})
+			data = append(data, LableValue{"防止磁盘被直接读写", homeCnt.HighReadWrite})
+			data = append(data, LableValue{"禁止创建.exe文件", homeCnt.HighCreateExe})
+			data = append(data, LableValue{"防止驱动程序被加载", homeCnt.HighLoadSys})
+			data = append(data, LableValue{"防止进程被注入", homeCnt.HighProcInject})
+		}
+	}
+End:
+	if res.Status == 1 {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "查询:首页统计信息", "", "成功")
+	} else {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "查询:首页统计信息", "", "失败")
+	}
+
+	xmldata["Type"] = "column3d" // pie3d | column3d
+	xmldata["Width"] = "800"
+	xmldata["Height"] = "320"
+	xmldata["Caption"] = "总体概况"
+	xmldata["SubCaption"] = "分类统计图"
+	xmldata["XAxisName"] = "类别"
+	xmldata["YAxisName"] = "数量"
+	c.Data["EventTotle"] = res.Totle
+
+	c.Data["BaseMode"] = "监视模式"
+	if res.BaseMode == 1 {
+		c.Data["BaseMode"] = "防护模式"
+	}
+	c.Data["HighMode"] = "监视模式"
+	if res.HighMode == 1 {
+		c.Data["HighMode"] = "防护模式"
+	}
+
+	c.Data["LVData"] = data
+	c.Data["XmlData"] = xmldata
+
+	c.TplNames = "logcontroller/homecount.html"
+}

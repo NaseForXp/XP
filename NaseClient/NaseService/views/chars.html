@@ -1,0 +1,33 @@
+<html>
+<head>
+<title>Test</title>
+<script type="text/javascript" src="static/fusioncharts/fusioncharts.js"></script>
+<script type="text/javascript" src="static/fusioncharts/themes/fusioncharts.theme.fint.js"></script>
+<script type="text/javascript">
+  FusionCharts.ready(function(){
+    var revenueChart = new FusionCharts(
+	{
+        "type": {{.XmlData.Type}},
+        "renderAt": "chartContainer",
+        "width": {{.XmlData.Width}},
+        "height": {{.XmlData.Height}},
+        "dataFormat": "json",
+        "dataSource":  {
+        	"chart": {
+           	 	"caption": {{.XmlData.Caption}},
+           	 	"subCaption": {{.XmlData.SubCaption}},
+            	"xAxisName": {{.XmlData.XAxisName}},
+            	"yAxisName": {{.XmlData.YAxisName}},
+            	"theme": "fint"
+         	},
+        	"data": [{{.LVData}}]
+      	}
+  	});
+revenueChart.render();
+})
+</script>
+</head>
+<body>
+  <div id="chartContainer">FusionCharts XT will load here!</div>
+</body>
+</html>
