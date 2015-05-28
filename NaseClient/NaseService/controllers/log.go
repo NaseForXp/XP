@@ -5,7 +5,9 @@ import (
 	"fmt"
 
 	"../tools/rules"
+	"../tools/serial"
 	"../tools/xplog"
+
 	"github.com/astaxie/beego"
 )
 
@@ -324,9 +326,7 @@ func (c *LogController) LogHomeCountCharts() {
 	}
 
 	var res LogHomeCountResponse
-	var xmldata map[string]string
 	var data []LableValue
-	xmldata = make(map[string]string)
 
 	usertokey := c.GetString("UserTokey")
 
@@ -373,15 +373,13 @@ End:
 		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "查询:首页统计信息", "", "失败")
 	}
 
-	xmldata["Type"] = "column3d" // pie3d | column3d
-	xmldata["Width"] = "800"
-	xmldata["Height"] = "320"
-	xmldata["Caption"] = "总体概况"
-	xmldata["SubCaption"] = "分类统计图"
-	xmldata["XAxisName"] = "类别"
-	xmldata["YAxisName"] = "数量"
+	err := serial.ClientVerifyLicense()
+	if err == nil {
+		c.Data["IsReg"] = "已经注册"
+	} else {
+		c.Data["IsReg"] = "尚未注册"
+	}
 	c.Data["EventTotle"] = res.Totle
-
 	c.Data["BaseMode"] = "监视模式"
 	if res.BaseMode == 1 {
 		c.Data["BaseMode"] = "防护模式"
@@ -391,8 +389,7 @@ End:
 		c.Data["HighMode"] = "防护模式"
 	}
 
-	c.Data["LVData"] = data
-	c.Data["XmlData"] = xmldata
+	c.Data["Data"] = data
 
 	c.TplNames = "logcontroller/homecount.html"
 }

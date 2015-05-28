@@ -393,8 +393,10 @@ func CreateTableWhiteList(db *sql.DB) (err error) {
 	}
 
 	sql = `insert into whitelist (id, path) values 
-		(null, 'c:\\windows\\pchealth\\helpctr\\binaries\\msconfig.exe'),
-		(null, 'c:\\windows\\System32\\cmd.exe');`
+		(null, 'c:\windows\pchealth\helpctr\binaries\msconfig.exe'),
+		(null, 'c:\windows\System32\cmd.exe'),
+		(null, 'C:\Program Files\NaseForXP\NaseClient\NaseUI\Nase.exe'),
+		(null, 'C:\Program Files\NaseForXP\NaseClient\NaseUI\Demo.exe');`
 	_, err = tx.Exec(sql)
 	if err != nil {
 		log.Printf("InsertTable(whitelist): %s, %s\n", err, sql)

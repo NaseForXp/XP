@@ -5,6 +5,7 @@ import (
 
 	_ "./routers"
 	"./tools/rules"
+	"./tools/serial"
 	"./tools/xplog"
 	"github.com/astaxie/beego"
 )
@@ -22,13 +23,20 @@ func main() {
 		xplog.LogFini()
 		return
 	}
-
-	err = rules.RuleMatchInit()
+	/*
+		err = rules.RuleMatchInit()
+		if err != nil {
+			fmt.Println(err)
+			xplog.LogFini()
+			rules.RulesRelease()
+			return
+		}
+	*/
+	err = serial.ClientVerifyLicense()
 	if err != nil {
-		fmt.Println(err)
-		xplog.LogFini()
-		rules.RulesRelease()
-		return
+		// 没注册
+		rules.RulesSafeBaseSet(rules.SafeBaseConfig{0, 0, 0, 0, 0, 0})
+		rules.RulesSafeHighSet(rules.SafeHighConfig{0, 0, 0, 0, 0, 0, 0, 0})
 	}
 
 	beego.Run()

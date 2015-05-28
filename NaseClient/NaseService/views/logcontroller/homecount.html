@@ -1,37 +1,50 @@
 <html>
 <head>
-<title>Test</title>
-<script type="text/javascript" src="../static/fusioncharts/fusioncharts.js"></script>
-<script type="text/javascript" src="../static/fusioncharts/themes/fusioncharts.theme.fint.js"></script>
+<title>HomeCount</title>
+
+<script type="text/javascript" src="../static/fusioncharts/jquery-1.9.1.js"></script>
+<script src="../static/fusioncharts/fusioncharts.js" type="text/javascript"></script>
+<script src="../static/fusioncharts/fusioncharts.charts.js" type="text/javascript"></script>
+<script src="../static/fusioncharts/fusioncharts.maps.js" type="text/javascript"></script>
+<script src="../static/fusioncharts/fusioncharts.widgets.js" type="text/javascript"></script>
+<script src="../static/fusioncharts/fusioncharts.gantt.js" type="text/javascript"></script>
+<script src="../static/fusioncharts/fusioncharts.powercharts.js" type="text/javascript"></script>
+
+<!-- 安全事件总体概况 -->
 <script type="text/javascript">
   FusionCharts.ready(function(){
     var revenueChart = new FusionCharts(
 	{
-        "type": {{.XmlData.Type}},
+        "type": "column3d",
         "renderAt": "chartContainer",
-        "width": {{.XmlData.Width}},
-        "height": {{.XmlData.Height}},
+        "width": "800",
+        "height": "320",
         "dataFormat": "json",
         "dataSource":  {
         	"chart": {
-           	 	"caption": {{.XmlData.Caption}},
-           	 	"subCaption": {{.XmlData.SubCaption}},
-            	"xAxisName": {{.XmlData.XAxisName}},
-            	"yAxisName": {{.XmlData.YAxisName}},
+           	 	"caption": "安全事件总体概况",
+           	 	"subCaption": "分类统计图",
+            	"xAxisName": "事件分类",
+            	"yAxisName": "事件数量(个)",
+				"showValues": "0",
+				"canvasBgColor": "#ffffff",
+				"showValues": "1",
+				"showBorder": "1",
             	"theme": "fint"
          	},
-        	"data": [{{.LVData}}]
+        	"data": {{.Data}}
       	}
   	});
 revenueChart.render();
 })
 </script>
+
 </head>
-<body>
-  <div id="info" >
+<body bgcolor="#FFFFFF">
+  <div id="info" align=center>
 <table align=center width=600 height="20">
 	<tr align=center>
-		<td align=left>注册状态:未注册</td>
+		<td align=left>注册状态:{{.IsReg}}</td>
 		<td align=left>事件总数:{{.EventTotle}}</td>
 	</tr>
     <tr align=center>
@@ -40,6 +53,6 @@ revenueChart.render();
 	</tr>
 </table>
   </div>
-  <div id="chartContainer">FusionCharts XT will load here!</div>
+  <div id="chartContainer" align=center>Loading...</div>
 </body>
 </html>

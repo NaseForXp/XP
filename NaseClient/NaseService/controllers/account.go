@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"../tools/rules"
+	"../tools/serial"
 	"../tools/xplog"
 	"github.com/astaxie/beego"
 )
@@ -86,7 +87,12 @@ func (c *AccountController) AccountSet() {
 		} else {
 			//正常
 			var account rules.AccountConfig
-
+			err = serial.ClientVerifyLicense()
+			if err != nil {
+				res.Status = 2
+				res.Errmsg = "错误:版本未注册"
+				goto End
+			}
 			account.Mode = req.Mode
 			account.SafeLev = req.SafeLev
 			account.PasswordComplexity = req.PasswordComplexity
@@ -155,11 +161,13 @@ func (c *AccountController) AccountGet() {
 		}
 	}
 End:
-	if res.Status == 1 {
-		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "获取账户安全配置", "", "成功")
-	} else {
-		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "获取账户安全配置", "", "失败")
-	}
+	/*
+		if res.Status == 1 {
+			xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "获取账户安全配置", "", "成功")
+		} else {
+			xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "获取账户安全配置", "", "失败")
+		}
+	*/
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["Account_ret"] = string(jres)

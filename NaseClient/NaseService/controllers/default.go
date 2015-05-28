@@ -19,7 +19,7 @@ func (c *MainController) Get() {
 func (c *MainController) Test() {
 	var xmldata map[string]string
 	xmldata = make(map[string]string)
-	xmldata["Type"] = "column2d" // pie3d
+	xmldata["Type"] = "Line2D" // pie3d
 	xmldata["Width"] = "500"
 	xmldata["Height"] = "300"
 	xmldata["Caption"] = "总体概况"

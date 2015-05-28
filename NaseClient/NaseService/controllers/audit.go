@@ -25,7 +25,7 @@ type AuditReportResponse struct {
 	YearEventTot  map[string]int // 当年安全事件分类总数 - 直方图
 }
 
-// 规则 - 导出
+// 审计- 报表
 func (c *AuditController) AuditReport() {
 	var res AuditReportResponse
 
@@ -75,5 +75,36 @@ End:
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", len(jres), err)
 	c.Data["Audit_ret"] = string(jres)
-	c.TplNames = "auditcontroller/audit.tpl"
+	//c.TplNames = "auditcontroller/audit.tpl"
+
+	// 本月趋势图
+	var c1_category []map[string]string
+	var c1_data []map[string]string
+	for i := 1; i < 32; i++ {
+		k := fmt.Sprintf("%02d", i)
+		c1_category = append(c1_category, map[string]string{"label": k + "日"})
+		c1_data = append(c1_data, map[string]string{"value": fmt.Sprintf("%d", res.DayInMonth[k])})
+	}
+	c.Data["C1_Category"] = c1_category
+	c.Data["C1_Data"] = c1_data
+
+	// 本月安全事件分类统计
+	type LableValue struct {
+		Label string
+		Value int
+	}
+	var c2_data []LableValue
+	for k, v := range res.MonthEventTot {
+		c2_data = append(c2_data, LableValue{k, v})
+	}
+	c.Data["C2_Data"] = c2_data
+
+	// 本年安全事件分类统计
+	var c3_data []LableValue
+	for k, v := range res.YearEventTot {
+		c3_data = append(c3_data, LableValue{k, v})
+	}
+	c.Data["C3_Data"] = c3_data
+
+	c.TplNames = "auditcontroller/auditreport.html"
 }

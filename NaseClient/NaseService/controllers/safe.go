@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"../tools/rules"
+	"../tools/serial"
 	"../tools/xplog"
 	"github.com/astaxie/beego"
 )
@@ -104,6 +105,12 @@ func (c *SafeController) SafeBaseSet() {
 			res.Status = 2
 			res.Errmsg = "错误:参数格式错误" + data
 		} else {
+			err = serial.ClientVerifyLicense()
+			if err != nil {
+				res.Status = 2
+				res.Errmsg = "错误:软件未注册"
+				goto End
+			}
 			//正常
 			var base rules.SafeBaseConfig
 			base.Mode = req.Mode
@@ -169,11 +176,13 @@ func (c *SafeController) SafeBaseGet() {
 		}
 	}
 End:
-	if res.Status == 1 {
-		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "获取基本防护配置", "", "成功")
-	} else {
-		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "获取基本防护配置", "", "失败")
-	}
+	/*
+		if res.Status == 1 {
+			xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "获取基本防护配置", "", "成功")
+		} else {
+			xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "获取基本防护配置", "", "失败")
+		}
+	*/
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["Safe_ret"] = string(jres)
@@ -207,6 +216,13 @@ func (c *SafeController) SafeHighSet() {
 			res.Errmsg = "错误:参数格式错误" + data
 		} else {
 			//正常
+			err = serial.ClientVerifyLicense()
+			if err != nil {
+				res.Status = 2
+				res.Errmsg = "错误:软件未注册"
+				goto End
+			}
+
 			var high rules.SafeHighConfig
 			high.Mode = req.Mode
 			high.AddService = req.AddService
@@ -275,11 +291,13 @@ func (c *SafeController) SafeHighGet() {
 		}
 	}
 End:
-	if res.Status == 1 {
-		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "获取增强防护配置", "", "成功")
-	} else {
-		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "获取增强防护配置", "", "失败")
-	}
+	/*
+		if res.Status == 1 {
+			xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "获取增强防护配置", "", "成功")
+		} else {
+			xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "获取增强防护配置", "", "失败")
+		}
+	*/
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["Safe_ret"] = string(jres)
