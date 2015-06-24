@@ -81,6 +81,18 @@ type LogHomeCountResponse struct {
 	HighProcInject int    // 增强防护-防止进程被注入
 }
 
+// 日志导出 - 请求
+type LogExportRequest struct {
+	SaveDir string // 保存目录
+}
+
+// 日志导出 - 响应
+type LogExportResponse struct {
+	Status   int    // 1:成功 其他:失败
+	Errmsg   string // 错误原因
+	SaveFile string // 保存的文件全路径
+}
+
 // 日志 - 查询 - 系统日志数量
 func (c *LogController) LogSysTotle() {
 	var res LogTotleResponse
@@ -392,4 +404,57 @@ End:
 	c.Data["Data"] = data
 
 	c.TplNames = "logcontroller/homecount.html"
+}
+
+// 日志 - 导出到文件
+func (c *LogController) LogExport() {
+	var req LogExportRequest
+	var res LogExportResponse
+
+	usertokey := c.GetString("UserTokey")
+	data := c.GetString("data")
+
+	fmt.Println("---LogExport")
+	fmt.Println("request :", usertokey, " | ", data)
+
+	if LoginCheckTokeyJson(usertokey) == false {
+		res.Status = 2
+		res.Errmsg = "错误:请登录后操作"
+		goto End
+	}
+
+	if data == "" {
+		res.Status = 2
+		res.Errmsg = "错误:数据data为空"
+	} else {
+		err := json.Unmarshal([]byte(data), &req)
+		if err != nil {
+			res.Status = 2
+			res.Errmsg = "错误:参数格式错误" + data
+		} else {
+			//正常
+			saveName, err := xplog.LogExport(req.SaveDir)
+			if err != nil {
+				res.Status = 2
+				res.Errmsg = err.Error()
+			} else {
+				// 成功
+				res.Status = 1
+				res.Errmsg = "日志导出成功"
+				res.SaveFile = saveName
+			}
+		}
+	}
+End:
+	if res.Status == 1 {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "日志导出", res.SaveFile, "成功")
+	} else {
+		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "日志导出", res.SaveFile, "失败")
+	}
+
+	jres, err := json.Marshal(res)
+	fmt.Println("response:", err)
+	c.Data["Log_ret"] = string(jres)
+
+	c.TplNames = "logcontroller/log.tpl"
 }

@@ -6,7 +6,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"io"
 	"log"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -23,7 +25,7 @@ var (
 	configFile     string         = "config.ini"    // 配置文件相对路径
 	logFile        string         = "log\\log.db"   // 规则数据库文件
 	hDBLog         *sql.DB                          // 数据库句柄
-	rwLockLog      sync.RWMutex                     // 记录操作锁
+	rwLockLog      sync.Mutex                       // 记录操作锁
 	logWaitGroup   sync.WaitGroup                   // 线程等待组
 	logCacheInsert []string                         // 拦截的日志放入这里
 	logCacheWrite  []string                         // 写入数据库的实际缓存
@@ -82,6 +84,7 @@ func LogInit() (err error) {
 		return err
 	}
 
+	logStatus = 0
 	logWaitGroup.Add(1)
 	go LogWriteCacheToDb()
 	return nil
@@ -167,22 +170,30 @@ func LogWriteCacheToDb() {
 	fmt.Println("Write Process exists")
 }
 
-// 连接数据库
-func LogConnectSqlite() (err error) {
+func LogGetDbName() (dbName string, err error) {
 	rootDir, err := RootDir.GetRootDir()
 	if err != nil {
-		return err
+		return dbName, err
 	}
 
 	configpath := filepath.Join(rootDir, configFile)
 	cfgIni, err := config.ReadDefault(configpath)
 	if err != nil {
-		return errors.New("错误:读取配置文件失败:" + configpath)
+		return dbName, errors.New("错误:读取配置文件失败:" + configpath)
 	}
 
-	dbName, err := cfgIni.String("Log", "LogDbFile")
+	dbName, err = cfgIni.String("Log", "LogDbFile")
 	if err != nil {
-		return errors.New("错误:[Log]=>LogDbFile")
+		return dbName, errors.New("错误:[Log]=>LogDbFile")
+	}
+	return dbName, nil
+}
+
+// 连接数据库
+func LogConnectSqlite() (err error) {
+	dbName, err := LogGetDbName()
+	if err != nil {
+		return err
 	}
 
 	db, err := sql.Open("sqlite3", dbName)
@@ -763,6 +774,105 @@ func LogQueryYearEventTot() (YearTop map[string]int, err error) {
 		return YearTop, err
 	}
 	return YearTop, err
+}
+
+// 拷贝文件
+func CopyFile(srcName, dstName string) (written int64, err error) {
+	src, err := os.Open(srcName)
+	if err != nil {
+		return written, err
+	}
+	defer src.Close()
+	dst, err := os.OpenFile(dstName, os.O_WRONLY|os.O_CREATE, 0644)
+	if err != nil {
+		return written, err
+	}
+	defer dst.Close()
+	return io.Copy(dst, src)
+}
+
+// 清空日志表
+func LogClearSysEvent() (err error) {
+	db := hDBLog
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("LogClearSysEvent:DB.Begin(): %s\n", err)
+		return err
+	}
+
+	sql := "delete from log_sys"
+	_, err = tx.Exec(sql)
+	if err != nil {
+		log.Printf("LogClearSysEvent(log_sys): %s, %s\n", err, sql)
+		tx.Rollback()
+		return err
+	}
+
+	sql = "delete from log_event"
+	_, err = tx.Exec(sql)
+	if err != nil {
+		log.Printf("LogClearSysEvent(log_event): %s, %s\n", err, sql)
+		tx.Rollback()
+		return err
+	}
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("LogQuerySysTotle(commit transaction): %s\n", err)
+		tx.Rollback()
+		return err
+	}
+
+	sql = "vacuum;"
+	_, err = db.Exec(sql)
+	if err != nil {
+		log.Printf("LogClearSysEvent(log_sys): %s, %s\n", err, sql)
+		return err
+	}
+
+	return nil
+}
+
+// 日志导出
+func LogExport(SaveDir string) (SaveFile string, err error) {
+	SaveDir, _ = filepath.Abs(SaveDir)
+
+	tm := time.Now()
+	name := fmt.Sprintf("%04d%02d%02d_%02d%02d%02d.db", tm.Year(), int(tm.Month()), tm.Day(), tm.Hour(), tm.Minute(), tm.Second())
+
+	SaveFile = filepath.Join(SaveDir, name)
+
+	// 1、关闭数据库
+	rwLockLog.Lock()
+	logStatus = 1 // 通知日志写入线程退出
+	rwLockLog.Unlock()
+	logWaitGroup.Wait()
+	LogCloseSqlite(hDBLog)
+
+	// 2、copy出数据库文件
+	dbname, err := LogGetDbName()
+	if err != nil {
+		return SaveFile, err
+	}
+
+	_, err = CopyFile(dbname, SaveFile)
+	if err != nil {
+		return SaveFile, err
+	}
+
+	// 3、打开数据库
+	err = LogInit()
+	if err != nil {
+		return SaveFile, err
+	}
+
+	// 4、清空数据库表项目
+	err = LogClearSysEvent()
+	if err != nil {
+		return SaveFile, err
+	}
+	return SaveFile, nil
 }
 
 /*

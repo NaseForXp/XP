@@ -23,15 +23,15 @@ func main() {
 		xplog.LogFini()
 		return
 	}
-	/*
-		err = rules.RuleMatchInit()
-		if err != nil {
-			fmt.Println(err)
-			xplog.LogFini()
-			rules.RulesRelease()
-			return
-		}
-	*/
+
+	err = rules.RuleMatchInit()
+	if err != nil {
+		fmt.Println(err)
+		xplog.LogFini()
+		rules.RulesRelease()
+		return
+	}
+
 	err = serial.ClientVerifyLicense()
 	if err != nil {
 		// 没注册
