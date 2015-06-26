@@ -66,7 +66,15 @@ func (c *IPController) IPAddGroup() {
 	var req IPGroupRequset
 	var res IPGroupResponse
 
+	usertokey := c.GetString("UserTokey")
 	data := c.GetString("data")
+
+	if tools.LoginCheckTokeyJson(usertokey) == false {
+		res.Status = 2
+		res.Errmsg = "错误:请登录后操作"
+		goto End
+	}
+
 	if data == "" {
 		res.Status = 2
 		res.Errmsg = "错误:数据data为空"
@@ -87,6 +95,13 @@ func (c *IPController) IPAddGroup() {
 		}
 	}
 
+End:
+	if res.Status == 1 {
+		//
+	} else {
+		//
+	}
+
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["ip_ret"] = string(jres)
@@ -100,7 +115,15 @@ func (c *IPController) IPDelGroup() {
 	var req IPGroupRequset
 	var res IPGroupResponse
 
+	usertokey := c.GetString("UserTokey")
 	data := c.GetString("data")
+
+	if tools.LoginCheckTokeyJson(usertokey) == false {
+		res.Status = 2
+		res.Errmsg = "错误:请登录后操作"
+		goto End
+	}
+
 	if data == "" {
 		res.Status = 2
 		res.Errmsg = "错误:数据data为空"
@@ -121,6 +144,12 @@ func (c *IPController) IPDelGroup() {
 		}
 	}
 
+End:
+	if res.Status == 1 {
+		//
+	} else {
+		//
+	}
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["ip_ret"] = string(jres)
@@ -133,14 +162,29 @@ func (c *IPController) IPQueryGroup() {
 	fmt.Println("request :")
 	var res IPQueryGroupResponse
 
-	groups, err := tools.RuleIPQueryGroup()
-	if err != nil {
+	usertokey := c.GetString("UserTokey")
+
+	if tools.LoginCheckTokeyJson(usertokey) == false {
 		res.Status = 2
-		res.Errmsg = err.Error()
+		res.Errmsg = "错误:请登录后操作"
+		goto End
 	} else {
-		res.Status = 1
-		res.Errmsg = "查询分组成功"
-		res.Groups = groups
+
+		groups, err := tools.RuleIPQueryGroup()
+		if err != nil {
+			res.Status = 2
+			res.Errmsg = err.Error()
+		} else {
+			res.Status = 1
+			res.Errmsg = "查询分组成功"
+			res.Groups = groups
+		}
+	}
+End:
+	if res.Status == 1 {
+		//
+	} else {
+		//
 	}
 
 	jres, err := json.Marshal(res)
@@ -157,7 +201,15 @@ func (c *IPController) IPAdd() {
 	var req IPAddRequset
 	var res IPAddDelResponse
 
+	usertokey := c.GetString("UserTokey")
 	data := c.GetString("data")
+
+	if tools.LoginCheckTokeyJson(usertokey) == false {
+		res.Status = 2
+		res.Errmsg = "错误:请登录后操作"
+		goto End
+	}
+
 	if data == "" {
 		res.Status = 2
 		res.Errmsg = "错误:数据data为空"
@@ -178,6 +230,13 @@ func (c *IPController) IPAdd() {
 		}
 	}
 
+End:
+	if res.Status == 1 {
+		//
+	} else {
+		//
+	}
+
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["ip_ret"] = string(jres)
@@ -191,7 +250,15 @@ func (c *IPController) IPDel() {
 	var req IPDelRequset
 	var res IPAddDelResponse
 
+	usertokey := c.GetString("UserTokey")
 	data := c.GetString("data")
+
+	if tools.LoginCheckTokeyJson(usertokey) == false {
+		res.Status = 2
+		res.Errmsg = "错误:请登录后操作"
+		goto End
+	}
+
 	if data == "" {
 		res.Status = 2
 		res.Errmsg = "错误:数据data为空"
@@ -211,7 +278,12 @@ func (c *IPController) IPDel() {
 			}
 		}
 	}
-
+End:
+	if res.Status == 1 {
+		//
+	} else {
+		//
+	}
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["ip_ret"] = string(jres)
@@ -224,16 +296,30 @@ func (c *IPController) IPQuery() {
 	fmt.Println("request :")
 	var res IPQueryResponse
 
-	ipport, err := tools.RuleIPQuery()
-	if err != nil {
+	usertokey := c.GetString("UserTokey")
+
+	if tools.LoginCheckTokeyJson(usertokey) == false {
 		res.Status = 2
-		res.Errmsg = err.Error()
+		res.Errmsg = "错误:请登录后操作"
+		goto End
 	} else {
-		res.Status = 1
-		res.Errmsg = "查询IP列表成功"
-		res.IpPort = ipport
+		ipport, err := tools.RuleIPQuery()
+		if err != nil {
+			res.Status = 2
+			res.Errmsg = err.Error()
+		} else {
+			res.Status = 1
+			res.Errmsg = "查询IP列表成功"
+			res.IpPort = ipport
+		}
 	}
 
+End:
+	if res.Status == 1 {
+		//
+	} else {
+		//
+	}
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["ip_ret"] = string(jres)
@@ -247,7 +333,15 @@ func (c *IPController) IPQueryByGroup() {
 	var req IPQueryByGroupRequest
 	var res IPQueryResponse
 
+	usertokey := c.GetString("UserTokey")
 	data := c.GetString("data")
+
+	if tools.LoginCheckTokeyJson(usertokey) == false {
+		res.Status = 2
+		res.Errmsg = "错误:请登录后操作"
+		goto End
+	}
+
 	if data == "" {
 		res.Status = 2
 		res.Errmsg = "错误:数据data为空"
@@ -268,7 +362,12 @@ func (c *IPController) IPQueryByGroup() {
 			}
 		}
 	}
-
+End:
+	if res.Status == 1 {
+		//
+	} else {
+		//
+	}
 	jres, err := json.Marshal(res)
 	fmt.Println("response:", string(jres), err)
 	c.Data["ip_ret"] = string(jres)

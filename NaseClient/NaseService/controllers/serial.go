@@ -64,6 +64,7 @@ func (c *SerialController) SerialRegist() {
 			goto End
 		}
 		//正常 - 验证注册码
+		fmt.Println(req.SerialNo)
 		err = serial.ClientVerifySn(req.SerialNo)
 		if err != nil {
 			res.Status = 2

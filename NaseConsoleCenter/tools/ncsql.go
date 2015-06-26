@@ -44,27 +44,27 @@ func RulesInit() (err error) {
 	}
 
 	// 初始化表
-	/*	{
-			err = CreateTableUser(hDbRules)
-			if err != nil {
-				return err
-			}
-
-			err = CreateTableIPGroup(hDbRules)
-			if err != nil {
-				return err
-			}
-
-			err = CreateTableIPList(hDbRules)
-			if err != nil {
-				return err
-			}
-
-			err = CreateTableLog(hDbLog)
-			if err != nil {
-				return err
-			}
+	/*{
+		err = CreateTableUser(hDbRules)
+		if err != nil {
+			return err
 		}
+
+		err = CreateTableIPGroup(hDbRules)
+		if err != nil {
+			return err
+		}
+
+		err = CreateTableIPList(hDbRules)
+		if err != nil {
+			return err
+		}
+
+		err = CreateTableLog(hDbLog)
+		if err != nil {
+			return err
+		}
+	}
 	*/
 	return err
 }
@@ -158,7 +158,6 @@ func CreateTableUser(db *sql.DB) (err error) {
 	}
 
 	sql = `insert into user (uid, uname, user_type, user_group, password) values 
-		(1, 'CenterAdmin', 1, 1, 'bb149ef481514784aa75833d76be7b39'),
 		(2, 'Admin', 2, 2, 'b40fdc1791396dc11b4ad54b5744bcd6'),
 		(3, 'Audit', 3, 3, 'b40fdc1791396dc11b4ad54b5744bcd6');
 	`
