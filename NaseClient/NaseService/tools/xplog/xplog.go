@@ -875,6 +875,95 @@ func LogExport(SaveDir string) (SaveFile string, err error) {
 	return SaveFile, nil
 }
 
+// 当天统计信息 - 总量
+func LogQueryTodayCount() (homeCnt LogHomeCount, err error) {
+	tm := time.Now()
+	today := fmt.Sprintf("%04d-%02d-%02d", tm.Year(), int(tm.Month()), tm.Day())
+
+	db := hDBLog
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("LogQueryTodayCount:DB.Begin(): %s\n", err)
+		return homeCnt, err
+	}
+
+	// 查询总数totle
+	sql := fmt.Sprintf("select count(*) from log_event where Time like '%s%%'", today)
+	rows, err := db.Query(sql)
+	if err != nil {
+		log.Printf("LogQueryTodayCount(): %s", err)
+		return homeCnt, errors.New("错误:查询当天统计信息失败")
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		rows.Scan(&homeCnt.Totle)
+		break
+	}
+	rows.Close()
+
+	// 查询单项
+	sql = fmt.Sprintf("select Module, count(*) as cnt from log_event where Time like '%s%%' group by Module", today)
+	rows, err = db.Query(sql)
+	if err != nil {
+		log.Printf("LogQueryTodayCount(): %s", err)
+		return homeCnt, errors.New("错误:查询当天统计信息失败")
+	}
+	defer rows.Close()
+
+	var name string
+	var cnt int
+	for rows.Next() {
+		rows.Scan(&name, &cnt)
+		switch name {
+		case "白名单":
+			homeCnt.White = cnt
+		case "黑名单":
+			homeCnt.Black = cnt
+		case "基本防护-系统文件及目录保护":
+			homeCnt.BaseWinDir = cnt
+		case "基本防护-系统启动文件保护":
+			homeCnt.BaseWinStart = cnt
+		case "基本防护-防止格式化系统磁盘":
+			homeCnt.BaseWinFormat = cnt
+		case "基本防护-防止系统关键进程被杀死":
+			homeCnt.BaseWinProc = cnt
+		case "基本防护-防止篡改系统服务":
+			homeCnt.BaseWinService = cnt
+		case "增强防护-防止服务被添加":
+			homeCnt.HighAddService = cnt
+		case "增强防护-防止自动运行":
+			homeCnt.HighAutoRun = cnt
+		case "增强防护-防止开机自启动":
+			homeCnt.HighAddStart = cnt
+		case "增强防护-防止磁盘被直接读写":
+			homeCnt.HighReadWrite = cnt
+		case "增强防护-禁止创建.exe文件":
+			homeCnt.HighCreateExe = cnt
+		case "增强防护-防止驱动程序被加载":
+			homeCnt.HighLoadSys = cnt
+		case "增强防护-防止进程被注入":
+			homeCnt.HighProcInject = cnt
+		}
+	}
+	rows.Close()
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("LogQueryTodayCount(commit transaction): %s\n", err)
+		tx.Rollback()
+		return homeCnt, err
+	}
+
+	return homeCnt, nil
+}
+
+// 写入当天统计信息
+func LogInsertToday(data LogHomeCount, today string) (err error) {
+	return nil
+}
+
 /*
 func main() {
 	err := LogInit()

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"../tools/ToolCenter"
+	"../tools/toolcenter"
 	"github.com/astaxie/beego"
 )
 
@@ -25,7 +25,7 @@ func (c *CenterController) CenterGetaddr() {
 		CenterPort int
 	}
 
-	ip, port, err := ToolCenter.CenterGetIpPort()
+	ip, port, err := toolcenter.CenterGetIpPort()
 	if err != nil {
 		res.CenterIP = ""
 		res.CenterPort = 0

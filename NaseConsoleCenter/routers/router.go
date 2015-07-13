@@ -22,4 +22,9 @@ func init() {
 	beego.Router("/ip/del", &controllers.IPController{}, "get,post:IPDel")
 	beego.Router("/ip/query", &controllers.IPController{}, "get,post:IPQuery")
 	beego.Router("/ip/querybygroup", &controllers.IPController{}, "get,post:IPQueryByGroup")
+
+	// 接收客户端的安装运行信息
+	beego.Router("/client/add", &controllers.ClientController{}, "get,post:ClientAdd")
+
+	// 接收客户端日志
 }

@@ -6,6 +6,7 @@ import (
 	_ "./routers"
 	"./tools/rules"
 	"./tools/serial"
+	"./tools/toolcenter"
 	"./tools/xplog"
 	"github.com/astaxie/beego"
 )
@@ -31,6 +32,9 @@ func main() {
 		rules.RulesRelease()
 		return
 	}
+
+	// 开启一个线程，用来统计日志信息和发送统计信息到管理中心
+	go toolcenter.CenterCountLogAndSendToCenter()
 
 	err = serial.ClientVerifyLicense()
 	if err != nil {

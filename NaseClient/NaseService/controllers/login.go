@@ -6,8 +6,8 @@ import (
 	"regexp"
 	"strings"
 
-	"../tools/ToolCenter"
 	"../tools/rules"
+	"../tools/toolcenter"
 	"../tools/xplog"
 	"github.com/astaxie/beego"
 )
@@ -91,43 +91,52 @@ func LoginCheck(req LoginRequset) (res LoginResponse) {
 		return res
 	}
 
-	ipport := strings.Split(req.CenterIPPort, ":")
-	if len(ipport) != 2 {
-		res.Errmsg = "错误:管理中心IP端口格式错误:" + req.CenterIPPort
-		return res
-	}
+	// 管理员需要验证IP+端口
+	if req.User == "Admin" {
+		ipport := strings.Split(req.CenterIPPort, ":")
+		if len(ipport) != 2 {
+			res.Errmsg = "错误:管理中心IP端口格式错误:" + req.CenterIPPort
+			return res
+		}
 
-	ip := ipport[0]
-	port := ipport[1]
+		ip := ipport[0]
+		port := ipport[1]
 
-	if LoginCheckIpFormat(ip) == false {
-		res.Errmsg = "错误:管理中心IP格式错误:" + ip
-		return res
-	}
+		if LoginCheckIpFormat(ip) == false {
+			res.Errmsg = "错误:管理中心IP格式错误:" + ip
+			return res
+		}
 
-	if LoginCheckPortFormat(port) == false {
-		res.Errmsg = "错误:管理中心Port格式错误:" + port
-		return res
-	}
+		if LoginCheckPortFormat(port) == false {
+			res.Errmsg = "错误:管理中心Port格式错误:" + port
+			return res
+		}
 
-	rip, rport, err := ToolCenter.CenterGetIpPort()
-	if err != nil {
-		res.Errmsg = err.Error()
-		return res
-	}
-
-	if ip != rip || port != rport {
-		err = ToolCenter.CenterSetIpPort(ip, port)
+		rip, rport, err := toolcenter.CenterGetIpPort()
 		if err != nil {
 			res.Errmsg = err.Error()
 			return res
 		}
+
+		if ip != rip || port != rport {
+			err = toolcenter.CenterSetIpPort(ip, port)
+			if err != nil {
+				res.Errmsg = err.Error()
+				return res
+			}
+		}
+
 	}
 
 	_, user_type, err := rules.RulesCheckUserPassword(req.User, req.Password)
 	if err != nil {
 		res.Errmsg = err.Error()
 		return res
+	}
+
+	if req.User == "Admin" {
+		// 将客户端信息发送给管理中心
+		toolcenter.CenterSendClientInfo()
 	}
 
 	// 生成用户令牌
