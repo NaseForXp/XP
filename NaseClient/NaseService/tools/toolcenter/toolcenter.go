@@ -12,12 +12,21 @@ import (
 	"net/url"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/larspensjo/config"
 
 	"../RootDir"
 	"../xplog"
+)
+
+var (
+	CenterIP   string = "192.168.1.100"
+	CenterPort string = "8081"
+	LocalIP    string = "127.0.0.1"
+	LocalPort  string = "8080"
+	CenterLock sync.Mutex
 )
 
 func CenterSetIpPort(ip string, port string) (err error) {
@@ -39,6 +48,11 @@ func CenterSetIpPort(ip string, port string) (err error) {
 	cfgIni.AddOption("Center", "Port", string(port))
 
 	cfgIni.WriteFile(configpath, 0644, "### 配置文件")
+
+	CenterLock.Lock()
+	CenterIP = ip
+	CenterPort = string(port)
+	CenterLock.Unlock()
 	return nil
 }
 
@@ -64,6 +78,12 @@ func CenterGetIpPort() (ip string, port string, err error) {
 		return ip, port, errors.New("错误:读取管理中心端口失败:" + port)
 	}
 
+	CenterLock.Lock()
+	CenterIP = ip
+	CenterPort = string(port)
+	LocalIP, _ = GetLocalIP()
+	LocalPort, _ = GetLocalPort()
+	CenterLock.Unlock()
 	return ip, port, nil
 }
 
@@ -76,6 +96,7 @@ func GetLocalIP() (ip string, err error) {
 
 	defer conn.Close()
 	ip = strings.Split(conn.LocalAddr().String(), ":")[0]
+
 	return ip, nil
 }
 
@@ -110,6 +131,7 @@ func HttpGetData(DstUrl string, data string) (ret []byte, err error) {
 	if err != nil {
 		return ret, err
 	}
+	res.Body.Close()
 
 	ret, err = ioutil.ReadAll(res.Body)
 	res.Body.Close()
@@ -128,24 +150,18 @@ type ClientInfomation struct {
 
 func CenterSendClientInfo() (err error) {
 	var data ClientInfomation
-	data.IP, err = GetLocalIP()
-	if err != nil {
-		return err
-	}
 
-	data.Port, err = GetLocalPort()
-	if err != nil {
-		return err
-	}
-
-	cip, cport, err := CenterGetIpPort()
-	if err != nil {
-		return err
-	}
+	CenterLock.Lock()
+	data.IP = LocalIP
+	data.Port = LocalPort
+	cip := CenterIP
+	cport := CenterPort
+	CenterLock.Unlock()
 
 	jdata, err := json.Marshal(data)
-
 	CenterUrl := fmt.Sprintf("http://%s:%s/client/add", cip, cport)
+
+	//fmt.Println(CenterUrl, string(jdata))
 	_, err = HttpGetData(CenterUrl, string(jdata))
 
 	return err
@@ -153,13 +169,36 @@ func CenterSendClientInfo() (err error) {
 
 // 获取今天的日志总数，写入数据库统计表，同时将统计发给管理中心
 func CenterCountLogAndSendToCenter() {
-	//i := 1
+	i := 0
 	for {
-		cntSt, err := xplog.LogQueryTodayCount()
-		fmt.Println(cntSt, err)
 		time.Sleep(time.Second * 20)
 
-		// 写入数据库
+		data, err := xplog.LogQueryTodayCount()
+		if err != nil {
+			continue
+		}
+
+		CenterLock.Lock()
+		data.IP = LocalIP
+		CenterLock.Unlock()
+
+		// 20秒同步一次本地数据库
+		err = xplog.LogInsertToday(data)
+
+		// 60秒同步一次远程管理中心
+		i += 1
+		if i == 3 {
+			i = 0
+
+			cip, cport, err := CenterGetIpPort()
+			if err != nil {
+				continue
+			}
+
+			jdata, err := json.Marshal(data)
+			CenterUrl := fmt.Sprintf("http://%s:%s/client/log", cip, cport)
+			_, err = HttpGetData(CenterUrl, string(jdata))
+		}
 	}
 
 }

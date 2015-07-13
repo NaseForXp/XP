@@ -73,6 +73,27 @@ type LogHomeCount struct {
 	HighProcInject int // 增强防护-防止进程被注入
 }
 
+// 客户端每天统计信息 - 总量
+type LogTodayCount struct {
+	IP             string // 本机IP
+	Time           string // 2012-03-12
+	Totle          int    // 总数
+	White          int    // 白名单事件数量
+	Black          int    // 黑名单事件数量
+	BaseWinDir     int    // 基本防护-系统文件及目录保护
+	BaseWinStart   int    // 基本防护-系统启动文件保护
+	BaseWinFormat  int    // 基本防护-防止格式化系统磁盘
+	BaseWinProc    int    // 基本防护-防止系统关键进程被杀死
+	BaseWinService int    // 基本防护-防止篡改系统服务
+	HighAddService int    // 增强防护-防止服务被添加
+	HighAutoRun    int    // 增强防护-防止自动运行
+	HighAddStart   int    // 增强防护-防止开机自启动
+	HighReadWrite  int    // 增强防护-防止磁盘被直接读写
+	HighCreateExe  int    // 增强防护-禁止创建.exe文件
+	HighLoadSys    int    // 增强防护-防止驱动程序被加载
+	HighProcInject int    // 增强防护-防止进程被注入
+}
+
 func LogInit() (err error) {
 	err = LogConnectSqlite()
 	if err != nil {
@@ -876,15 +897,16 @@ func LogExport(SaveDir string) (SaveFile string, err error) {
 }
 
 // 当天统计信息 - 总量
-func LogQueryTodayCount() (homeCnt LogHomeCount, err error) {
+func LogQueryTodayCount() (todayCnt LogTodayCount, err error) {
 	tm := time.Now()
 	today := fmt.Sprintf("%04d-%02d-%02d", tm.Year(), int(tm.Month()), tm.Day())
+	todayCnt.Time = today
 
 	db := hDBLog
 	tx, err := db.Begin()
 	if err != nil {
 		log.Printf("LogQueryTodayCount:DB.Begin(): %s\n", err)
-		return homeCnt, err
+		return todayCnt, err
 	}
 
 	// 查询总数totle
@@ -892,12 +914,12 @@ func LogQueryTodayCount() (homeCnt LogHomeCount, err error) {
 	rows, err := db.Query(sql)
 	if err != nil {
 		log.Printf("LogQueryTodayCount(): %s", err)
-		return homeCnt, errors.New("错误:查询当天统计信息失败")
+		return todayCnt, errors.New("错误:查询当天统计信息失败")
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		rows.Scan(&homeCnt.Totle)
+		rows.Scan(&todayCnt.Totle)
 		break
 	}
 	rows.Close()
@@ -907,7 +929,7 @@ func LogQueryTodayCount() (homeCnt LogHomeCount, err error) {
 	rows, err = db.Query(sql)
 	if err != nil {
 		log.Printf("LogQueryTodayCount(): %s", err)
-		return homeCnt, errors.New("错误:查询当天统计信息失败")
+		return todayCnt, errors.New("错误:查询当天统计信息失败")
 	}
 	defer rows.Close()
 
@@ -917,33 +939,33 @@ func LogQueryTodayCount() (homeCnt LogHomeCount, err error) {
 		rows.Scan(&name, &cnt)
 		switch name {
 		case "白名单":
-			homeCnt.White = cnt
+			todayCnt.White = cnt
 		case "黑名单":
-			homeCnt.Black = cnt
+			todayCnt.Black = cnt
 		case "基本防护-系统文件及目录保护":
-			homeCnt.BaseWinDir = cnt
+			todayCnt.BaseWinDir = cnt
 		case "基本防护-系统启动文件保护":
-			homeCnt.BaseWinStart = cnt
+			todayCnt.BaseWinStart = cnt
 		case "基本防护-防止格式化系统磁盘":
-			homeCnt.BaseWinFormat = cnt
+			todayCnt.BaseWinFormat = cnt
 		case "基本防护-防止系统关键进程被杀死":
-			homeCnt.BaseWinProc = cnt
+			todayCnt.BaseWinProc = cnt
 		case "基本防护-防止篡改系统服务":
-			homeCnt.BaseWinService = cnt
+			todayCnt.BaseWinService = cnt
 		case "增强防护-防止服务被添加":
-			homeCnt.HighAddService = cnt
+			todayCnt.HighAddService = cnt
 		case "增强防护-防止自动运行":
-			homeCnt.HighAutoRun = cnt
+			todayCnt.HighAutoRun = cnt
 		case "增强防护-防止开机自启动":
-			homeCnt.HighAddStart = cnt
+			todayCnt.HighAddStart = cnt
 		case "增强防护-防止磁盘被直接读写":
-			homeCnt.HighReadWrite = cnt
+			todayCnt.HighReadWrite = cnt
 		case "增强防护-禁止创建.exe文件":
-			homeCnt.HighCreateExe = cnt
+			todayCnt.HighCreateExe = cnt
 		case "增强防护-防止驱动程序被加载":
-			homeCnt.HighLoadSys = cnt
+			todayCnt.HighLoadSys = cnt
 		case "增强防护-防止进程被注入":
-			homeCnt.HighProcInject = cnt
+			todayCnt.HighProcInject = cnt
 		}
 	}
 	rows.Close()
@@ -953,14 +975,63 @@ func LogQueryTodayCount() (homeCnt LogHomeCount, err error) {
 	if err != nil {
 		log.Printf("LogQueryTodayCount(commit transaction): %s\n", err)
 		tx.Rollback()
-		return homeCnt, err
+		return todayCnt, err
 	}
 
-	return homeCnt, nil
+	return todayCnt, nil
 }
 
 // 写入当天统计信息
-func LogInsertToday(data LogHomeCount, today string) (err error) {
+func LogInsertToday(data LogTodayCount) (err error) {
+	db := hDBLog
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("LogInsertToday:DB.Begin(): %s\n", err)
+		return err
+	}
+
+	cnt := 0
+	sql := fmt.Sprintf("select count(*) from log_count where Time = '%s'", data.Time)
+	rows, err := db.Query(sql)
+	if err != nil {
+		log.Printf("LogInsertToday(): %s", err)
+		return errors.New("错误:写入当天统计信息失败")
+	}
+	defer rows.Close()
+	for rows.Next() {
+		rows.Scan(&cnt)
+	}
+	rows.Close()
+
+	sql = ""
+	if cnt == 0 {
+		// insert
+		sql = fmt.Sprintf("insert into log_count (Id, Time, Totle, White, Black, BaseWinDir, BaseWinStart, BaseWinFormat, BaseWinProc, BaseWinService, HighAddService, HighAutoRun, HighAddStart, HighReadWrite, HighCreateExe, HighLoadSys, HighProcInject) values (null, '%s', %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d)",
+			data.Time, data.Totle, data.White, data.Black, data.BaseWinDir, data.BaseWinStart, data.BaseWinFormat, data.BaseWinProc,
+			data.BaseWinService, data.HighAddService, data.HighAutoRun, data.HighAddStart, data.HighReadWrite, data.HighCreateExe,
+			data.HighLoadSys, data.HighProcInject)
+	} else {
+		// update
+		sql = fmt.Sprintf("update log_count set Totle = %d, White = %d, Black = %d, BaseWinDir = %d, BaseWinStart = %d, BaseWinFormat = %d, BaseWinProc = %d, BaseWinService = %d, HighAddService = %d, HighAutoRun = %d, HighAddStart = %d, HighReadWrite = %d, HighCreateExe = %d, HighLoadSys = %d, HighProcInject = %d where Time = '%s'",
+			data.Totle, data.White, data.Black, data.BaseWinDir, data.BaseWinStart, data.BaseWinFormat, data.BaseWinProc,
+			data.BaseWinService, data.HighAddService, data.HighAutoRun, data.HighAddStart, data.HighReadWrite, data.HighCreateExe,
+			data.HighLoadSys, data.HighProcInject, data.Time)
+	}
+
+	_, err = tx.Exec(sql)
+	if err != nil {
+		log.Printf("LogInsertToday(): %s, %s\n", err, sql)
+		tx.Rollback()
+		return err
+	}
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("LogInsertToday(commit transaction): %s\n", err)
+		tx.Rollback()
+		return err
+	}
 	return nil
 }
 

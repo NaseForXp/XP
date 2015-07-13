@@ -136,7 +136,13 @@ func LoginCheck(req LoginRequset) (res LoginResponse) {
 
 	if req.User == "Admin" {
 		// 将客户端信息发送给管理中心
-		toolcenter.CenterSendClientInfo()
+		err = toolcenter.CenterSendClientInfo()
+		if err != nil {
+			res.Errmsg = "管理中心无法连接"
+			res.Status = 2
+			//return res
+
+		}
 	}
 
 	// 生成用户令牌

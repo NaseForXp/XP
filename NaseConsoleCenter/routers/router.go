@@ -26,5 +26,8 @@ func init() {
 	// 接收客户端的安装运行信息
 	beego.Router("/client/add", &controllers.ClientController{}, "get,post:ClientAdd")
 
+	// 接收客户端的日志统计信息
+	beego.Router("/client/log", &controllers.ClientController{}, "get,post:ClientLog")
+
 	// 接收客户端日志
 }
