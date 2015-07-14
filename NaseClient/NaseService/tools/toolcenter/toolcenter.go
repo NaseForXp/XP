@@ -131,7 +131,6 @@ func HttpGetData(DstUrl string, data string) (ret []byte, err error) {
 	if err != nil {
 		return ret, err
 	}
-	res.Body.Close()
 
 	ret, err = ioutil.ReadAll(res.Body)
 	res.Body.Close()

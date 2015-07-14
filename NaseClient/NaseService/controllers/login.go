@@ -140,8 +140,7 @@ func LoginCheck(req LoginRequset) (res LoginResponse) {
 		if err != nil {
 			res.Errmsg = "管理中心无法连接"
 			res.Status = 2
-			//return res
-
+			return res
 		}
 	}
 

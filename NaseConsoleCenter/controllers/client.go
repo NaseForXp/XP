@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"../tools"
 	"github.com/astaxie/beego"
 )
 
@@ -25,6 +26,7 @@ type ClientInfomationResponse struct {
 
 // 客户端每天统计信息 - 总量
 type LogTodayCountRequest struct {
+	IP             string // 本机IP
 	Time           string // 2012-03-12
 	Totle          int    // 总数
 	White          int    // 白名单事件数量
@@ -67,8 +69,14 @@ func (c *ClientController) ClientAdd() {
 			res.Errmsg = "错误:参数格式错误" + data
 		} else {
 			// 写入数据库 XXXX
-			res.Errmsg = "成功"
-			res.Status = 1
+			err := tools.RuleClientLogin(req.IP, req.Port)
+			if err == nil {
+				res.Errmsg = "成功"
+				res.Status = 1
+			} else {
+				res.Errmsg = err.Error()
+				res.Status = 2
+			}
 		}
 	}
 
@@ -98,8 +106,18 @@ func (c *ClientController) ClientLog() {
 			res.Errmsg = "错误:参数格式错误" + data
 		} else {
 			// 写入数据库 XXXX
-			res.Errmsg = "成功"
-			res.Status = 1
+			err = tools.RuleClientLogToday(req.IP, req.Time, req.Totle, req.White,
+				req.Black, req.BaseWinDir, req.BaseWinStart, req.BaseWinFormat,
+				req.BaseWinProc, req.BaseWinService, req.HighAddService,
+				req.HighAutoRun, req.HighAddStart, req.HighReadWrite, req.HighCreateExe,
+				req.HighLoadSys, req.HighProcInject)
+			if err == nil {
+				res.Errmsg = "成功"
+				res.Status = 1
+			} else {
+				res.Errmsg = err.Error()
+				res.Status = 2
+			}
 		}
 	}
 

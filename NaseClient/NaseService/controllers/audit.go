@@ -31,7 +31,7 @@ func (c *AuditController) AuditReport() {
 
 	usertokey := c.GetString("UserTokey")
 
-	fmt.Println("---AuditDump")
+	fmt.Println("---AuditReport")
 	fmt.Println("request :", usertokey)
 
 	if LoginCheckTokeyJson(usertokey) == false {
@@ -80,11 +80,13 @@ End:
 	// 本月趋势图
 	var c1_category []map[string]string
 	var c1_data []map[string]string
+
 	for i := 1; i < 32; i++ {
 		k := fmt.Sprintf("%02d", i)
 		c1_category = append(c1_category, map[string]string{"label": k + "日"})
 		c1_data = append(c1_data, map[string]string{"value": fmt.Sprintf("%d", res.DayInMonth[k])})
 	}
+
 	c.Data["C1_Category"] = c1_category
 	c.Data["C1_Data"] = c1_data
 

@@ -60,12 +60,13 @@ func RulesInit() (err error) {
 			return err
 		}
 
-		err = CreateTableLog(hDbLog)
-		if err != nil {
-			return err
-		}
+
 	}
 	*/
+	err = CreateTableLog(hDbLog)
+	if err != nil {
+		return err
+	}
 	return err
 }
 
@@ -662,4 +663,104 @@ func RuleIPQueryByGroup(group string) (ipport []IpPort, err error) {
 		return ipport, err
 	}
 	return ipport, err
+}
+
+// 客户端登录时候将客户端IP+端口添加到管理中心
+func RuleClientLogin(ip, port string) (err error) {
+	db := hDbRules
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("RuleClientLogin:DB.Begin(): %s\n", err)
+		return err
+	}
+
+	var sql string
+	// 查找IP是否存在
+	sql = fmt.Sprintf("select count(*) from ip_list where IP = '%s'", ip)
+	rows, err := db.Query(sql)
+	if err != nil {
+		log.Printf("RuleClientLogin(): %s", err)
+		return errors.New("错误:添加IP到管理中心失败")
+	}
+	defer rows.Close()
+
+	var cnt int = 0
+	for rows.Next() {
+		rows.Scan(&cnt)
+	}
+	rows.Close()
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("RuleClientLogin(commit transaction): %s\n", err)
+		tx.Rollback()
+		return err
+	}
+
+	if cnt == 0 {
+		// ip不存在，插入
+		err = RuleIPAdd(ip, port, "默认组")
+	}
+	return err
+}
+
+// 客户端将日志统计上传到管理中心
+func RuleClientLogToday(IP, Time string, Totle, White, Black, BaseWinDir, BaseWinStart,
+	BaseWinFormat, BaseWinProc, BaseWinService, HighAddService, HighAutoRun,
+	HighAddStart, HighReadWrite, HighCreateExe, HighLoadSys, HighProcInject int) (err error) {
+	db := hDbLog
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("RuleClientLogToday:DB.Begin(): %s\n", err)
+		return err
+	}
+
+	var sql string
+	// 查找记录是否存在
+	sql = fmt.Sprintf("select count(*) from log_count where IP = '%s' and Time = '%s'", IP, Time)
+	rows, err := db.Query(sql)
+	if err != nil {
+		log.Printf("RuleClientLogToday(): %s", err)
+		return errors.New("错误:接收客户端日志统计失败")
+	}
+	defer rows.Close()
+
+	var cnt int = 0
+	for rows.Next() {
+		rows.Scan(&cnt)
+	}
+	rows.Close()
+
+	sql = ""
+	if cnt == 0 {
+		// insert
+		sql = fmt.Sprintf("insert into log_count (Id, IP, Time, Totle, White, Black, BaseWinDir, BaseWinStart, BaseWinFormat, BaseWinProc, BaseWinService, HighAddService, HighAutoRun, HighAddStart, HighReadWrite, HighCreateExe, HighLoadSys, HighProcInject) values (null, '%s', '%s', %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d)",
+			IP, Time, Totle, White, Black, BaseWinDir, BaseWinStart, BaseWinFormat, BaseWinProc,
+			BaseWinService, HighAddService, HighAutoRun, HighAddStart, HighReadWrite, HighCreateExe,
+			HighLoadSys, HighProcInject)
+	} else {
+		// update
+		sql = fmt.Sprintf("update log_count set Totle = %d, White = %d, Black = %d, BaseWinDir = %d, BaseWinStart = %d, BaseWinFormat = %d, BaseWinProc = %d, BaseWinService = %d, HighAddService = %d, HighAutoRun = %d, HighAddStart = %d, HighReadWrite = %d, HighCreateExe = %d, HighLoadSys = %d, HighProcInject = %d where IP = '%s' and Time = '%s'",
+			Totle, White, Black, BaseWinDir, BaseWinStart, BaseWinFormat, BaseWinProc,
+			BaseWinService, HighAddService, HighAutoRun, HighAddStart, HighReadWrite, HighCreateExe,
+			HighLoadSys, HighProcInject, IP, Time)
+	}
+
+	_, err = tx.Exec(sql)
+	if err != nil {
+		log.Printf("LogInsertToday(): %s, %s\n", err, sql)
+		tx.Rollback()
+		return err
+	}
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("RuleClientLogToday(commit transaction): %s\n", err)
+		tx.Rollback()
+		return err
+	}
+
+	return err
 }

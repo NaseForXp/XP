@@ -278,7 +278,7 @@ func LogCreateTable() (err error) {
 	// 统计表
 	sql = `create table if not exists log_count (
 			Id integer not null primary key, 
-			Time date unique,
+			Time char(20) unique,
 			Totle integer default 0,
 			White integer default 0,
 			Black integer default 0,
@@ -510,6 +510,7 @@ func LogQueryEvent(KeyWord, TimeStart, TimeStop string, Start, Length int) (resA
 }
 
 // 客户端首页 - 查询统计信息 - 总量
+/*
 func LogQueryHomeCount() (homeCnt LogHomeCount, err error) {
 	db := hDBLog
 	tx, err := db.Begin()
@@ -589,7 +590,61 @@ func LogQueryHomeCount() (homeCnt LogHomeCount, err error) {
 
 	return homeCnt, nil
 }
+*/
+func LogQueryHomeCount() (homeCnt LogHomeCount, err error) {
+	db := hDBLog
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("LogQueryCount:DB.Begin(): %s\n", err)
+		return homeCnt, err
+	}
 
+	// 查询总数totle
+	sql := "select sum(Totle) from log_count"
+	rows, err := db.Query(sql)
+	if err != nil {
+		log.Printf("LogQueryCount(): %s", err)
+		return homeCnt, errors.New("错误:查询首页统计信息失败")
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		rows.Scan(&homeCnt.Totle)
+		break
+	}
+	rows.Close()
+
+	// 查询单项
+	sql = "select sum(White), sum(Black), sum(BaseWinDir), sum(BaseWinStart), sum(BaseWinFormat)," +
+		" sum(BaseWinProc), sum(BaseWinService), sum(HighAddService), sum(HighAutoRun), sum(HighAddStart)," +
+		" sum(HighReadWrite), sum(HighCreateExe), sum(HighLoadSys), sum(HighProcInject) from log_count"
+	rows, err = db.Query(sql)
+	if err != nil {
+		log.Printf("LogQueryCount(): %s", err)
+		return homeCnt, errors.New("错误:查询首页统计信息失败")
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		rows.Scan(&homeCnt.White, &homeCnt.Black, &homeCnt.BaseWinDir, &homeCnt.BaseWinStart,
+			&homeCnt.BaseWinFormat, &homeCnt.BaseWinProc, &homeCnt.BaseWinService, &homeCnt.HighAddService,
+			&homeCnt.HighAutoRun, &homeCnt.HighAddStart, &homeCnt.HighReadWrite, &homeCnt.HighCreateExe,
+			&homeCnt.HighLoadSys, &homeCnt.HighProcInject)
+	}
+	rows.Close()
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("LogQueryCount(commit transaction): %s\n", err)
+		tx.Rollback()
+		return homeCnt, err
+	}
+
+	return homeCnt, nil
+}
+
+/*
 func LogQueryDayInMonth() (dayInMon map[string]int, err error) {
 	dayInMon = make(map[string]int)
 	db := hDBLog
@@ -631,7 +686,52 @@ func LogQueryDayInMonth() (dayInMon map[string]int, err error) {
 	}
 	return dayInMon, err
 }
+*/
 
+func LogQueryDayInMonth() (dayInMon map[string]int, err error) {
+	dayInMon = make(map[string]int)
+	db := hDBLog
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("LogQueryDayInMonth:DB.Begin(): %s\n", err)
+		return dayInMon, err
+	}
+
+	tm := time.Now()
+	Year := int(tm.Year())
+	Mon := int(tm.Month())
+
+	sql := fmt.Sprintf("select Time, sum(Totle) from log_count where Time like '%04d-%02d-%%' group by Time order by Time asc", Year, Mon)
+	rows, err := db.Query(sql)
+	if err != nil {
+		log.Printf("LogQueryDayInMonth: %s\n", err)
+		return dayInMon, errors.New("错误:查询当月每天总数失败")
+	}
+	defer rows.Close()
+
+	for i := 1; i < 32; i++ {
+		dayInMon[fmt.Sprintf("%02d", i)] = 0
+	}
+	var cnt int = 0
+	var day string = ""
+	for rows.Next() {
+		rows.Scan(&day, &cnt)
+		dayInMon[strings.Split(day, "-")[2]] = cnt
+	}
+	rows.Close()
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("LogQueryDayInMonth(commit transaction): %s\n", err)
+		tx.Rollback()
+		return dayInMon, err
+	}
+
+	return dayInMon, err
+}
+
+/*
 func LogQueryMonthEventTot() (MonTop map[string]int, err error) {
 	// 初始化
 	MonTop = make(map[string]int)
@@ -714,7 +814,86 @@ func LogQueryMonthEventTot() (MonTop map[string]int, err error) {
 	}
 	return MonTop, err
 }
+*/
 
+func LogQueryMonthEventTot() (MonTop map[string]int, err error) {
+	// 初始化
+	MonTop = make(map[string]int)
+	MonTop["白名单"] = 0
+	MonTop["黑名单"] = 0
+	MonTop["系统文件及目录保护"] = 0
+	MonTop["系统启动文件保护"] = 0
+	MonTop["防止格式化系统磁盘"] = 0
+	MonTop["防止系统关键进程被杀死"] = 0
+	MonTop["防止篡改系统服务"] = 0
+	MonTop["防止服务被添加"] = 0
+	MonTop["防止自动运行"] = 0
+	MonTop["防止开机自启动"] = 0
+	MonTop["防止磁盘被直接读写"] = 0
+	MonTop["禁止创建exe文件"] = 0
+	MonTop["防止驱动程序被加载"] = 0
+	MonTop["防止进程被注入"] = 0
+
+	db := hDBLog
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("LogQueryMonthTop:DB.Begin(): %s\n", err)
+		return MonTop, err
+	}
+
+	tm := time.Now()
+	Year := int(tm.Year())
+	Mon := int(tm.Month())
+
+	// 查询当月分类统计TOP
+	sql := "select sum(White), sum(Black), sum(BaseWinDir), sum(BaseWinStart), sum(BaseWinFormat)," +
+		" sum(BaseWinProc), sum(BaseWinService), sum(HighAddService), sum(HighAutoRun), sum(HighAddStart)," +
+		" sum(HighReadWrite), sum(HighCreateExe), sum(HighLoadSys), sum(HighProcInject) " +
+		fmt.Sprintf("from log_count where Time like '%04d-%02d-%%'", Year, Mon)
+	rows, err := db.Query(sql)
+	if err != nil {
+		log.Printf("LogQueryCount(): %s", err)
+		return MonTop, errors.New("错误:查询当月分类统计失败")
+	}
+	defer rows.Close()
+
+	var homeCnt LogHomeCount
+
+	for rows.Next() {
+		rows.Scan(&homeCnt.White, &homeCnt.Black, &homeCnt.BaseWinDir, &homeCnt.BaseWinStart,
+			&homeCnt.BaseWinFormat, &homeCnt.BaseWinProc, &homeCnt.BaseWinService, &homeCnt.HighAddService,
+			&homeCnt.HighAutoRun, &homeCnt.HighAddStart, &homeCnt.HighReadWrite, &homeCnt.HighCreateExe,
+			&homeCnt.HighLoadSys, &homeCnt.HighProcInject)
+	}
+	rows.Close()
+
+	MonTop["白名单"] = homeCnt.White
+	MonTop["黑名单"] = homeCnt.Black
+	MonTop["系统文件及目录保护"] = homeCnt.BaseWinDir
+	MonTop["系统启动文件保护"] = homeCnt.BaseWinStart
+	MonTop["防止格式化系统磁盘"] = homeCnt.BaseWinFormat
+	MonTop["防止系统关键进程被杀死"] = homeCnt.BaseWinProc
+	MonTop["防止篡改系统服务"] = homeCnt.BaseWinService
+	MonTop["防止服务被添加"] = homeCnt.HighAddService
+	MonTop["防止自动运行"] = homeCnt.HighAutoRun
+	MonTop["防止开机自启动"] = homeCnt.HighAddStart
+	MonTop["防止磁盘被直接读写"] = homeCnt.HighReadWrite
+	MonTop["禁止创建exe文件"] = homeCnt.HighCreateExe
+	MonTop["防止驱动程序被加载"] = homeCnt.HighLoadSys
+	MonTop["防止进程被注入"] = homeCnt.HighProcInject
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("LogQueryMonthTop(commit transaction): %s\n", err)
+		tx.Rollback()
+		return MonTop, err
+	}
+
+	return MonTop, err
+}
+
+/*
 func LogQueryYearEventTot() (YearTop map[string]int, err error) {
 	// 初始化
 	YearTop = make(map[string]int)
@@ -786,6 +965,82 @@ func LogQueryYearEventTot() (YearTop map[string]int, err error) {
 			YearTop["防止进程被注入"] = cnt
 		}
 	}
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("LogQueryYearEventTot(commit transaction): %s\n", err)
+		tx.Rollback()
+		return YearTop, err
+	}
+	return YearTop, err
+}
+*/
+
+func LogQueryYearEventTot() (YearTop map[string]int, err error) {
+	// 初始化
+	YearTop = make(map[string]int)
+	YearTop["白名单"] = 0
+	YearTop["黑名单"] = 0
+	YearTop["系统文件及目录保护"] = 0
+	YearTop["系统启动文件保护"] = 0
+	YearTop["防止格式化系统磁盘"] = 0
+	YearTop["防止系统关键进程被杀死"] = 0
+	YearTop["防止篡改系统服务"] = 0
+	YearTop["防止服务被添加"] = 0
+	YearTop["防止自动运行"] = 0
+	YearTop["防止开机自启动"] = 0
+	YearTop["防止磁盘被直接读写"] = 0
+	YearTop["禁止创建exe文件"] = 0
+	YearTop["防止驱动程序被加载"] = 0
+	YearTop["防止进程被注入"] = 0
+
+	db := hDBLog
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("LogQueryYearEventTot:DB.Begin(): %s\n", err)
+		return YearTop, err
+	}
+
+	tm := time.Now()
+	Year := int(tm.Year())
+
+	// 查询当年分类统计TOP
+	sql := "select sum(White), sum(Black), sum(BaseWinDir), sum(BaseWinStart), sum(BaseWinFormat)," +
+		" sum(BaseWinProc), sum(BaseWinService), sum(HighAddService), sum(HighAutoRun), sum(HighAddStart)," +
+		" sum(HighReadWrite), sum(HighCreateExe), sum(HighLoadSys), sum(HighProcInject) " +
+		fmt.Sprintf("from log_count where Time like '%04d-%%'", Year)
+	rows, err := db.Query(sql)
+	if err != nil {
+		log.Printf("LogQueryCount(): %s", err)
+		return YearTop, errors.New("错误:查询当年分类统计失败")
+	}
+	defer rows.Close()
+
+	var homeCnt LogHomeCount
+
+	for rows.Next() {
+		rows.Scan(&homeCnt.White, &homeCnt.Black, &homeCnt.BaseWinDir, &homeCnt.BaseWinStart,
+			&homeCnt.BaseWinFormat, &homeCnt.BaseWinProc, &homeCnt.BaseWinService, &homeCnt.HighAddService,
+			&homeCnt.HighAutoRun, &homeCnt.HighAddStart, &homeCnt.HighReadWrite, &homeCnt.HighCreateExe,
+			&homeCnt.HighLoadSys, &homeCnt.HighProcInject)
+	}
+	rows.Close()
+
+	YearTop["白名单"] = homeCnt.White
+	YearTop["黑名单"] = homeCnt.Black
+	YearTop["系统文件及目录保护"] = homeCnt.BaseWinDir
+	YearTop["系统启动文件保护"] = homeCnt.BaseWinStart
+	YearTop["防止格式化系统磁盘"] = homeCnt.BaseWinFormat
+	YearTop["防止系统关键进程被杀死"] = homeCnt.BaseWinProc
+	YearTop["防止篡改系统服务"] = homeCnt.BaseWinService
+	YearTop["防止服务被添加"] = homeCnt.HighAddService
+	YearTop["防止自动运行"] = homeCnt.HighAutoRun
+	YearTop["防止开机自启动"] = homeCnt.HighAddStart
+	YearTop["防止磁盘被直接读写"] = homeCnt.HighReadWrite
+	YearTop["禁止创建exe文件"] = homeCnt.HighCreateExe
+	YearTop["防止驱动程序被加载"] = homeCnt.HighLoadSys
+	YearTop["防止进程被注入"] = homeCnt.HighProcInject
 
 	// 事务提交
 	err = tx.Commit()
