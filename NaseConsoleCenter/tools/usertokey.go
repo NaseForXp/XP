@@ -49,7 +49,7 @@ func LoginCheckTokeyJson(jtokey string) (isOk bool) {
 	var tokey string
 
 	// 暂时全返回成功
-	return true
+	//return true
 
 	if jtokey == "" {
 		return false

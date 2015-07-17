@@ -23,6 +23,9 @@ func init() {
 	beego.Router("/ip/query", &controllers.IPController{}, "get,post:IPQuery")
 	beego.Router("/ip/querybygroup", &controllers.IPController{}, "get,post:IPQueryByGroup")
 
+	// 审计 - 生成所有IP统计报表
+	beego.Router("/audit/report", &controllers.AuditController{}, "get,post:AuditReport")
+
 	// 接收客户端的安装运行信息
 	beego.Router("/client/add", &controllers.ClientController{}, "get,post:ClientAdd")
 

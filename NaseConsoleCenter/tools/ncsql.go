@@ -7,10 +7,35 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
+	"time"
 
 	"github.com/larspensjo/config"
 	_ "github.com/mattn/go-sqlite3"
 )
+
+type KeyValue struct {
+	Key   string
+	Value int
+}
+
+// 统计信息 - 总量
+type LogTypeCount struct {
+	Totle          int // 总数
+	White          int // 白名单事件数量
+	Black          int // 黑名单事件数量
+	BaseWinDir     int // 基本防护-系统文件及目录保护
+	BaseWinStart   int // 基本防护-系统启动文件保护
+	BaseWinFormat  int // 基本防护-防止格式化系统磁盘
+	BaseWinProc    int // 基本防护-防止系统关键进程被杀死
+	BaseWinService int // 基本防护-防止篡改系统服务
+	HighAddService int // 增强防护-防止服务被添加
+	HighAutoRun    int // 增强防护-防止自动运行
+	HighAddStart   int // 增强防护-防止开机自启动
+	HighReadWrite  int // 增强防护-防止磁盘被直接读写
+	HighCreateExe  int // 增强防护-禁止创建.exe文件
+	HighLoadSys    int // 增强防护-防止驱动程序被加载
+	HighProcInject int // 增强防护-防止进程被注入
+}
 
 // 全局变量定义
 var (
@@ -59,7 +84,6 @@ func RulesInit() (err error) {
 		if err != nil {
 			return err
 		}
-
 
 	}
 	*/
@@ -264,7 +288,7 @@ func CreateTableLog(db *sql.DB) (err error) {
 	sql = `create table if not exists log_count (
 			Id integer not null primary key, 
 			IP  varchar(32) not null,
-			Time date unique,
+			Time char(20),
 			Totle integer default 0,
 			White integer default 0,
 			Black integer default 0,
@@ -763,4 +787,167 @@ func RuleClientLogToday(IP, Time string, Totle, White, Black, BaseWinDir, BaseWi
 	}
 
 	return err
+}
+
+// 查询当年 每个月的事件总数
+func RuleQueryMonEventInYear() (moneveyear []KeyValue, err error) {
+	db := hDbLog
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("RuleQueryMonEventInYear:DB.Begin(): %s\n", err)
+		return moneveyear, err
+	}
+
+	tm := time.Now()
+	Year := tm.Year()
+	var sql string
+
+	// 查找IP组
+	sql = fmt.Sprintf("select sum(Totle) as Tot, substr(Time,1,7) as Time from log_count where Time like '%d-%%' group by substr(Time,1,7) order by Time asc;", Year)
+	rows, err := db.Query(sql)
+	if err != nil {
+		log.Printf("RuleQueryMonEventInYear(): %s", err)
+		return moneveyear, errors.New("错误:查询当前每个月的事件总数失败")
+	}
+	defer rows.Close()
+
+	var data KeyValue
+	for rows.Next() {
+		rows.Scan(&data.Value, &data.Key)
+		moneveyear = append(moneveyear, data)
+	}
+	rows.Close()
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("RuleQueryMonEventInYear(commit transaction): %s\n", err)
+		tx.Rollback()
+		return moneveyear, err
+	}
+	return moneveyear, err
+}
+
+// 查询 本月主机排名 Top10
+func RuleQueryTopIPInMon() (topIPInMon []KeyValue, err error) {
+	db := hDbLog
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("RuleQueryTopIPInMon:DB.Begin(): %s\n", err)
+		return topIPInMon, err
+	}
+
+	tm := time.Now()
+	Year := tm.Year()
+	Mon := int(tm.Month())
+	var sql string
+
+	// 查找IP组
+	sql = fmt.Sprintf("select sum(Totle) as Totle, IP from log_count where Time like '%04d-%02d-%%' group by IP order by Totle desc limit 0, 10;", Year, Mon)
+	rows, err := db.Query(sql)
+	if err != nil {
+		log.Printf("RuleQueryTopIPInMon(): %s", err)
+		return topIPInMon, errors.New("错误:查询本月主机排名失败")
+	}
+	defer rows.Close()
+
+	var data KeyValue
+	for rows.Next() {
+		rows.Scan(&data.Value, &data.Key)
+		topIPInMon = append(topIPInMon, data)
+	}
+	rows.Close()
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("RuleQueryTopIPInMon(commit transaction): %s\n", err)
+		tx.Rollback()
+		return topIPInMon, err
+	}
+	return topIPInMon, err
+}
+
+// 查询 本年主机排名 Top10
+func RuleQueryTopIPInYear() (topIPInYear []KeyValue, err error) {
+	db := hDbLog
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("RuleQueryTopIPInYear:DB.Begin(): %s\n", err)
+		return topIPInYear, err
+	}
+
+	tm := time.Now()
+	Year := tm.Year()
+	var sql string
+
+	// 查找IP组
+	sql = fmt.Sprintf("select sum(Totle) as Totle, IP from log_count where Time like '%04d-%%' group by IP order by Totle desc limit 0, 10;", Year)
+	rows, err := db.Query(sql)
+	if err != nil {
+		log.Printf("RuleQueryTopIPInYear(): %s", err)
+		return topIPInYear, errors.New("错误:查询本年主机排名失败")
+	}
+	defer rows.Close()
+
+	var data KeyValue
+	for rows.Next() {
+		rows.Scan(&data.Value, &data.Key)
+		topIPInYear = append(topIPInYear, data)
+	}
+	rows.Close()
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("RuleQueryTopIPInYear(commit transaction): %s\n", err)
+		tx.Rollback()
+		return topIPInYear, err
+	}
+	return topIPInYear, err
+}
+
+// 本月安全事件统计
+func RuleQueryTotEventInMon() (logtypecnt LogTypeCount, err error) {
+	db := hDbLog
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("RuleQueryTotEventInMon:DB.Begin(): %s\n", err)
+		return logtypecnt, err
+	}
+
+	tm := time.Now()
+	Year := tm.Year()
+	Mon := int(tm.Month())
+	var sql string
+
+	// 查找IP组
+	sql = "select sum(White), sum(Black), sum(BaseWinDir), sum(BaseWinStart), sum(BaseWinFormat)," +
+		" sum(BaseWinProc), sum(BaseWinService), sum(HighAddService), sum(HighAutoRun)," +
+		" sum(HighAddStart),  sum(HighReadWrite), sum(HighCreateExe), sum(HighLoadSys), sum(HighProcInject)" +
+		fmt.Sprintf(" from log_count where Time like '%04d-%02d-%%';", Year, Mon)
+	rows, err := db.Query(sql)
+	if err != nil {
+		log.Printf("RuleQueryTotEventInMon(): %s", err)
+		return logtypecnt, errors.New("错误:查询本月安全事件统计失败")
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		rows.Scan(&logtypecnt.White, &logtypecnt.Black, &logtypecnt.BaseWinDir,
+			&logtypecnt.BaseWinStart, &logtypecnt.BaseWinFormat, &logtypecnt.BaseWinProc,
+			&logtypecnt.BaseWinService, &logtypecnt.HighAddService, &logtypecnt.HighAutoRun,
+			&logtypecnt.HighAddStart, &logtypecnt.HighReadWrite, &logtypecnt.HighCreateExe,
+			&logtypecnt.HighLoadSys, &logtypecnt.HighProcInject)
+	}
+	rows.Close()
+
+	// 事务提交
+	err = tx.Commit()
+	if err != nil {
+		log.Printf("RuleQueryTotEventInMon(commit transaction): %s\n", err)
+		tx.Rollback()
+		return logtypecnt, err
+	}
+	return logtypecnt, err
 }

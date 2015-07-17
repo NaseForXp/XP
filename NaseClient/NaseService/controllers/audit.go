@@ -18,11 +18,8 @@ func (c *AuditController) Get() {
 
 // 规则导出 - 响应
 type AuditReportResponse struct {
-	Status        int            // 1:成功 其他:失败
-	Errmsg        string         // 错误原因
-	DayInMonth    map[string]int // 当月中每天的数据 - 折线
-	MonthEventTot map[string]int // 当月安全事件分类总数 - 直方图
-	YearEventTot  map[string]int // 当年安全事件分类总数 - 直方图
+	Status int    // 1:成功 其他:失败
+	Errmsg string // 错误原因
 }
 
 // 审计- 报表
@@ -34,25 +31,30 @@ func (c *AuditController) AuditReport() {
 	fmt.Println("---AuditReport")
 	fmt.Println("request :", usertokey)
 
+	var dayinmon map[string]int
+	var monevetot xplog.LogHomeCount
+	var yearevetot xplog.LogHomeCount
+	var err error
+
 	if LoginCheckTokeyJson(usertokey) == false {
 		res.Status = 2
 		res.Errmsg = "错误:请登录后操作"
 		goto End
 	} else {
-		dayinmon, err := xplog.LogQueryDayInMonth()
+		dayinmon, err = xplog.LogQueryDayInMonth()
 		if err != nil {
 			res.Status = 2
 			res.Errmsg = err.Error()
 			goto End
 		}
-		monevetot, err := xplog.LogQueryMonthEventTot()
+		monevetot, err = xplog.LogQueryMonthEventTot()
 		if err != nil {
 			res.Status = 2
 			res.Errmsg = err.Error()
 			goto End
 		}
 
-		yearevetot, err := xplog.LogQueryYearEventTot()
+		yearevetot, err = xplog.LogQueryYearEventTot()
 		if err != nil {
 			res.Status = 2
 			res.Errmsg = err.Error()
@@ -60,9 +62,6 @@ func (c *AuditController) AuditReport() {
 		}
 
 		//正常
-		res.DayInMonth = dayinmon
-		res.MonthEventTot = monevetot
-		res.YearEventTot = yearevetot
 		res.Status = 1
 		res.Errmsg = "生成报表成功"
 	}
@@ -84,7 +83,7 @@ End:
 	for i := 1; i < 32; i++ {
 		k := fmt.Sprintf("%02d", i)
 		c1_category = append(c1_category, map[string]string{"label": k + "日"})
-		c1_data = append(c1_data, map[string]string{"value": fmt.Sprintf("%d", res.DayInMonth[k])})
+		c1_data = append(c1_data, map[string]string{"value": fmt.Sprintf("%d", dayinmon[k])})
 	}
 
 	c.Data["C1_Category"] = c1_category
@@ -96,16 +95,38 @@ End:
 		Value int
 	}
 	var c2_data []LableValue
-	for k, v := range res.MonthEventTot {
-		c2_data = append(c2_data, LableValue{k, v})
-	}
+	c2_data = append(c2_data, LableValue{"白名单", monevetot.White})
+	c2_data = append(c2_data, LableValue{"黑名单", monevetot.Black})
+	c2_data = append(c2_data, LableValue{"系统文件及目录保护", monevetot.BaseWinDir})
+	c2_data = append(c2_data, LableValue{"系统启动文件保护", monevetot.BaseWinStart})
+	c2_data = append(c2_data, LableValue{"防止格式化系统磁盘", monevetot.BaseWinFormat})
+	c2_data = append(c2_data, LableValue{"防止系统关键进程被杀死", monevetot.BaseWinProc})
+	c2_data = append(c2_data, LableValue{"防止篡改系统服务", monevetot.BaseWinService})
+	c2_data = append(c2_data, LableValue{"防止服务被添加", monevetot.HighAddService})
+	c2_data = append(c2_data, LableValue{"防止自动运行", monevetot.HighAutoRun})
+	c2_data = append(c2_data, LableValue{"防止开机自启动", monevetot.HighAddStart})
+	c2_data = append(c2_data, LableValue{"防止磁盘被直接读写", monevetot.HighReadWrite})
+	c2_data = append(c2_data, LableValue{"禁止创建exe文件", monevetot.HighCreateExe})
+	c2_data = append(c2_data, LableValue{"防止驱动程序被加载", monevetot.HighLoadSys})
+	c2_data = append(c2_data, LableValue{"防止进程被注入", monevetot.HighProcInject})
 	c.Data["C2_Data"] = c2_data
 
 	// 本年安全事件分类统计
 	var c3_data []LableValue
-	for k, v := range res.YearEventTot {
-		c3_data = append(c3_data, LableValue{k, v})
-	}
+	c3_data = append(c3_data, LableValue{"白名单", yearevetot.White})
+	c3_data = append(c3_data, LableValue{"黑名单", yearevetot.Black})
+	c3_data = append(c3_data, LableValue{"系统文件及目录保护", yearevetot.BaseWinDir})
+	c3_data = append(c3_data, LableValue{"系统启动文件保护", yearevetot.BaseWinStart})
+	c3_data = append(c3_data, LableValue{"防止格式化系统磁盘", yearevetot.BaseWinFormat})
+	c3_data = append(c3_data, LableValue{"防止系统关键进程被杀死", yearevetot.BaseWinProc})
+	c3_data = append(c3_data, LableValue{"防止篡改系统服务", yearevetot.BaseWinService})
+	c3_data = append(c3_data, LableValue{"防止服务被添加", yearevetot.HighAddService})
+	c3_data = append(c3_data, LableValue{"防止自动运行", yearevetot.HighAutoRun})
+	c3_data = append(c3_data, LableValue{"防止开机自启动", yearevetot.HighAddStart})
+	c3_data = append(c3_data, LableValue{"防止磁盘被直接读写", yearevetot.HighReadWrite})
+	c3_data = append(c3_data, LableValue{"禁止创建exe文件", yearevetot.HighCreateExe})
+	c3_data = append(c3_data, LableValue{"防止驱动程序被加载", yearevetot.HighLoadSys})
+	c3_data = append(c3_data, LableValue{"防止进程被注入", yearevetot.HighProcInject})
 	c.Data["C3_Data"] = c3_data
 
 	c.TplNames = "auditcontroller/auditreport.html"

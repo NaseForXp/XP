@@ -24,15 +24,14 @@ func main() {
 		xplog.LogFini()
 		return
 	}
-	/*
-		err = rules.RuleMatchInit()
-		if err != nil {
-			fmt.Println(err)
-			xplog.LogFini()
-			rules.RulesRelease()
-			return
-		}
-	*/
+
+	err = rules.RuleMatchInit()
+	if err != nil {
+		fmt.Println(err)
+		xplog.LogFini()
+		rules.RulesRelease()
+		return
+	}
 
 	// 开启一个线程，用来统计日志信息和发送统计信息到管理中心
 	go toolcenter.CenterCountLogAndSendToCenter()

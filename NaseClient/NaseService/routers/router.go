@@ -12,6 +12,8 @@ func init() {
 	beego.Router("/login", &controllers.LoginController{}, "get,post:Login")
 
 	beego.Router("/center/getaddr", &controllers.CenterController{}, "get,post:CenterGetaddr")
+	// 获取指定目录下的文件结构
+	beego.Router("/center/getdirlist", &controllers.CenterController{}, "get,post:CenterGetDirList")
 
 	// 系统设置页面
 	beego.Router("/sys/changepassword", &controllers.SysController{}, "get,post:SysChangePassword")
@@ -58,4 +60,5 @@ func init() {
 	// 授权
 	beego.Router("/serial/regist", &controllers.SerialController{}, "get,post:SerialRegist")
 	beego.Router("/serial/getcode", &controllers.SerialController{}, "get,post:SerialGetcode")
+
 }
