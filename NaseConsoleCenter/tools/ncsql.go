@@ -478,6 +478,29 @@ func RuleIPDelGroup(gname string) (err error) {
 	}
 
 	var sql string
+	// 将本组的IP移动到默认组
+	sql = fmt.Sprintf("select A.IP from ip_list A left join ip_group B on A.Gid = B.Id where B.Name = '%s';", gname)
+	rows, err := db.Query(sql)
+	if err != nil {
+		log.Printf("IPDelGroup(): %s", err)
+		return errors.New("错误:删除分组失败")
+	}
+	defer rows.Close()
+
+	var tip string
+	for rows.Next() {
+		rows.Scan(&tip)
+		// 移动该IP到默认组
+		sql = fmt.Sprintf("update ip_list set Gid = 1 where IP = '%s';", tip)
+		_, err = tx.Exec(sql)
+		if err != nil {
+			log.Printf("IPDelGroup(): %s, %s\n", err, sql)
+			tx.Rollback()
+			return err
+		}
+	}
+	rows.Close()
+
 	// 删除IP组
 	sql = fmt.Sprintf("delete from ip_group where Name = '%s';", gname)
 	_, err = tx.Exec(sql)
@@ -563,8 +586,29 @@ func RuleIPAdd(ip, port, gname string) (err error) {
 		return errors.New("错误:添加IP失败,分组不存在")
 	}
 
-	// 添加IP
-	sql = fmt.Sprintf("insert into ip_list (Id, Gid, IP, Port) values (null, %d, '%s', '%s');", Gid, ip, port)
+	// 查询IP是否存在
+	sql = fmt.Sprintf("select count(*) from ip_list where IP = '%s'", ip)
+	rows, err = db.Query(sql)
+	if err != nil {
+		log.Printf("IPQueryGroup(): %s", err)
+		return errors.New("错误:添加IP失败")
+	}
+	defer rows.Close()
+
+	var cnt int = 0
+	for rows.Next() {
+		rows.Scan(&cnt)
+	}
+	rows.Close()
+
+	sql = ""
+	if cnt == 0 {
+		// IP不存在，添加
+		sql = fmt.Sprintf("insert into ip_list (Id, Gid, IP, Port) values (null, %d, '%s', '%s');", Gid, ip, port)
+	} else {
+		// IP存在，更新
+		sql = fmt.Sprintf("update ip_list set Gid = %d, Port = '%s' where IP = '%s';", Gid, port, ip)
+	}
 	_, err = tx.Exec(sql)
 	if err != nil {
 		log.Printf("RuleIPAdd(): %s, %s\n", err, sql)

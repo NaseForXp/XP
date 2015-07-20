@@ -50,8 +50,9 @@ func CreateTableUser(db *sql.DB) (err error) {
 
 	sql = `insert into user (uid, uname, user_type, user_group, password) values 
 		(1, 'CenterAdmin', 1, 1, 'bb149ef481514784aa75833d76be7b39'),
-		(2, 'Admin', 2, 2, 'b40fdc1791396dc11b4ad54b5744bcd6'),
-		(3, 'Audit', 3, 3, 'b40fdc1791396dc11b4ad54b5744bcd6');
+		(2, 'CenterAudit', 1, 1, 'bb149ef481514784aa75833d76be7b39'),
+		(3, 'Admin', 2, 2, 'b40fdc1791396dc11b4ad54b5744bcd6'),
+		(4, 'Audit', 3, 3, 'b40fdc1791396dc11b4ad54b5744bcd6');
 	`
 	_, err = tx.Exec(sql)
 	if err != nil {
