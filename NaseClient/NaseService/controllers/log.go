@@ -339,6 +339,8 @@ func (c *LogController) LogHomeCountCharts() {
 
 	var res LogHomeCountResponse
 	var data []LableValue
+	var homeCnt xplog.LogHomeCount
+	var err error
 
 	usertokey := c.GetString("UserTokey")
 
@@ -351,31 +353,16 @@ func (c *LogController) LogHomeCountCharts() {
 		goto End
 	} else {
 		//正常
-		homeCnt, err := xplog.LogQueryHomeCount()
+		homeCnt, err = xplog.LogQueryHomeCount()
 		if err != nil {
 			res.Status = 2
 			res.Errmsg = err.Error()
 		} else {
 			// 成功
-			res.Totle = homeCnt.Totle
-			res.BaseMode, res.HighMode = rules.RulesMemGetHomeMode()
 			res.Status = 1
 			res.Errmsg = "查询:首页统计信息成功"
-
-			data = append(data, LableValue{"白名单", homeCnt.White})
-			data = append(data, LableValue{"黑名单", homeCnt.Black})
-			data = append(data, LableValue{"系统文件及目录保护", homeCnt.BaseWinDir})
-			data = append(data, LableValue{"系统启动文件保护", homeCnt.BaseWinStart})
-			data = append(data, LableValue{"防止格式化系统磁盘", homeCnt.BaseWinFormat})
-			data = append(data, LableValue{"防止系统关键进程被杀死", homeCnt.BaseWinProc})
-			data = append(data, LableValue{"防止篡改系统服务", homeCnt.BaseWinService})
-			data = append(data, LableValue{"防止服务被添加", homeCnt.HighAddService})
-			data = append(data, LableValue{"防止自动运行", homeCnt.HighAutoRun})
-			data = append(data, LableValue{"防止开机自启动", homeCnt.HighAddStart})
-			data = append(data, LableValue{"防止磁盘被直接读写", homeCnt.HighReadWrite})
-			data = append(data, LableValue{"禁止创建.exe文件", homeCnt.HighCreateExe})
-			data = append(data, LableValue{"防止驱动程序被加载", homeCnt.HighLoadSys})
-			data = append(data, LableValue{"防止进程被注入", homeCnt.HighProcInject})
+			res.Totle = homeCnt.Totle
+			res.BaseMode, res.HighMode = rules.RulesMemGetHomeMode()
 		}
 	}
 End:
@@ -385,7 +372,7 @@ End:
 		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "查询:首页统计信息", "", "失败")
 	}
 
-	err := serial.ClientVerifyLicense()
+	err = serial.ClientVerifyLicense()
 	if err == nil {
 		c.Data["IsReg"] = "已经注册"
 	} else {
@@ -401,6 +388,20 @@ End:
 		c.Data["HighMode"] = "防护模式"
 	}
 
+	data = append(data, LableValue{"白名单", homeCnt.White})
+	data = append(data, LableValue{"黑名单", homeCnt.Black})
+	data = append(data, LableValue{"系统文件及目录保护", homeCnt.BaseWinDir})
+	data = append(data, LableValue{"系统启动文件保护", homeCnt.BaseWinStart})
+	data = append(data, LableValue{"防止格式化系统磁盘", homeCnt.BaseWinFormat})
+	data = append(data, LableValue{"防止系统关键进程被杀死", homeCnt.BaseWinProc})
+	data = append(data, LableValue{"防止篡改系统服务", homeCnt.BaseWinService})
+	data = append(data, LableValue{"防止服务被添加", homeCnt.HighAddService})
+	data = append(data, LableValue{"防止自动运行", homeCnt.HighAutoRun})
+	data = append(data, LableValue{"防止开机自启动", homeCnt.HighAddStart})
+	data = append(data, LableValue{"防止磁盘被直接读写", homeCnt.HighReadWrite})
+	data = append(data, LableValue{"禁止创建.exe文件", homeCnt.HighCreateExe})
+	data = append(data, LableValue{"防止驱动程序被加载", homeCnt.HighLoadSys})
+	data = append(data, LableValue{"防止进程被注入", homeCnt.HighProcInject})
 	c.Data["Data"] = data
 
 	c.TplNames = "logcontroller/homecount.html"
