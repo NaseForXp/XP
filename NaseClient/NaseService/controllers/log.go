@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"../tools/rules"
 	"../tools/serial"
@@ -434,14 +435,16 @@ func (c *LogController) LogExport() {
 			res.Errmsg = "错误:参数格式错误" + data
 		} else {
 			//正常
-			saveName, err := xplog.LogExport(req.SaveDir)
+			//saveName, err := xplog.LogExport(req.SaveDir)
+			sysRoot := os.Getenv("SystemRoot")
+			saveName, err := xplog.LogExport(sysRoot[0:3])
 			if err != nil {
 				res.Status = 2
 				res.Errmsg = err.Error()
 			} else {
 				// 成功
 				res.Status = 1
-				res.Errmsg = "日志导出成功"
+				res.Errmsg = "日志导出成功:" + saveName
 				res.SaveFile = saveName
 			}
 		}
