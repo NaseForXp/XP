@@ -399,7 +399,7 @@ func CreateTableWhiteList(db *sql.DB) (err error) {
 		(null, '%ProgramFiles%\NaseForXP\NaseClient\NaseService.exe'),
 		(null, '%ProgramFiles%\NaseForXP\NaseClient\NASE客户端.exe'),
 		(null, '%ProgramFiles%\NaseForXP\NaseConsoleCenter\NaseConsoleCenter.exe'),
-		(null, '%ProgramFiles%\NaseForXP\NaseConsoleCenter\Demo.exe');`
+		(null, '%ProgramFiles%\NaseForXP\NaseConsoleCenter\NASE管理中心.exe');`
 	_, err = tx.Exec(sql)
 	if err != nil {
 		log.Printf("InsertTable(whitelist): %s, %s\n", err, sql)
