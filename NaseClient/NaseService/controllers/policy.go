@@ -77,7 +77,7 @@ End:
 		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "导出配置", "", "失败")
 	}
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", len(jres), err)
+	fmt.Println("response:", string(jres), err)
 	c.Data["Policy_ret"] = string(jres)
 	c.TplNames = "policy/policy.tpl"
 }
@@ -91,7 +91,7 @@ func (c *PolicyController) PolicyLoad() {
 	data := c.GetString("data")
 
 	fmt.Println("---PolicyLoad")
-	fmt.Println("request :", usertokey)
+	fmt.Println("request :", usertokey, data)
 
 	if LoginCheckTokeyJson(usertokey) == false {
 		res.Status = 2

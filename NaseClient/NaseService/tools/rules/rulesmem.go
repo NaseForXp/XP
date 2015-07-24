@@ -51,6 +51,7 @@ func RulesMemInit() (err error) {
 
 		rwLockRule.Lock()
 		for _, f := range ws {
+			f = RueleReplaceEnv(f)
 			f, _ = filepath.Abs(strings.ToLower(f))
 			hMemRules.White[f] = 0
 		}
@@ -71,6 +72,7 @@ func RulesMemInit() (err error) {
 
 		rwLockRule.Lock()
 		for _, f := range bs {
+			f = RueleReplaceEnv(f)
 			f, _ = filepath.Abs(strings.ToLower(f))
 			hMemRules.Black[f] = 0
 		}
@@ -85,6 +87,7 @@ func RulesMemInit() (err error) {
 
 	rwLockRule.Lock()
 	for f, perm := range windir {
+		f = RueleReplaceEnv(f)
 		f, _ = filepath.Abs(strings.ToLower(f))
 		hMemRules.WinDir[f] = perm
 
@@ -99,6 +102,7 @@ func RulesMemInit() (err error) {
 
 	rwLockRule.Lock()
 	for f, perm := range winstart {
+		f = RueleReplaceEnv(f)
 		f, _ = filepath.Abs(strings.ToLower(f))
 		hMemRules.WinStart[f] = perm
 	}
@@ -112,6 +116,7 @@ func RulesMemInit() (err error) {
 
 	rwLockRule.Lock()
 	for _, f := range winsproc {
+		f = RueleReplaceEnv(f)
 		f, _ = filepath.Abs(strings.ToLower(f))
 		hMemRules.WinProc[f] = 0
 	}
@@ -148,6 +153,7 @@ func RulesMemInit() (err error) {
 		return err
 	}
 
+	RulesMemPrint()
 	return err
 }
 

@@ -13,7 +13,9 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"../RootDir"
@@ -76,6 +78,54 @@ type RulesPolicyDumpSt struct {
 	WinStart     []string       // 受保护的系统启动项
 	WinProc      []string       // 受保护的系统进程
 	HighWinStart []string       // 增强防护_开机启动项
+}
+
+// 将环境变量替换成字符串
+func RueleReplaceEnv(path string) string {
+	SystemRoot := os.Getenv("SystemRoot")
+	ProgramFiles := os.Getenv("ProgramFiles")
+	SystemDrive := os.Getenv("SystemDrive")
+
+	if strings.Index(path, "%SystemRoot%") == 0 {
+		path = strings.Replace(path, "%SystemRoot%", SystemRoot, -1)
+		return path
+	}
+
+	if strings.Index(path, "%ProgramFiles%") == 0 {
+		path = strings.Replace(path, "%ProgramFiles%", ProgramFiles, -1)
+		return path
+	}
+
+	if strings.Index(path, "%SystemDrive%") == 0 {
+		path = strings.Replace(path, "%SystemDrive%", SystemDrive, -1)
+		return path
+	}
+
+	return path
+}
+
+// 将字符串替换成环境变量
+func RueleReplaceToEnv(path string) string {
+	SystemRoot := os.Getenv("SystemRoot")
+	ProgramFiles := os.Getenv("ProgramFiles")
+	SystemDrive := os.Getenv("SystemDrive")
+
+	if strings.Index(path, SystemRoot) == 0 {
+		path = strings.Replace(path, SystemRoot, "%SystemRoot%", -1)
+		return path
+	}
+
+	if strings.Index(path, ProgramFiles) == 0 {
+		path = strings.Replace(path, ProgramFiles, "%ProgramFiles%", -1)
+		return path
+	}
+
+	if strings.Index(path, SystemDrive) == 0 {
+		path = strings.Replace(path, SystemDrive, "%SystemDrive%", -1)
+		return path
+	}
+
+	return path
 }
 
 // 模块初始化
@@ -252,7 +302,8 @@ func RuleCheckInWhite(fpath string) (bFind bool, err error) {
 	}
 
 	absPath, _ := filepath.Abs(fpath)
-	sql := fmt.Sprintf("select * from whitelist where path = '%s'", absPath)
+	envPath := RueleReplaceToEnv(absPath)
+	sql := fmt.Sprintf("select * from whitelist where path = '%s'", envPath)
 	rows, err := db.Query(sql)
 	if err != nil {
 		log.Printf("RuleCheckInWhite(): %s", err)
@@ -277,8 +328,9 @@ func RuleCheckInWhite(fpath string) (bFind bool, err error) {
 	return bFind, nil
 }
 
-// 添加白名单(可能是目录或末尾带*)
+// 添加白名单(可能是目录或末尾带*) - 路径替换成环境变量
 func RulesAddWhite(fpath string) (err error) {
+	fpath = RueleReplaceEnv(fpath)
 	bFind, err := RuleCheckInBlack(fpath)
 	if err != nil {
 		return err
@@ -296,7 +348,8 @@ func RulesAddWhite(fpath string) (err error) {
 	}
 
 	absPath, _ := filepath.Abs(fpath)
-	sql := fmt.Sprintf("insert into whitelist (id, path) values (null, '%s')", absPath)
+	envPath := RueleReplaceToEnv(absPath)
+	sql := fmt.Sprintf("insert into whitelist (id, path) values (null, '%s')", envPath)
 	_, err = tx.Exec(sql)
 	if err != nil {
 		log.Printf("RulesAddWhite(): %s", err)
@@ -314,13 +367,14 @@ func RulesAddWhite(fpath string) (err error) {
 
 	// 更新内存
 	rwLockRule.Lock()
-	hMemRules.White[absPath] = 0
+	hMemRules.White[strings.ToLower(absPath)] = 0
 	rwLockRule.Unlock()
 	return nil
 }
 
-// 删除白名单(可能是目录或末尾带*)
+// 删除白名单(可能是目录或末尾带*) - 路径本身是环境变量的 - 不能取Abs
 func RulesDelWhite(fpath string) (err error) {
+	fpath = RueleReplaceEnv(fpath)
 	db := hDbRules
 	tx, err := db.Begin()
 	if err != nil {
@@ -329,7 +383,8 @@ func RulesDelWhite(fpath string) (err error) {
 	}
 
 	absPath, _ := filepath.Abs(fpath)
-	sql := fmt.Sprintf("delete from whitelist where path = '%s'", absPath)
+	envPath := RueleReplaceToEnv(absPath)
+	sql := fmt.Sprintf("delete from whitelist where path = '%s'", envPath)
 	_, err = tx.Exec(sql)
 	if err != nil {
 		log.Printf("RulesDelWhite(): %s", err)
@@ -347,7 +402,7 @@ func RulesDelWhite(fpath string) (err error) {
 
 	// 更新内存
 	rwLockRule.Lock()
-	delete(hMemRules.White, absPath)
+	delete(hMemRules.White, strings.ToLower(absPath))
 	rwLockRule.Unlock()
 
 	return nil
@@ -427,6 +482,7 @@ func RulesQueryWhite(start int, length int) (files []string, err error) {
 
 // 查找是否在黑名单
 func RuleCheckInBlack(fpath string) (bFind bool, err error) {
+	fpath = RueleReplaceEnv(fpath)
 	bFind = false
 	db := hDbRules
 	tx, err := db.Begin()
@@ -436,7 +492,8 @@ func RuleCheckInBlack(fpath string) (bFind bool, err error) {
 	}
 
 	absPath, _ := filepath.Abs(fpath)
-	sql := fmt.Sprintf("select * from blacklist where path = '%s'", absPath)
+	envPath := RueleReplaceToEnv(absPath)
+	sql := fmt.Sprintf("select * from blacklist where path = '%s'", envPath)
 	rows, err := db.Query(sql)
 	if err != nil {
 		log.Printf("RuleCheckInBlack(): %s", err)
@@ -463,6 +520,7 @@ func RuleCheckInBlack(fpath string) (bFind bool, err error) {
 
 // 添加黑名单(可能是目录或末尾带*)
 func RulesAddBlack(fpath string) (err error) {
+	fpath = RueleReplaceEnv(fpath)
 	bFind, err := RuleCheckInWhite(fpath)
 	if err != nil {
 		return err
@@ -479,7 +537,8 @@ func RulesAddBlack(fpath string) (err error) {
 	}
 
 	absPath, _ := filepath.Abs(fpath)
-	sql := fmt.Sprintf("insert into blacklist (id, path) values (null, '%s')", absPath)
+	envPath := RueleReplaceToEnv(absPath)
+	sql := fmt.Sprintf("insert into blacklist (id, path) values (null, '%s')", envPath)
 	_, err = tx.Exec(sql)
 	if err != nil {
 		log.Printf("RulesAddBlack(): %s", err)
@@ -497,7 +556,7 @@ func RulesAddBlack(fpath string) (err error) {
 
 	// 更新内存
 	rwLockRule.Lock()
-	hMemRules.Black[absPath] = 0
+	hMemRules.Black[strings.ToLower(absPath)] = 0
 	rwLockRule.Unlock()
 
 	return nil
@@ -505,6 +564,7 @@ func RulesAddBlack(fpath string) (err error) {
 
 // 删除黑名单(可能是目录或末尾带*)
 func RulesDelBlack(fpath string) (err error) {
+	fpath = RueleReplaceEnv(fpath)
 	db := hDbRules
 	tx, err := db.Begin()
 	if err != nil {
@@ -513,7 +573,8 @@ func RulesDelBlack(fpath string) (err error) {
 	}
 
 	absPath, _ := filepath.Abs(fpath)
-	sql := fmt.Sprintf("delete from blacklist where path = '%s'", absPath)
+	envPath := RueleReplaceToEnv(absPath)
+	sql := fmt.Sprintf("delete from blacklist where path = '%s'", envPath)
 	_, err = tx.Exec(sql)
 	if err != nil {
 		log.Printf("RulesDelBlack(): %s", err)
@@ -531,7 +592,7 @@ func RulesDelBlack(fpath string) (err error) {
 
 	// 更新内存
 	rwLockRule.Lock()
-	delete(hMemRules.Black, absPath)
+	delete(hMemRules.Black, strings.ToLower(absPath))
 	rwLockRule.Unlock()
 
 	return nil
@@ -757,6 +818,7 @@ func RulesSafeHighSet(cfg SafeHighConfig) (err error) {
 
 // 添加系统目录及文件 WinDir
 func RulesAddSafeBaseWinDir(fpath string, perm string) (err error) {
+	fpath = RueleReplaceEnv(fpath)
 	db := hDbRules
 	tx, err := db.Begin()
 	if err != nil {
@@ -765,7 +827,8 @@ func RulesAddSafeBaseWinDir(fpath string, perm string) (err error) {
 	}
 
 	absPath, _ := filepath.Abs(fpath)
-	sql := fmt.Sprintf("insert into win_dir (id, path, perm) values (null, '%s', '%s')", absPath, perm)
+	envPath := RueleReplaceToEnv(absPath)
+	sql := fmt.Sprintf("insert into win_dir (id, path, perm) values (null, '%s', '%s')", envPath, perm)
 	_, err = tx.Exec(sql)
 	if err != nil {
 		log.Printf("RulesAddSafeBaseWinDir(): %s", err)
@@ -783,7 +846,7 @@ func RulesAddSafeBaseWinDir(fpath string, perm string) (err error) {
 
 	// 更新内存
 	rwLockRule.Lock()
-	hMemRules.WinDir[absPath] = perm
+	hMemRules.WinDir[strings.ToLower(absPath)] = perm
 	rwLockRule.Unlock()
 
 	return nil
@@ -791,6 +854,7 @@ func RulesAddSafeBaseWinDir(fpath string, perm string) (err error) {
 
 // 删除系统目录及文件 WinDir
 func RulesDelSafeBaseWinDir(fpath string) (err error) {
+	fpath = RueleReplaceEnv(fpath)
 	db := hDbRules
 	tx, err := db.Begin()
 	if err != nil {
@@ -799,7 +863,8 @@ func RulesDelSafeBaseWinDir(fpath string) (err error) {
 	}
 
 	absPath, _ := filepath.Abs(fpath)
-	sql := fmt.Sprintf("delete from win_dir where path = '%s'", absPath)
+	envPath := RueleReplaceToEnv(absPath)
+	sql := fmt.Sprintf("delete from win_dir where path = '%s'", envPath)
 	_, err = tx.Exec(sql)
 	if err != nil {
 		log.Printf("RulesDelSafeBaseWinDir(): %s", err)
@@ -817,7 +882,7 @@ func RulesDelSafeBaseWinDir(fpath string) (err error) {
 
 	// 更新内存
 	rwLockRule.Lock()
-	delete(hMemRules.WinDir, absPath)
+	delete(hMemRules.WinDir, strings.ToLower(absPath))
 	rwLockRule.Unlock()
 
 	return nil
@@ -862,6 +927,7 @@ func RulesQuerySafeBaseWinDir() (files map[string]string, err error) {
 /////
 // 添加系统启动文件 WinStart
 func RulesAddSafeBaseWinStart(fpath string, perm string) (err error) {
+	fpath = RueleReplaceEnv(fpath)
 	db := hDbRules
 	tx, err := db.Begin()
 	if err != nil {
@@ -870,7 +936,8 @@ func RulesAddSafeBaseWinStart(fpath string, perm string) (err error) {
 	}
 
 	absPath, _ := filepath.Abs(fpath)
-	sql := fmt.Sprintf("insert into win_start (id, path, perm) values (null, '%s', '%s')", absPath, perm)
+	envPath := RueleReplaceToEnv(absPath)
+	sql := fmt.Sprintf("insert into win_start (id, path, perm) values (null, '%s', '%s')", envPath, perm)
 	_, err = tx.Exec(sql)
 	if err != nil {
 		log.Printf("RulesAddSafeBaseWinStart(): %s", err)
@@ -888,13 +955,14 @@ func RulesAddSafeBaseWinStart(fpath string, perm string) (err error) {
 
 	// 更新内存
 	rwLockRule.Lock()
-	hMemRules.WinStart[absPath] = perm
+	hMemRules.WinStart[strings.ToLower(absPath)] = perm
 	rwLockRule.Unlock()
 	return nil
 }
 
 // 删除系统启动文件 WinStart
 func RulesDelSafeBaseWinStart(fpath string) (err error) {
+	fpath = RueleReplaceEnv(fpath)
 	db := hDbRules
 	tx, err := db.Begin()
 	if err != nil {
@@ -903,7 +971,8 @@ func RulesDelSafeBaseWinStart(fpath string) (err error) {
 	}
 
 	absPath, _ := filepath.Abs(fpath)
-	sql := fmt.Sprintf("delete from win_start where path = '%s'", absPath)
+	envPath := RueleReplaceToEnv(absPath)
+	sql := fmt.Sprintf("delete from win_start where path = '%s'", envPath)
 	_, err = tx.Exec(sql)
 	if err != nil {
 		log.Printf("RulesDelSafeBaseWinStart(): %s", err)
@@ -921,7 +990,7 @@ func RulesDelSafeBaseWinStart(fpath string) (err error) {
 
 	// 更新内存
 	rwLockRule.Lock()
-	delete(hMemRules.WinDir, absPath)
+	delete(hMemRules.WinDir, strings.ToLower(absPath))
 	rwLockRule.Unlock()
 	return nil
 }
@@ -965,6 +1034,7 @@ func RulesQuerySafeBaseWinStart() (files map[string]string, err error) {
 ////
 // 添加系统关键进程 WinProc
 func RulesAddSafeBaseWinProc(fpath string) (err error) {
+	fpath = RueleReplaceEnv(fpath)
 	db := hDbRules
 	tx, err := db.Begin()
 	if err != nil {
@@ -973,7 +1043,9 @@ func RulesAddSafeBaseWinProc(fpath string) (err error) {
 	}
 
 	absPath, _ := filepath.Abs(fpath)
-	sql := fmt.Sprintf("insert into win_proc (id, path) values (null, '%s')", absPath)
+	envPath := RueleReplaceToEnv(absPath)
+
+	sql := fmt.Sprintf("insert into win_proc (id, path) values (null, '%s')", envPath)
 	_, err = tx.Exec(sql)
 	if err != nil {
 		log.Printf("RulesAddSafeBaseWinProc(): %s", err)
@@ -991,7 +1063,7 @@ func RulesAddSafeBaseWinProc(fpath string) (err error) {
 
 	// 更新内存
 	rwLockRule.Lock()
-	hMemRules.WinProc[absPath] = 0
+	hMemRules.WinProc[strings.ToLower(absPath)] = 0
 	rwLockRule.Unlock()
 
 	return nil
@@ -999,6 +1071,7 @@ func RulesAddSafeBaseWinProc(fpath string) (err error) {
 
 // 删除系统关键进程 WinProc
 func RulesDelSafeBaseWinProc(fpath string) (err error) {
+	fpath = RueleReplaceEnv(fpath)
 	db := hDbRules
 	tx, err := db.Begin()
 	if err != nil {
@@ -1007,7 +1080,9 @@ func RulesDelSafeBaseWinProc(fpath string) (err error) {
 	}
 
 	absPath, _ := filepath.Abs(fpath)
-	sql := fmt.Sprintf("delete from win_proc where path = '%s'", absPath)
+	envPath := RueleReplaceToEnv(absPath)
+
+	sql := fmt.Sprintf("delete from win_proc where path = '%s'", envPath)
 	_, err = tx.Exec(sql)
 	if err != nil {
 		log.Printf("RulesDelSafeBaseWinProc(): %s", err)
@@ -1025,7 +1100,7 @@ func RulesDelSafeBaseWinProc(fpath string) (err error) {
 
 	// 更新内存
 	rwLockRule.Lock()
-	delete(hMemRules.WinProc, absPath)
+	delete(hMemRules.WinProc, strings.ToLower(absPath))
 	rwLockRule.Unlock()
 	return nil
 }
@@ -1500,6 +1575,5 @@ func RulesPolicyLoad(policy RulesPolicyDumpSt) (err error) {
 	// 5.重新加载
 	RulesMemInit()
 
-	RulesMemPrint()
 	return nil
 }

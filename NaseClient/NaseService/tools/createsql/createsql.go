@@ -225,7 +225,7 @@ func CreateTableWinDir(db *sql.DB) (err error) {
 	}
 
 	sql = `insert into win_dir (id, path, perm) values 
-		(null, 'C:\\Windows\\', 'r');`
+		(null, '%SystemRoot%', 'r');`
 	_, err = tx.Exec(sql)
 	if err != nil {
 		log.Printf("InsertTable(user): %s, %s\n", err, sql)
@@ -266,8 +266,8 @@ func CreateTableWinStart(db *sql.DB) (err error) {
 	}
 
 	sql = `insert into win_start (id, path, perm) values 
-		(null, 'C:\\boot.ini', 'r'),
-		(null, 'C:\\Ntldr', 'r');`
+		(null, '%SystemDrive%\\boot.ini', 'r'),
+		(null, '%SystemDrive%\\Ntldr', 'r');`
 	_, err = tx.Exec(sql)
 	if err != nil {
 		log.Printf("InsertTable(user): %s, %s\n", err, sql)
@@ -307,12 +307,12 @@ func CreateTableWinProc(db *sql.DB) (err error) {
 	}
 
 	sql = `insert into win_proc (id, path) values 
-		(null, 'C:\\Windows\\System32\\csrss.exe'),
-		(null, 'C:\\Windows\\System32\\lsass.exe'),
-		(null, 'C:\\Windows\\System32\\services.exe'),
-		(null, 'C:\\Windows\\System32\\smss.exe'),
-		(null, 'C:\\Windows\\System32\\svchost.exe'),
-		(null, 'C:\\Windows\\System32\\winlogon.exe');`
+		(null, '%SystemRoot%\\System32\\csrss.exe'),
+		(null, '%SystemRoot%\\System32\\lsass.exe'),
+		(null, '%SystemRoot%\\System32\\services.exe'),
+		(null, '%SystemRoot%\\System32\\smss.exe'),
+		(null, '%SystemRoot%\\System32\\svchost.exe'),
+		(null, '%SystemRoot%\\System32\\winlogon.exe');`
 	_, err = tx.Exec(sql)
 	if err != nil {
 		log.Printf("InsertTable(user): %s, %s\n", err, sql)
@@ -394,12 +394,12 @@ func CreateTableWhiteList(db *sql.DB) (err error) {
 	}
 
 	sql = `insert into whitelist (id, path) values 
-		(null, 'c:\windows\pchealth\helpctr\binaries\msconfig.exe'),
-		(null, 'c:\windows\System32\cmd.exe'),
-		(null, 'C:\Program Files\NaseForXP\NaseClient\NaseService.exe'),
-		(null, 'C:\Program Files\NaseForXP\NaseClient\Demo.exe'),
-		(null, 'C:\Program Files\NaseForXP\NaseConsoleCenter\NaseConsoleCenter.exe'),
-		(null, 'C:\Program Files\NaseForXP\NaseConsoleCenter\Demo.exe');`
+		(null, '%SystemRoot%\pchealth\helpctr\binaries\msconfig.exe'),
+		(null, '%SystemRoot%\System32\cmd.exe'),
+		(null, '%ProgramFiles%\NaseForXP\NaseClient\NaseService.exe'),
+		(null, '%ProgramFiles%\NaseForXP\NaseClient\NASE客户端.exe'),
+		(null, '%ProgramFiles%\NaseForXP\NaseConsoleCenter\NaseConsoleCenter.exe'),
+		(null, '%ProgramFiles%\NaseForXP\NaseConsoleCenter\Demo.exe');`
 	_, err = tx.Exec(sql)
 	if err != nil {
 		log.Printf("InsertTable(whitelist): %s, %s\n", err, sql)

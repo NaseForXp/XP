@@ -290,7 +290,9 @@ func (c *SysController) SysQueryWhite() {
 				// 成功
 				res.Status = 1
 				res.Errmsg = "查询白名单成功"
-				res.Files = files
+				for _, f := range files {
+					res.Files = append(res.Files, rules.RueleReplaceEnv(f))
+				}
 			}
 		}
 	}
@@ -445,7 +447,9 @@ func (c *SysController) SysQueryBlack() {
 				// 成功
 				res.Status = 1
 				res.Errmsg = "查询黑名单成功"
-				res.Files = files
+				for _, f := range files {
+					res.Files = append(res.Files, rules.RueleReplaceEnv(f))
+				}
 			}
 		}
 	}
