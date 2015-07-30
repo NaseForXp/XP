@@ -1,8 +1,10 @@
 package controllers
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net/url"
 
 	"../tools/rules"
 	"../tools/xplog"
@@ -61,12 +63,12 @@ func (c *PolicyController) PolicyDump() {
 				res.Status = 2
 				res.Errmsg = err.Error()
 			} else {
-				saveString := string(savebytes)
+				saveString := base64.StdEncoding.EncodeToString(savebytes)
 				//正常
 				res.Status = 1
 				res.Errmsg = "导出配置成功"
 				res.FileSize = len(saveString)
-				res.FileText = saveString
+				res.FileText = url.QueryEscape(saveString)
 			}
 		}
 	}
@@ -77,7 +79,7 @@ End:
 		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "导出配置", "", "失败")
 	}
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", string(jres), err)
+	fmt.Println("response:", len(jres), err)
 	c.Data["Policy_ret"] = string(jres)
 	c.TplNames = "policy/policy.tpl"
 }
@@ -91,7 +93,7 @@ func (c *PolicyController) PolicyLoad() {
 	data := c.GetString("data")
 
 	fmt.Println("---PolicyLoad")
-	fmt.Println("request :", usertokey, data)
+	fmt.Println("request :", usertokey)
 
 	if LoginCheckTokeyJson(usertokey) == false {
 		res.Status = 2
@@ -104,6 +106,7 @@ func (c *PolicyController) PolicyLoad() {
 		res.Errmsg = "错误:数据data为空"
 	} else {
 		var policy rules.RulesPolicyDumpSt
+
 		err := json.Unmarshal([]byte(data), &req)
 		if err != nil {
 			res.Status = 2
@@ -114,12 +117,19 @@ func (c *PolicyController) PolicyLoad() {
 		//正常
 		if req.FileSize != len(req.FileText) {
 			res.Status = 2
-			res.Errmsg = "错误:参数长度错误"
+			res.Errmsg = "错误:参数长度错误Text"
 			fmt.Println(len(req.FileText))
 			goto End
 		}
 
-		err = json.Unmarshal([]byte(req.FileText), &policy)
+		FileText, err := base64.StdEncoding.DecodeString(req.FileText)
+		if err != nil {
+			res.Status = 2
+			res.Errmsg = "错误:参数格式错误B64解码"
+			goto End
+		}
+
+		err = json.Unmarshal(FileText, &policy)
 		if err != nil {
 			res.Status = 2
 			res.Errmsg = "错误:参数格式错误"
