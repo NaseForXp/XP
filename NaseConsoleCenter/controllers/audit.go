@@ -140,7 +140,7 @@ End:
 
 	// 查询本月安全事件统计
 	var c4_data []LableValue
-	c4_data = append(c4_data, LableValue{"白名单", logtypecnt.White})
+	//c4_data = append(c4_data, LableValue{"白名单", logtypecnt.White})
 	c4_data = append(c4_data, LableValue{"黑名单", logtypecnt.Black})
 	c4_data = append(c4_data, LableValue{"系统文件及目录保护", logtypecnt.BaseWinDir})
 	c4_data = append(c4_data, LableValue{"系统启动文件保护", logtypecnt.BaseWinStart})
