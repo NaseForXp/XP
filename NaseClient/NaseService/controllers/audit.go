@@ -95,7 +95,7 @@ End:
 		Value int
 	}
 	var c2_data []LableValue
-	c2_data = append(c2_data, LableValue{"白名单", monevetot.White})
+	//c2_data = append(c2_data, LableValue{"白名单", monevetot.White})
 	c2_data = append(c2_data, LableValue{"黑名单", monevetot.Black})
 	c2_data = append(c2_data, LableValue{"系统文件及目录保护", monevetot.BaseWinDir})
 	c2_data = append(c2_data, LableValue{"系统启动文件保护", monevetot.BaseWinStart})
@@ -113,7 +113,7 @@ End:
 
 	// 本年安全事件分类统计
 	var c3_data []LableValue
-	c3_data = append(c3_data, LableValue{"白名单", yearevetot.White})
+	//c3_data = append(c3_data, LableValue{"白名单", yearevetot.White})
 	c3_data = append(c3_data, LableValue{"黑名单", yearevetot.Black})
 	c3_data = append(c3_data, LableValue{"系统文件及目录保护", yearevetot.BaseWinDir})
 	c3_data = append(c3_data, LableValue{"系统启动文件保护", yearevetot.BaseWinStart})

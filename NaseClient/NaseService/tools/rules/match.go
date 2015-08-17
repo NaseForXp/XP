@@ -16,7 +16,6 @@ import (
 	"strings"
 
 	"../xplog"
-
 	"github.com/mahonia"
 )
 
@@ -368,7 +367,7 @@ func RuleMatchDiskReadWrite(uname, proc, file, opStr string) bool {
 	// 白名单放行
 	_, ok := hMemRules.White[proc]
 	if ok {
-		xplog.LogInsertEvent("白名单", "防护模式", uname, proc, file, opStr, "允许")
+		//xplog.LogInsertEvent("白名单", "防护模式", uname, proc, file, opStr, "允许")
 		return true
 	}
 
@@ -407,7 +406,7 @@ func RuleMatchDiskFormat(uname, proc, file string) bool {
 	// 白名单放行
 	_, ok := hMemRules.White[proc]
 	if ok {
-		xplog.LogInsertEvent("白名单", "防护模式", uname, proc, file, opStr, "允许")
+		//xplog.LogInsertEvent("白名单", "防护模式", uname, proc, file, opStr, "允许")
 		return true
 	}
 
@@ -443,7 +442,7 @@ func RuleMatchFileRead(uname, proc, file string) bool {
 	// 白名单放行
 	_, ok := hMemRules.White[proc]
 	if ok {
-		xplog.LogInsertEvent("白名单", "防护模式", uname, proc, file, "写文件", "允许")
+		//xplog.LogInsertEvent("白名单", "防护模式", uname, proc, file, "写文件", "允许")
 		return true
 	}
 
@@ -482,7 +481,7 @@ func RuleMatchFileWrite(uname, proc, file string) bool {
 	// 白名单放行
 	_, ok := hMemRules.White[proc]
 	if ok {
-		xplog.LogInsertEvent("白名单", "防护模式", uname, proc, file, "写文件", "允许")
+		//xplog.LogInsertEvent("白名单", "防护模式", uname, proc, file, "写文件", "允许")
 		return true
 	}
 
@@ -490,6 +489,11 @@ func RuleMatchFileWrite(uname, proc, file string) bool {
 	_, ok = hMemRules.Black[proc]
 	if ok {
 		xplog.LogInsertEvent("黑名单", "防护模式", uname, proc, file, "写文件", "拒绝")
+		return false
+	}
+
+	// 自保护
+	if strings.Index(file, naseClientDir) >= 0 {
 		return false
 	}
 
@@ -538,7 +542,7 @@ func RuleMatchFileUnlink(uname, proc, file string) bool {
 	// 白名单放行
 	_, ok := hMemRules.White[proc]
 	if ok {
-		xplog.LogInsertEvent("白名单", "防护模式", uname, proc, file, "删除文件", "允许")
+		//xplog.LogInsertEvent("白名单", "防护模式", uname, proc, file, "删除文件", "允许")
 		return true
 	}
 
@@ -546,6 +550,11 @@ func RuleMatchFileUnlink(uname, proc, file string) bool {
 	_, ok = hMemRules.Black[proc]
 	if ok {
 		xplog.LogInsertEvent("黑名单", "防护模式", uname, proc, file, "删除文件", "拒绝")
+		return false
+	}
+
+	// 自保护
+	if strings.Index(file, naseClientDir) >= 0 {
 		return false
 	}
 
@@ -595,7 +604,7 @@ func RuleMatchFileRename(uname, proc, file, new_file string) bool {
 	// 白名单放行
 	_, ok := hMemRules.White[proc]
 	if ok {
-		xplog.LogInsertEvent("白名单", "防护模式", uname, proc, file+"->"+new_file, "移动文件", "允许")
+		//xplog.LogInsertEvent("白名单", "防护模式", uname, proc, file+"->"+new_file, "移动文件", "允许")
 		return true
 	}
 
@@ -603,6 +612,11 @@ func RuleMatchFileRename(uname, proc, file, new_file string) bool {
 	_, ok = hMemRules.Black[proc]
 	if ok {
 		xplog.LogInsertEvent("黑名单", "防护模式", uname, proc, file+"->"+new_file, "移动文件", "拒绝")
+		return false
+	}
+
+	// 自保护
+	if strings.Index(file, naseClientDir) >= 0 {
 		return false
 	}
 
@@ -690,7 +704,7 @@ func RuleMatchFileCreate(uname, proc, file string) bool {
 	// 白名单放行
 	_, ok := hMemRules.White[proc]
 	if ok {
-		xplog.LogInsertEvent("白名单", "防护模式", uname, proc, file, "创建文件", "允许")
+		//xplog.LogInsertEvent("白名单", "防护模式", uname, proc, file, "创建文件", "允许")
 		return true
 	}
 
@@ -698,6 +712,11 @@ func RuleMatchFileCreate(uname, proc, file string) bool {
 	_, ok = hMemRules.Black[proc]
 	if ok {
 		xplog.LogInsertEvent("黑名单", "防护模式", uname, proc, file, "创建文件", "拒绝")
+		return false
+	}
+
+	// 自保护
+	if strings.Index(file, naseClientDir) >= 0 {
 		return false
 	}
 
@@ -759,7 +778,7 @@ func RuleMatchProcessKill(uname, process, dst_proc string) bool {
 	// 白名单放行
 	_, ok := hMemRules.White[process]
 	if ok {
-		xplog.LogInsertEvent("白名单", "防护模式", uname, process, dst_proc, "进程杀死", "允许")
+		//xplog.LogInsertEvent("白名单", "防护模式", uname, process, dst_proc, "进程杀死", "允许")
 		return true
 	}
 
@@ -767,6 +786,11 @@ func RuleMatchProcessKill(uname, process, dst_proc string) bool {
 	_, ok = hMemRules.Black[process]
 	if ok {
 		xplog.LogInsertEvent("黑名单", "防护模式", uname, process, dst_proc, "进程杀死", "拒绝")
+		return false
+	}
+
+	// 自保护
+	if strings.Index(dst_proc, naseClientDir) >= 0 {
 		return false
 	}
 
@@ -799,7 +823,7 @@ func RuleMatchProcessInject(uname, process, dst_proc string) bool {
 	// 白名单放行
 	_, ok := hMemRules.White[process]
 	if ok {
-		xplog.LogInsertEvent("白名单", "防护模式", uname, process, dst_proc, "进程注入", "允许")
+		//xplog.LogInsertEvent("白名单", "防护模式", uname, process, dst_proc, "进程注入", "允许")
 		return true
 	}
 
@@ -808,6 +832,16 @@ func RuleMatchProcessInject(uname, process, dst_proc string) bool {
 	if ok {
 		xplog.LogInsertEvent("黑名单", "防护模式", uname, process, dst_proc, "进程注入", "拒绝")
 		return false
+	}
+
+	// 自保护
+	if strings.Index(dst_proc, naseClientDir) >= 0 {
+		return false
+	}
+
+	// 账户设置放行：特殊情况
+	if strings.Index(dst_proc, seceditExe) >= 0 {
+		return true
 	}
 
 	// 进程被注入
@@ -835,7 +869,7 @@ func RuleMatchServiceChange(uname, process, service_name, op string) bool {
 	// 白名单放行
 	_, ok := hMemRules.White[process]
 	if ok {
-		xplog.LogInsertEvent("白名单", "防护模式", uname, process, service_name, op, "允许")
+		//xplog.LogInsertEvent("白名单", "防护模式", uname, process, service_name, op, "允许")
 		return true
 	}
 
@@ -873,7 +907,7 @@ func RuleMatchServiceAdd(uname, process, service_name, binPath string) bool {
 	// 白名单放行
 	_, ok := hMemRules.White[process]
 	if ok {
-		xplog.LogInsertEvent("白名单", "防护模式", uname, process, logdst, "添加服务", "允许")
+		//xplog.LogInsertEvent("白名单", "防护模式", uname, process, logdst, "添加服务", "允许")
 		return true
 	}
 
@@ -911,7 +945,7 @@ func RuleMatchDriveLoad(uname, process, service_name, binPath string) bool {
 	// 白名单放行
 	_, ok := hMemRules.White[process]
 	if ok {
-		xplog.LogInsertEvent("白名单", "防护模式", uname, process, logdst, "驱动加载", "允许")
+		//xplog.LogInsertEvent("白名单", "防护模式", uname, process, logdst, "驱动加载", "允许")
 		return true
 	}
 
@@ -950,7 +984,7 @@ func RuleMatchRegSetValue(uname, process, regpath, regvalue string) bool {
 		// 白名单放行
 		_, ok := hMemRules.White[process]
 		if ok {
-			xplog.LogInsertEvent("白名单", "防护模式", uname, process, logdst, "设置开机启动", "允许")
+			//xplog.LogInsertEvent("白名单", "防护模式", uname, process, logdst, "设置开机启动", "允许")
 			return true
 		}
 

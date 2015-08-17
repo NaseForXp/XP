@@ -4,11 +4,15 @@ package RootDir
 
 import (
 	"errors"
+	"os"
 	"path/filepath"
 )
 
 func GetRootDir() (rootdir string, err error) {
-	rootdir, err = filepath.Abs("./")
+	ProgramFiles := os.Getenv("ProgramFiles")
+	naseClient := filepath.Join(ProgramFiles, "NaseForXP\\NaseClient")
+
+	rootdir, err = filepath.Abs(naseClient)
 	if err != nil {
 		return "", errors.New("错误:获取根路径失败")
 	}

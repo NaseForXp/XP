@@ -26,10 +26,13 @@ import (
 
 // 全局变量定义
 var (
-	rwLockRule sync.Mutex                   // 全局读写锁 - 内存中的规则
-	hMemRules  RuleMemHandle                // 规则内存句柄
-	configFile string        = "config.ini" // 配置文件相对路径
-	hDbRules   *sql.DB                      // 规则数据库句柄
+	rwLockRule    sync.Mutex                   // 全局读写锁 - 内存中的规则
+	hMemRules     RuleMemHandle                // 规则内存句柄
+	configFile    string        = "config.ini" // 配置文件相对路径
+	hDbRules      *sql.DB                      // 规则数据库句柄
+	naseClientDir string
+	naseServerDir string
+	seceditExe    string
 )
 
 // 安全防护 - 基本防护 - 配置
@@ -141,6 +144,12 @@ func RulesInit() (err error) {
 	if err != nil {
 		return err
 	}
+
+	naseClientDir, _ = RootDir.GetRootDir()
+	naseClientDir = strings.ToLower(naseClientDir)
+	naseServerDir = strings.ToLower(filepath.Join(filepath.Dir(naseClientDir), "NaseConsoleCenter"))
+
+	seceditExe = strings.ToLower(filepath.Join(os.Getenv("SystemRoot"), "system32\\secedit.exe"))
 	return err
 }
 

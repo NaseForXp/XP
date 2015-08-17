@@ -389,7 +389,7 @@ End:
 		c.Data["HighMode"] = "防护模式"
 	}
 
-	data = append(data, LableValue{"白名单", homeCnt.White})
+	//data = append(data, LableValue{"白名单", homeCnt.White})
 	data = append(data, LableValue{"黑名单", homeCnt.Black})
 	data = append(data, LableValue{"系统文件及目录保护", homeCnt.BaseWinDir})
 	data = append(data, LableValue{"系统启动文件保护", homeCnt.BaseWinStart})
