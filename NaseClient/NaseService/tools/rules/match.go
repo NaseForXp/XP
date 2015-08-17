@@ -358,8 +358,10 @@ func RuleMatchInit() (err error) {
 
 // 规则匹配 - 磁盘直接读写
 func RuleMatchDiskReadWrite(uname, proc, file, opStr string) bool {
-	proc, _ = filepath.Abs(strings.ToLower(proc))
-	file, _ = filepath.Abs(strings.ToLower(file))
+	proc, _ = filepath.Abs(proc)
+	proc = strings.ToLower(proc)
+	file, _ = filepath.Abs(file)
+	file = strings.ToLower(file)
 
 	rwLockRule.Lock()
 	defer rwLockRule.Unlock()
@@ -394,7 +396,8 @@ func RuleMatchDiskReadWrite(uname, proc, file, opStr string) bool {
 
 // 规则匹配 - 磁盘格式化
 func RuleMatchDiskFormat(uname, proc, file string) bool {
-	proc, _ = filepath.Abs(strings.ToLower(proc))
+	proc, _ = filepath.Abs(proc)
+	proc = strings.ToLower(proc)
 	// 格式化路径已经是磁盘了
 	file = strings.ToLower(file)
 
@@ -433,7 +436,9 @@ func RuleMatchDiskFormat(uname, proc, file string) bool {
 
 // 文件读操作 - autorun.inf
 func RuleMatchFileRead(uname, proc, file string) bool {
-	proc, _ = filepath.Abs(strings.ToLower(proc))
+	proc, _ = filepath.Abs(proc)
+	proc = strings.ToLower(proc)
+	file, _ = filepath.Abs(file)
 	file = strings.ToLower(file)
 
 	rwLockRule.Lock()
@@ -472,8 +477,10 @@ func RuleMatchFileRead(uname, proc, file string) bool {
 
 // 文件写操作
 func RuleMatchFileWrite(uname, proc, file string) bool {
-	proc, _ = filepath.Abs(strings.ToLower(proc))
-	file, _ = filepath.Abs(strings.ToLower(file))
+	proc, _ = filepath.Abs(proc)
+	proc = strings.ToLower(proc)
+	file, _ = filepath.Abs(file)
+	file = strings.ToLower(file)
 
 	rwLockRule.Lock()
 	defer rwLockRule.Unlock()
@@ -533,8 +540,10 @@ func RuleMatchFileWrite(uname, proc, file string) bool {
 
 // 文件删除操作
 func RuleMatchFileUnlink(uname, proc, file string) bool {
-	proc, _ = filepath.Abs(strings.ToLower(proc))
-	file, _ = filepath.Abs(strings.ToLower(file))
+	proc, _ = filepath.Abs(proc)
+	proc = strings.ToLower(proc)
+	file, _ = filepath.Abs(file)
+	file = strings.ToLower(file)
 
 	rwLockRule.Lock()
 	defer rwLockRule.Unlock()
@@ -594,9 +603,12 @@ func RuleMatchFileUnlink(uname, proc, file string) bool {
 
 // 文件移动操作
 func RuleMatchFileRename(uname, proc, file, new_file string) bool {
-	proc, _ = filepath.Abs(strings.ToLower(proc))
-	file, _ = filepath.Abs(strings.ToLower(file))
-	new_file, _ = filepath.Abs(strings.ToLower(new_file))
+	proc, _ = filepath.Abs(proc)
+	proc = strings.ToLower(proc)
+	file, _ = filepath.Abs(file)
+	file = strings.ToLower(file)
+	new_file, _ = filepath.Abs(new_file)
+	new_file = strings.ToLower(new_file)
 
 	rwLockRule.Lock()
 	defer rwLockRule.Unlock()
@@ -695,8 +707,10 @@ func RuleMatchFileRename(uname, proc, file, new_file string) bool {
 
 // 文件创建操作
 func RuleMatchFileCreate(uname, proc, file string) bool {
-	proc, _ = filepath.Abs(strings.ToLower(proc))
-	file, _ = filepath.Abs(strings.ToLower(file))
+	proc, _ = filepath.Abs(proc)
+	proc = strings.ToLower(proc)
+	file, _ = filepath.Abs(file)
+	file = strings.ToLower(file)
 
 	rwLockRule.Lock()
 	defer rwLockRule.Unlock()
@@ -769,8 +783,10 @@ func RuleMatchFileCreate(uname, proc, file string) bool {
 
 // 规则匹配 - 进程杀死
 func RuleMatchProcessKill(uname, process, dst_proc string) bool {
-	process, _ = filepath.Abs(strings.ToLower(process))
-	dst_proc, _ = filepath.Abs(strings.ToLower(dst_proc))
+	process, _ = filepath.Abs(process)
+	process = strings.ToLower(process)
+	dst_proc, _ = filepath.Abs(dst_proc)
+	dst_proc = strings.ToLower(dst_proc)
 
 	rwLockRule.Lock()
 	defer rwLockRule.Unlock()
@@ -814,8 +830,10 @@ func RuleMatchProcessKill(uname, process, dst_proc string) bool {
 
 // 规则匹配 - 进程被注入
 func RuleMatchProcessInject(uname, process, dst_proc string) bool {
-	process, _ = filepath.Abs(strings.ToLower(process))
-	dst_proc, _ = filepath.Abs(strings.ToLower(dst_proc))
+	process, _ = filepath.Abs(process)
+	process = strings.ToLower(process)
+	dst_proc, _ = filepath.Abs(dst_proc)
+	dst_proc = strings.ToLower(dst_proc)
 
 	rwLockRule.Lock()
 	defer rwLockRule.Unlock()
@@ -861,7 +879,8 @@ func RuleMatchProcessInject(uname, process, dst_proc string) bool {
 
 // 规则匹配 - 服务篡改（Del,change）
 func RuleMatchServiceChange(uname, process, service_name, op string) bool {
-	process, _ = filepath.Abs(strings.ToLower(process))
+	process, _ = filepath.Abs(process)
+	process = strings.ToLower(process)
 
 	rwLockRule.Lock()
 	defer rwLockRule.Unlock()
@@ -896,8 +915,10 @@ func RuleMatchServiceChange(uname, process, service_name, op string) bool {
 
 // 规则匹配 - 服务添加（Add）
 func RuleMatchServiceAdd(uname, process, service_name, binPath string) bool {
-	process, _ = filepath.Abs(strings.ToLower(process))
-	binPath, _ = filepath.Abs(strings.ToLower(binPath))
+	process, _ = filepath.Abs(process)
+	process = strings.ToLower(process)
+	binPath, _ = filepath.Abs(binPath)
+	binPath = strings.ToLower(binPath)
 
 	rwLockRule.Lock()
 	defer rwLockRule.Unlock()
@@ -934,8 +955,10 @@ func RuleMatchServiceAdd(uname, process, service_name, binPath string) bool {
 
 // 规则匹配 - 驱动加载
 func RuleMatchDriveLoad(uname, process, service_name, binPath string) bool {
-	process, _ = filepath.Abs(strings.ToLower(process))
-	binPath, _ = filepath.Abs(strings.ToLower(binPath))
+	process, _ = filepath.Abs(process)
+	process = strings.ToLower(process)
+	binPath, _ = filepath.Abs(binPath)
+	binPath = strings.ToLower(binPath)
 
 	rwLockRule.Lock()
 	defer rwLockRule.Unlock()
@@ -972,7 +995,9 @@ func RuleMatchDriveLoad(uname, process, service_name, binPath string) bool {
 
 // 规则匹配 - 注册表设置 - 开机启动
 func RuleMatchRegSetValue(uname, process, regpath, regvalue string) bool {
-	process, _ = filepath.Abs(strings.ToLower(process))
+	process, _ = filepath.Abs(process)
+	process = strings.ToLower(process)
+	regpath, _ = filepath.Abs(regpath)
 	regpath = strings.ToUpper(regpath)
 
 	rwLockRule.Lock()

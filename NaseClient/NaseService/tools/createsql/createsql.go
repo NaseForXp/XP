@@ -397,6 +397,8 @@ func CreateTableWhiteList(db *sql.DB) (err error) {
 		(null, '%SystemRoot%\pchealth\helpctr\binaries\msconfig.exe'),
 		(null, '%SystemRoot%\System32\secedit.exe'),
 		(null, '%SystemRoot%\System32\services.exe'),
+		(null, '%SystemRoot%\System32\svchost.exe'),
+		(null, '%SystemRoot%\System32\winlogon.exe'),
 		(null, '%ProgramFiles%\NaseForXP\NaseClient\NaseService.exe'),
 		(null, '%ProgramFiles%\NaseForXP\NaseClient\NASE客户端.exe'),
 		(null, '%ProgramFiles%\NaseForXP\NaseConsoleCenter\NaseConsoleCenter.exe'),
