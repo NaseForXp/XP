@@ -17,8 +17,9 @@ int get_account_security_set(psecurity_set pSet)
 		return 0;
 	}
 
-	GetModuleFileNameA(NULL, dir, MAX_PATH);
-	(strrchr(dir, '\\') + 1)[0] = 0; 
+	//GetModuleFileNameA(NULL, dir, MAX_PATH);
+	//(strrchr(dir, '\\') + 1)[0] = 0; 	
+	GetEnvironmentVariableA("TEMP", dir, MAX_PATH);
 	
 	sprintf(path, "%s%s", dir, "sec.ini");
 	sprintf(cmd, "secedit /export /CFG \"%s\" /quiet", path);
@@ -50,8 +51,9 @@ int set_account_security_set(psecurity_set pSet)
 		return 0;
 	}
 	
-	GetModuleFileNameA(NULL, dir, MAX_PATH);
-	(strrchr(dir, '\\') + 1)[0] = 0; 
+	//GetModuleFileNameA(NULL, dir, MAX_PATH);
+	//(strrchr(dir, '\\') + 1)[0] = 0; 
+	GetEnvironmentVariableA("TEMP", dir, MAX_PATH);
 	
 	sprintf(pathsdb, "%s%s", dir, "sec.sdb");
 	sprintf(path, "%s%s", dir, "sec.ini");
