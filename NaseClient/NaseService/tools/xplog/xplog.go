@@ -413,19 +413,40 @@ func IsTimeRangeRight(timeStart string, timeEnd string) bool {
 }
 
 // 查询系统日志
-func LogQuerySys(KeyWord, TimeStart, TimeStop string, Start, Length int) (resArray []LogSysQueryRes, err error) {
+func LogQuerySys(KeyWord, TimeStart, TimeStop string, Start, Length int) (recordTot int, resArray []LogSysQueryRes, err error) {
 	if IsTimeRangeRight(TimeStart, TimeStop) == false {
-		return resArray, errors.New("错误:查询时间格式不正确:[" + TimeStart + "~" + TimeStop + "]")
+		return recordTot, resArray, errors.New("错误:查询时间格式不正确:[" + TimeStart + "~" + TimeStop + "]")
 	}
 
 	db := hDBLog
 	tx, err := db.Begin()
 	if err != nil {
 		log.Printf("LogQuerySys:DB.Begin(): %s\n", err)
-		return resArray, err
+		return recordTot, resArray, err
 	}
 
-	sql := "select Uname, Op, Info, Result, strftime('%Y-%m-%d %H:%M:%S', Time) from log_sys where " +
+	// 查询数量
+	sql := "select count(*) from log_sys where " +
+		"Time >= '" + TimeStart + "' and " +
+		"Time <= '" + TimeStop + "' and " +
+		"( Uname like '%" + KeyWord + "%' or " +
+		"Op like '%" + KeyWord + "%' or " +
+		"Info like '%" + KeyWord + "%' or " +
+		"Result like '%" + KeyWord + "%' ) "
+
+	rows, err := db.Query(sql)
+	if err != nil {
+		log.Printf("LogQuerySys(): %s", err)
+		return recordTot, resArray, errors.New("错误:查询系统日志数量失败")
+	}
+	for rows.Next() {
+		rows.Scan(&recordTot)
+		break
+	}
+	rows.Close()
+
+	// 查询记录
+	sql = "select Uname, Op, Info, Result, strftime('%Y-%m-%d %H:%M:%S', Time) from log_sys where " +
 		"Time >= '" + TimeStart + "' and " +
 		"Time <= '" + TimeStop + "' and " +
 		"( Uname like '%" + KeyWord + "%' or " +
@@ -434,10 +455,10 @@ func LogQuerySys(KeyWord, TimeStart, TimeStop string, Start, Length int) (resArr
 		"Result like '%" + KeyWord + "%' ) " +
 		fmt.Sprintf("order by Id desc limit %d, %d ", Start, Length)
 
-	rows, err := db.Query(sql)
+	rows, err = db.Query(sql)
 	if err != nil {
 		log.Printf("LogQuerySys(): %s", err)
-		return resArray, errors.New("错误:查询系统日志失败")
+		return recordTot, resArray, errors.New("错误:查询系统日志失败")
 	}
 	defer rows.Close()
 
@@ -453,26 +474,51 @@ func LogQuerySys(KeyWord, TimeStart, TimeStop string, Start, Length int) (resArr
 	if err != nil {
 		log.Printf("LogQuerySys(commit transaction): %s\n", err)
 		tx.Rollback()
-		return resArray, err
+		return recordTot, resArray, err
 	}
 
-	return resArray, nil
+	return recordTot, resArray, nil
 }
 
 // 查询安全日志
-func LogQueryEvent(KeyWord, TimeStart, TimeStop string, Start, Length int) (resArray []LogEventQueryRes, err error) {
+func LogQueryEvent(KeyWord, TimeStart, TimeStop string, Start, Length int) (recordTot int, resArray []LogEventQueryRes, err error) {
 	if IsTimeRangeRight(TimeStart, TimeStop) == false {
-		return resArray, errors.New("错误:查询时间格式不正确:[" + TimeStart + "~" + TimeStop + "]")
+		return recordTot, resArray, errors.New("错误:查询时间格式不正确:[" + TimeStart + "~" + TimeStop + "]")
 	}
 
 	db := hDBLog
 	tx, err := db.Begin()
 	if err != nil {
 		log.Printf("LogQueryEvent:DB.Begin(): %s\n", err)
-		return resArray, err
+		return recordTot, resArray, err
 	}
 
-	sql := "select Module, Mode, User, Sub, Obj, Op, Ret, strftime('%Y-%m-%d %H:%M:%S', Time) from log_event where " +
+	// 查询数量
+	sql := "select count(*) from log_event where " +
+		"Time >= '" + TimeStart + "' and " +
+		"Time <= '" + TimeStop + "' and ( " +
+		"Mode like '%" + KeyWord + "%' or " +
+		"Module like '%" + KeyWord + "%' or " +
+		"User like '%" + KeyWord + "%' or " +
+		"Sub like '%" + KeyWord + "%' or " +
+		"Obj like '%" + KeyWord + "%' or " +
+		"Op like '%" + KeyWord + "%' or " +
+		"Ret like '%" + KeyWord + "%' ) "
+
+	rows, err := db.Query(sql)
+	if err != nil {
+		log.Printf("LogQueryEvent(): %s", err)
+		return recordTot, resArray, errors.New("错误:查询系统日志数量失败")
+	}
+
+	for rows.Next() {
+		rows.Scan(&recordTot)
+		break
+	}
+	rows.Close()
+
+	// 查询记录
+	sql = "select Module, Mode, User, Sub, Obj, Op, Ret, strftime('%Y-%m-%d %H:%M:%S', Time) from log_event where " +
 		"Time >= '" + TimeStart + "' and " +
 		"Time <= '" + TimeStop + "' and ( " +
 		"Mode like '%" + KeyWord + "%' or " +
@@ -484,10 +530,10 @@ func LogQueryEvent(KeyWord, TimeStart, TimeStop string, Start, Length int) (resA
 		"Ret like '%" + KeyWord + "%' ) " +
 		fmt.Sprintf("order by Id desc limit %d, %d ", Start, Length)
 
-	rows, err := db.Query(sql)
+	rows, err = db.Query(sql)
 	if err != nil {
 		log.Printf("LogQueryEvent(): %s", err)
-		return resArray, errors.New("错误:查询系统日志失败")
+		return recordTot, resArray, errors.New("错误:查询系统日志失败")
 	}
 	defer rows.Close()
 
@@ -503,10 +549,10 @@ func LogQueryEvent(KeyWord, TimeStart, TimeStop string, Start, Length int) (resA
 	if err != nil {
 		log.Printf("LogQueryEvent(commit transaction): %s\n", err)
 		tx.Rollback()
-		return resArray, err
+		return recordTot, resArray, err
 	}
 
-	return resArray, nil
+	return recordTot, resArray, nil
 }
 
 // 客户端首页 - 查询统计信息 - 总量

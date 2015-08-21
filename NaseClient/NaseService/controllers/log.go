@@ -33,6 +33,7 @@ type LogQuerySysRequest struct {
 type LogQuerySysResponse struct {
 	Status   int                    // 1:成功 其他:失败
 	Errmsg   string                 // 错误原因
+	Count    int                    // 记录总数
 	LogArray []xplog.LogSysQueryRes // 日志数组
 }
 
@@ -49,6 +50,7 @@ type LogQueryEventRequest struct {
 type LogQueryEventResponse struct {
 	Status   int                      // 1:成功 其他:失败
 	Errmsg   string                   // 错误原因
+	Count    int                      // 记录总数
 	LogArray []xplog.LogEventQueryRes // 日志数组
 }
 
@@ -199,13 +201,14 @@ func (c *LogController) LogSysQuery() {
 			res.Errmsg = "错误:参数格式错误" + data
 		} else {
 			//正常
-			array, err := xplog.LogQuerySys(req.KeyWord, req.TimeStart, req.TimeStop, req.Start, req.Length)
+			totCnt, array, err := xplog.LogQuerySys(req.KeyWord, req.TimeStart, req.TimeStop, req.Start, req.Length)
 			if err != nil {
 				res.Status = 2
 				res.Errmsg = err.Error()
 			} else {
 				// 成功
 				res.Status = 1
+				res.Count = totCnt
 				res.Errmsg = "查询:系统日志成功"
 				res.LogArray = array
 			}
@@ -252,13 +255,14 @@ func (c *LogController) LogEventQuery() {
 			res.Errmsg = "错误:参数格式错误" + data
 		} else {
 			//正常
-			array, err := xplog.LogQueryEvent(req.KeyWord, req.TimeStart, req.TimeStop, req.Start, req.Length)
+			totCnt, array, err := xplog.LogQueryEvent(req.KeyWord, req.TimeStart, req.TimeStop, req.Start, req.Length)
 			if err != nil {
 				res.Status = 2
 				res.Errmsg = err.Error()
 			} else {
 				// 成功
 				res.Status = 1
+				res.Count = totCnt
 				res.Errmsg = "查询:安全日志成功"
 				res.LogArray = array
 			}
