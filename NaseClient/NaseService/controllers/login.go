@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"../tools/ET99"
 	"../tools/rules"
 	"../tools/toolcenter"
 	"../tools/xplog"
@@ -126,6 +127,13 @@ func LoginCheck(req LoginRequset) (res LoginResponse) {
 			}
 		}
 
+	}
+
+	// 验证USBkey
+	err := ET99.Et99_check_login()
+	if err != nil {
+		res.Errmsg = err.Error()
+		return res
 	}
 
 	_, user_type, err := rules.RulesCheckUserPassword(req.User, req.Password)

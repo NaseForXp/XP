@@ -89,7 +89,7 @@ func CenterGetIpPort() (ip string, port string, err error) {
 
 // 获取本机IP
 func GetLocalIP() (ip string, err error) {
-	conn, err := net.Dial("udp", "192.255.255.255:80")
+	conn, err := net.Dial("udp", "255.255.255.255:80")
 	if err != nil {
 		return ip, err
 	}
