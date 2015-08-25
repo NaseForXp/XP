@@ -130,7 +130,7 @@ func LoginCheck(req LoginRequset) (res LoginResponse) {
 	}
 
 	// 验证USBkey
-	err := ET99.Et99_check_login()
+	err := ET99.Et99_check_client_login()
 	if err != nil {
 		res.Errmsg = err.Error()
 		return res

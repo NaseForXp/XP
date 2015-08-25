@@ -1,4 +1,4 @@
-package ET99
+package et99
 
 //package main
 
@@ -22,6 +22,7 @@ typedef struct UserInfo_t{
 
 #define KEY_TYPE_Center 1
 #define KEY_TYPE_Client 2
+
 
 // 导出函数列表
 typedef ET_STATUS ET_API (*et_FindToken_t) (unsigned char* pid,int * count);
@@ -331,14 +332,13 @@ out2:
 	return err;
 }
 
-
 */
 import "C"
 
 // 验证硬件是否插入usbkey，以及key是否匹配
-// 客户端验证机器码 xxxxxxxx-xxxxxxxx-xxxxxxx
-func Et99_check_client_login() (err error) {
-	hcode, err := serial.ClientGetRegInfo()
+// 管理中心验证 CPUID
+func Et99_check_center_login() (err error) {
+	hcode, err := serial.GetSysInfo()
 	if err != nil {
 		return err
 	}
@@ -352,16 +352,16 @@ func Et99_check_client_login() (err error) {
 		return errors.New(fmt.Sprintf("错误:ET_Et99_read_code() ret = %d", r))
 	}
 
-	//fmt.Println("Localcode: ", hcode)
-	//fmt.Println("type: ", keytype, "info: ", C.GoString(&info[0]))
-	//fmt.Println("keycode: ", C.GoString(&mcode[0]))
+	fmt.Println("Localcode: ", hcode)
+	fmt.Println("type: ", keytype, "info: ", C.GoString(&info[0]))
+	fmt.Println("keycode: ", C.GoString(&mcode[0]))
 
-	if keytype != C.KEY_TYPE_Client {
+	if keytype != C.KEY_TYPE_Center {
 		return errors.New("错误:Key类型错误，请插入正确的USB_Key")
 	}
 
 	rcode := C.GoString(&mcode[0])
-	if hcode == rcode {
+	if hcode.CpuId == rcode {
 		return nil
 	}
 
@@ -370,19 +370,19 @@ func Et99_check_client_login() (err error) {
 
 /*
 func main() {
-	code := "04291F39-C26B2600-17FA29EE"
+	code := "000300007541687400400000"
 	info := "用户信息"
 
 	fmt.Println(code, info)
 
 	// 一个key有写入次数上限
-	//if C.ET_Et99_set_code(C.KEY_TYPE_Client, C.CString(info), C.CString(code)) != 0 {
-	//	fmt.Println("写入失败")
-	//} else {
-	//	fmt.Println("写入成功")
-	//}
+	if C.ET_Et99_set_code(C.KEY_TYPE_Center, C.CString(info), C.CString(code)) != 0 {
+		fmt.Println("写入失败")
+	} else {
+		fmt.Println("写入成功")
+	}
 
-	e := Et99_check_client_login()
+	e := Et99_check_center_login()
 	if e == nil {
 		fmt.Println("USBKEY 验证成功")
 	} else {

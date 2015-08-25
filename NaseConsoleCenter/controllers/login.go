@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"../et99"
 	"../tools"
 	"github.com/astaxie/beego"
 )
@@ -67,6 +68,13 @@ func LoginCheck(req LoginRequset) (res LoginResponse) {
 
 	if req.Password == "" {
 		res.Errmsg = "错误:密码不能为空"
+		return res
+	}
+
+	// 验证USBkey
+	err := et99.Et99_check_center_login()
+	if err != nil {
+		res.Errmsg = err.Error()
 		return res
 	}
 
