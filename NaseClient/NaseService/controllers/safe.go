@@ -108,7 +108,7 @@ func (c *SafeController) SafeBaseSet() {
 			err = serial.ClientVerifyLicense()
 			if err != nil {
 				res.Status = 2
-				res.Errmsg = "错误:软件未注册"
+				res.Errmsg = err.Error()
 				goto End
 			}
 			//正常
