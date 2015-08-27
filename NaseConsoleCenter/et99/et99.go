@@ -336,24 +336,46 @@ out2:
 import "C"
 
 // 验证硬件是否插入usbkey，以及key是否匹配
-// 管理中心验证 CPUID
+// 管理中心验证 Static+CPUINFO+DISKINFO
 func Et99_check_center_login() (err error) {
-	hcode, err := serial.GetSysInfo()
-	if err != nil {
-		return err
-	}
+	codeinfo, _ := serial.GetSysInfo()
 
+	c1 := serial.GetCrc32([]byte(codeinfo.StaticInfo))
+	c2 := serial.GetCrc32([]byte(codeinfo.CpuInfo))
+	c3 := serial.GetCrc32([]byte(codeinfo.DiskInfo))
+
+	hcode := fmt.Sprintf("%08X-%08X-%08X", c1, c2, c3)
+	fmt.Println("Localcode: ", hcode)
 	var keytype C.int
 	var info [50]C.char
 	var mcode [50]C.char
 
 	r := C.ET_Et99_read_code((unsafe.Pointer)(&mcode), 50, &keytype, (unsafe.Pointer)(&info), 50)
-	if r != 0 {
-		return errors.New(fmt.Sprintf("错误:ET_Et99_read_code() ret = %d", r))
+	switch r {
+	case 0:
+		break
+	case -1:
+		return errors.New("错误：没有找到FT_ET99_API.dll")
+	case -2:
+		return errors.New("错误：导出FT_ET99_API.dll失败")
+	case -3:
+		return errors.New("错误：查找USBKEY失败")
+	case -4:
+		return errors.New("错误：查找到多个USBKEY")
+	case -5:
+		return errors.New("错误：打开USBKEY失败")
+	case -6:
+		return errors.New("错误：验证USBKEY PIN密码失败")
+	case -7:
+		return errors.New("错误：读取USBKEY信息失败")
+	case -8:
+		return errors.New("错误：读取USBKEY绑定信息失败")
+	case -9:
+		return errors.New("错误：关闭USBKEY失败")
+	default:
+		return errors.New("错误：未知错误")
 	}
 
-	fmt.Println("Localcode: ", hcode)
-	fmt.Println("type: ", keytype, "info: ", C.GoString(&info[0]))
 	fmt.Println("keycode: ", C.GoString(&mcode[0]))
 
 	if keytype != C.KEY_TYPE_Center {
@@ -361,7 +383,7 @@ func Et99_check_center_login() (err error) {
 	}
 
 	rcode := C.GoString(&mcode[0])
-	if hcode.CpuId == rcode {
+	if hcode == rcode {
 		return nil
 	}
 

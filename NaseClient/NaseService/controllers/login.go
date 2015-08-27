@@ -6,10 +6,11 @@ import (
 	"regexp"
 	"strings"
 
-	"../tools/ET99"
+	"../tools/et99"
 	"../tools/rules"
 	"../tools/toolcenter"
 	"../tools/xplog"
+
 	"github.com/astaxie/beego"
 )
 
@@ -129,13 +130,6 @@ func LoginCheck(req LoginRequset) (res LoginResponse) {
 
 	}
 
-	// 验证USBkey
-	err := ET99.Et99_check_client_login()
-	if err != nil {
-		res.Errmsg = err.Error()
-		return res
-	}
-
 	_, user_type, err := rules.RulesCheckUserPassword(req.User, req.Password)
 	if err != nil {
 		res.Errmsg = err.Error()
@@ -158,6 +152,15 @@ func LoginCheck(req LoginRequset) (res LoginResponse) {
 	// 生成用户令牌
 	tokey := LoginCreateTokey()
 	LoginAddTokey(req.User, tokey)
+
+	// 验证USBkey
+	if req.User == "Admin" || req.User == "Audit" {
+		err := et99.Et99_check_client_login()
+		if err != nil {
+			res.Errmsg = err.Error()
+			return res
+		}
+	}
 
 	res.Errmsg = "登录成功"
 	res.Status = 1

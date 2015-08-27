@@ -1,4 +1,4 @@
-package ET99
+package et99
 
 //package main
 
@@ -348,13 +348,34 @@ func Et99_check_client_login() (err error) {
 	var mcode [50]C.char
 
 	r := C.ET_Et99_read_code((unsafe.Pointer)(&mcode), 50, &keytype, (unsafe.Pointer)(&info), 50)
-	if r != 0 {
-		return errors.New(fmt.Sprintf("错误:ET_Et99_read_code() ret = %d", r))
+	switch r {
+	case 0:
+		break
+	case -1:
+		return errors.New("错误：没有找到FT_ET99_API.dll")
+	case -2:
+		return errors.New("错误：导出FT_ET99_API.dll失败")
+	case -3:
+		return errors.New("错误：查找USBKEY失败")
+	case -4:
+		return errors.New("错误：查找到多个USBKEY")
+	case -5:
+		return errors.New("错误：打开USBKEY失败")
+	case -6:
+		return errors.New("错误：验证USBKEY PIN密码失败")
+	case -7:
+		return errors.New("错误：读取USBKEY信息失败")
+	case -8:
+		return errors.New("错误：读取USBKEY绑定信息失败")
+	case -9:
+		return errors.New("错误：关闭USBKEY失败")
+	default:
+		return errors.New("错误：未知错误")
 	}
 
-	//fmt.Println("Localcode: ", hcode)
+	fmt.Println("Localcode: ", hcode)
 	//fmt.Println("type: ", keytype, "info: ", C.GoString(&info[0]))
-	//fmt.Println("keycode: ", C.GoString(&mcode[0]))
+	fmt.Println("keycode: ", C.GoString(&mcode[0]))
 
 	if keytype != C.KEY_TYPE_Client {
 		return errors.New("错误:Key类型错误，请插入正确的USB_Key")

@@ -59,8 +59,8 @@ func ClientGetRegInfo() (encodeString string, err error) {
 
 	// 3.计算校验
 	crc1 := GetCrc32(key)
-	crc2 := GetCrc32([]byte(sysinfo.Uuid))
-	crc3 := GetCrc32([]byte(sysinfo.CpuId))
+	crc2 := GetCrc32([]byte(sysinfo.StaticInfo + sysinfo.CpuInfo))
+	crc3 := GetCrc32([]byte(sysinfo.DiskInfo))
 
 	// 4.拼接客户端信息
 	encodeString = fmt.Sprintf("%08X-%08X-%08X", crc1, crc2, crc3)
