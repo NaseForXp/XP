@@ -132,8 +132,16 @@ func (c *SerialController) SerialGetcode() {
 			}
 		}
 
+		// 验证授权是否过期
+		err = serial.ClientVerifySn(res.SerialNo)
+		if err != nil {
+			res.Errmsg = err.Error()
+			res.SerialNo = ""
+		} else {
+			res.Errmsg = "获取授权信息成功"
+		}
 		res.Status = 1
-		res.Errmsg = "获取授权信息成功"
+
 	}
 End:
 	if res.Status == 1 {
