@@ -106,7 +106,7 @@ func ClientSaveLicense(serial string) (err error) {
 func ClientVerifyLicense() (err error) {
 	serial, err := ClientReadLicense()
 	if err != nil {
-		return err
+		return errors.New("错误:读取授权文件失败")
 	}
 
 	err = ClientVerifySn(serial)
