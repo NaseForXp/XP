@@ -431,7 +431,6 @@ func LogQuerySys(KeyWord, TimeStart, TimeStop string, Start, Length int) (record
 		"Time <= '" + TimeStop + "' and " +
 		"( Uname like '%" + KeyWord + "%' or " +
 		"Op like '%" + KeyWord + "%' or " +
-		"Info like '%" + KeyWord + "%' or " +
 		"Result like '%" + KeyWord + "%' ) "
 
 	rows, err := db.Query(sql)
@@ -451,7 +450,6 @@ func LogQuerySys(KeyWord, TimeStart, TimeStop string, Start, Length int) (record
 		"Time <= '" + TimeStop + "' and " +
 		"( Uname like '%" + KeyWord + "%' or " +
 		"Op like '%" + KeyWord + "%' or " +
-		"Info like '%" + KeyWord + "%' or " +
 		"Result like '%" + KeyWord + "%' ) " +
 		fmt.Sprintf("order by Id desc limit %d, %d ", Start, Length)
 
