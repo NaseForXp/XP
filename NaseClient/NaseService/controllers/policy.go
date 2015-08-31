@@ -3,9 +3,9 @@ package controllers
 import (
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"net/url"
 
+	"../tools/debug"
 	"../tools/rules"
 	"../tools/xplog"
 	"github.com/astaxie/beego"
@@ -16,7 +16,7 @@ type PolicyController struct {
 }
 
 func (c *PolicyController) Get() {
-	fmt.Println("---rules Get")
+	debug.Println("---rules Get")
 }
 
 // 规则导出 - 响应
@@ -45,8 +45,8 @@ func (c *PolicyController) PolicyDump() {
 
 	usertokey := c.GetString("UserTokey")
 
-	fmt.Println("---PolicyDump")
-	fmt.Println("request :", usertokey)
+	debug.Println("---PolicyDump")
+	debug.Println("request :", usertokey)
 
 	if LoginCheckTokeyJson(usertokey) == false {
 		res.Status = 2
@@ -79,7 +79,7 @@ End:
 		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "导出配置", "", "失败")
 	}
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", len(jres), err)
+	debug.Println("response:", string(jres), err)
 	c.Data["Policy_ret"] = string(jres)
 	c.TplNames = "policy/policy.tpl"
 }
@@ -92,8 +92,8 @@ func (c *PolicyController) PolicyLoad() {
 	usertokey := c.GetString("UserTokey")
 	data := c.GetString("data")
 
-	fmt.Println("---PolicyLoad")
-	fmt.Println("request :", usertokey)
+	debug.Println("---PolicyLoad")
+	debug.Println("request :", usertokey)
 
 	if LoginCheckTokeyJson(usertokey) == false {
 		res.Status = 2
@@ -118,7 +118,7 @@ func (c *PolicyController) PolicyLoad() {
 		if req.FileSize != len(req.FileText) {
 			res.Status = 2
 			res.Errmsg = "错误:参数长度错误Text"
-			fmt.Println(len(req.FileText))
+			debug.Println(len(req.FileText))
 			goto End
 		}
 
@@ -154,7 +154,7 @@ End:
 		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "导入配置", "", "失败")
 	}
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", string(jres), err)
+	debug.Println("response:", string(jres), err)
 	c.Data["Policy_ret"] = string(jres)
 
 	c.TplNames = "policy/policy.tpl"

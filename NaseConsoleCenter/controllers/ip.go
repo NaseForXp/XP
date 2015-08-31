@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"../tools"
 	"github.com/astaxie/beego"
@@ -61,8 +60,8 @@ type IPController struct {
 }
 
 func (c *IPController) IPAddGroup() {
-	fmt.Println("---IPAddGroup")
-	fmt.Println("request :", c.GetString("data"))
+	tools.Println("---IPAddGroup")
+	tools.Println("request :", c.GetString("data"))
 	var req IPGroupRequset
 	var res IPGroupResponse
 
@@ -103,15 +102,15 @@ End:
 	}
 
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", string(jres), err)
+	tools.Println("response:", string(jres), err)
 	c.Data["ip_ret"] = string(jres)
 
 	c.TplNames = "ip.tpl"
 }
 
 func (c *IPController) IPDelGroup() {
-	fmt.Println("---IPDelGroup")
-	fmt.Println("request :", c.GetString("data"))
+	tools.Println("---IPDelGroup")
+	tools.Println("request :", c.GetString("data"))
 	var req IPGroupRequset
 	var res IPGroupResponse
 
@@ -151,15 +150,15 @@ End:
 		//
 	}
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", string(jres), err)
+	tools.Println("response:", string(jres), err)
 	c.Data["ip_ret"] = string(jres)
 
 	c.TplNames = "ip.tpl"
 }
 
 func (c *IPController) IPQueryGroup() {
-	fmt.Println("---IPQueryGroup")
-	fmt.Println("request :")
+	tools.Println("---IPQueryGroup")
+	tools.Println("request :")
 	var res IPQueryGroupResponse
 
 	usertokey := c.GetString("UserTokey")
@@ -188,7 +187,7 @@ End:
 	}
 
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", string(jres), err)
+	tools.Println("response:", string(jres), err)
 	c.Data["ip_ret"] = string(jres)
 
 	c.TplNames = "ip.tpl"
@@ -196,8 +195,8 @@ End:
 
 //////////////// IP
 func (c *IPController) IPAdd() {
-	fmt.Println("---IPAdd")
-	fmt.Println("request :", c.GetString("data"))
+	tools.Println("---IPAdd")
+	tools.Println("request :", c.GetString("data"))
 	var req IPAddRequset
 	var res IPAddDelResponse
 
@@ -238,15 +237,15 @@ End:
 	}
 
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", string(jres), err)
+	tools.Println("response:", string(jres), err)
 	c.Data["ip_ret"] = string(jres)
 
 	c.TplNames = "ip.tpl"
 }
 
 func (c *IPController) IPDel() {
-	fmt.Println("---IPDel")
-	fmt.Println("request :", c.GetString("data"))
+	tools.Println("---IPDel")
+	tools.Println("request :", c.GetString("data"))
 	var req IPDelRequset
 	var res IPAddDelResponse
 
@@ -285,15 +284,15 @@ End:
 		//
 	}
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", string(jres), err)
+	tools.Println("response:", string(jres), err)
 	c.Data["ip_ret"] = string(jres)
 
 	c.TplNames = "ip.tpl"
 }
 
 func (c *IPController) IPQuery() {
-	fmt.Println("---IPQuery")
-	fmt.Println("request :")
+	tools.Println("---IPQuery")
+	tools.Println("request :")
 	var res IPQueryResponse
 
 	usertokey := c.GetString("UserTokey")
@@ -321,15 +320,15 @@ End:
 		//
 	}
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", string(jres), err)
+	tools.Println("response:", string(jres), err)
 	c.Data["ip_ret"] = string(jres)
 
 	c.TplNames = "ip.tpl"
 }
 
 func (c *IPController) IPQueryByGroup() {
-	fmt.Println("---IPQueryByGroup")
-	fmt.Println("request :", c.GetString("data"))
+	tools.Println("---IPQueryByGroup")
+	tools.Println("request :", c.GetString("data"))
 	var req IPQueryByGroupRequest
 	var res IPQueryResponse
 
@@ -369,7 +368,7 @@ End:
 		//
 	}
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", string(jres), err)
+	tools.Println("response:", string(jres), err)
 	c.Data["ip_ret"] = string(jres)
 
 	c.TplNames = "ip.tpl"

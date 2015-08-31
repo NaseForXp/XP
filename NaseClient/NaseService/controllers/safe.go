@@ -2,8 +2,8 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 
+	"../tools/debug"
 	"../tools/rules"
 	"../tools/serial"
 	"../tools/xplog"
@@ -15,7 +15,7 @@ type SafeController struct {
 }
 
 func (c *SafeController) Get() {
-	fmt.Println("---Safe Get")
+	debug.Println("---Safe Get")
 }
 
 // 基本防护 - 设置 - 请求
@@ -87,8 +87,8 @@ func (c *SafeController) SafeBaseSet() {
 	usertokey := c.GetString("UserTokey")
 	data := c.GetString("data")
 
-	fmt.Println("---SafeBaseSet")
-	fmt.Println("request :", usertokey, " | ", data)
+	debug.Println("---SafeBaseSet")
+	debug.Println("request :", usertokey, " | ", data)
 
 	if LoginCheckTokeyJson(usertokey) == false {
 		res.Status = 2
@@ -138,7 +138,7 @@ End:
 		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "设置基本防护配置", data, "失败")
 	}
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", string(jres), err)
+	debug.Println("response:", string(jres), err)
 	c.Data["Safe_ret"] = string(jres)
 
 	c.TplNames = "safecontroller/safe.tpl"
@@ -150,8 +150,8 @@ func (c *SafeController) SafeBaseGet() {
 
 	usertokey := c.GetString("UserTokey")
 
-	fmt.Println("---SafeBaseGet")
-	fmt.Println("request :", usertokey)
+	debug.Println("---SafeBaseGet")
+	debug.Println("request :", usertokey)
 
 	if LoginCheckTokeyJson(usertokey) == false {
 		res.Status = 2
@@ -184,7 +184,7 @@ End:
 		}
 	*/
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", string(jres), err)
+	debug.Println("response:", string(jres), err)
 	c.Data["Safe_ret"] = string(jres)
 	c.TplNames = "safecontroller/safe.tpl"
 }
@@ -197,8 +197,8 @@ func (c *SafeController) SafeHighSet() {
 	usertokey := c.GetString("UserTokey")
 	data := c.GetString("data")
 
-	fmt.Println("---SafeHighSet")
-	fmt.Println("request :", usertokey, " | ", data)
+	debug.Println("---SafeHighSet")
+	debug.Println("request :", usertokey, " | ", data)
 
 	if LoginCheckTokeyJson(usertokey) == false {
 		res.Status = 2
@@ -251,7 +251,7 @@ End:
 		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "设置增强防护配置", data, "失败")
 	}
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", string(jres), err)
+	debug.Println("response:", string(jres), err)
 	c.Data["Safe_ret"] = string(jres)
 
 	c.TplNames = "safecontroller/safe.tpl"
@@ -263,8 +263,8 @@ func (c *SafeController) SafeHighGet() {
 
 	usertokey := c.GetString("UserTokey")
 
-	fmt.Println("---SafeHighGet")
-	fmt.Println("request :", usertokey)
+	debug.Println("---SafeHighGet")
+	debug.Println("request :", usertokey)
 
 	if LoginCheckTokeyJson(usertokey) == false {
 		res.Status = 2
@@ -299,7 +299,7 @@ End:
 		}
 	*/
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", string(jres), err)
+	debug.Println("response:", string(jres), err)
 	c.Data["Safe_ret"] = string(jres)
 	c.TplNames = "safecontroller/safe.tpl"
 }

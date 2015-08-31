@@ -14,7 +14,7 @@ type AuditController struct {
 }
 
 func (c *AuditController) Get() {
-	fmt.Println("---rules Get")
+	tools.Println("---rules Get")
 }
 
 // 规则导出 - 响应
@@ -29,8 +29,8 @@ func (c *AuditController) AuditReport() {
 
 	usertokey := c.GetString("UserTokey")
 
-	fmt.Println("---AuditReport")
-	fmt.Println("request :", usertokey)
+	tools.Println("---AuditReport")
+	tools.Println("request :", usertokey)
 
 	var moneveyear []tools.KeyValue
 	var topIPInMon []tools.KeyValue
@@ -78,7 +78,7 @@ func (c *AuditController) AuditReport() {
 End:
 
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", len(jres), err)
+	tools.Println("response:", string(jres), err)
 	c.Data["Audit_ret"] = string(jres)
 
 	// 当年每个月的事件总数趋势图

@@ -8,6 +8,7 @@ import (
 	"unsafe"
 
 	"../serial"
+	"../tools"
 )
 
 /*
@@ -345,7 +346,7 @@ func Et99_check_center_login() (err error) {
 	c3 := serial.GetCrc32([]byte(codeinfo.DiskInfo))
 
 	hcode := fmt.Sprintf("%08X-%08X-%08X", c1, c2, c3)
-	fmt.Println("Localcode: ", hcode)
+	tools.Println("Localcode: ", hcode)
 	var keytype C.int
 	var info [50]C.char
 	var mcode [50]C.char

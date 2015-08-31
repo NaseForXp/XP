@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"../et99"
 	"../tools"
@@ -29,12 +28,12 @@ type LoginController struct {
 }
 
 func (c *LoginController) Get() {
-	fmt.Println("---Login Get")
+	tools.Println("---Login Get")
 }
 
 func (c *LoginController) Login() {
-	fmt.Println("---Login")
-	fmt.Println("request :", c.GetString("data"))
+	tools.Println("---Login")
+	tools.Println("request :", c.GetString("data"))
 	var req LoginRequset
 	var res LoginResponse
 
@@ -53,7 +52,7 @@ func (c *LoginController) Login() {
 	}
 
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", string(jres), err)
+	tools.Println("response:", string(jres), err)
 	c.Data["login_ret"] = string(jres)
 
 	c.TplNames = "login.tpl"

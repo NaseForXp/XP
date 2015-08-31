@@ -2,13 +2,12 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 
+	"../tools/debug"
 	"../tools/rules"
 	"../tools/serial"
 	"../tools/xplog"
-
 	"github.com/astaxie/beego"
 )
 
@@ -17,7 +16,7 @@ type LogController struct {
 }
 
 func (c *LogController) Get() {
-	fmt.Println("---Log Get")
+	debug.Println("---Log Get")
 }
 
 // 系统日志 - 查询 - 请求
@@ -102,8 +101,8 @@ func (c *LogController) LogSysTotle() {
 
 	usertokey := c.GetString("UserTokey")
 
-	fmt.Println("---LogSysTotle")
-	fmt.Println("request :", usertokey)
+	debug.Println("---LogSysTotle")
+	debug.Println("request :", usertokey)
 
 	if LoginCheckTokeyJson(usertokey) == false {
 		res.Status = 2
@@ -129,7 +128,7 @@ End:
 		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "查询:系统日志数量", "", "失败")
 	}
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", string(jres), err)
+	debug.Println("response:", string(jres), err)
 	c.Data["Log_ret"] = string(jres)
 
 	c.TplNames = "logcontroller/log.tpl"
@@ -141,8 +140,8 @@ func (c *LogController) LogEventTotle() {
 
 	usertokey := c.GetString("UserTokey")
 
-	fmt.Println("---LogEventTotle")
-	fmt.Println("request :", usertokey)
+	debug.Println("---LogEventTotle")
+	debug.Println("request :", usertokey)
 
 	if LoginCheckTokeyJson(usertokey) == false {
 		res.Status = 2
@@ -168,7 +167,7 @@ End:
 		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "查询:安全日志数量成功", "", "失败")
 	}
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", string(jres), err)
+	debug.Println("response:", string(jres), err)
 	c.Data["Log_ret"] = string(jres)
 
 	c.TplNames = "logcontroller/log.tpl"
@@ -182,8 +181,8 @@ func (c *LogController) LogSysQuery() {
 	usertokey := c.GetString("UserTokey")
 	data := c.GetString("data")
 
-	fmt.Println("---LogSysQuery")
-	fmt.Println("request :", usertokey, " | ", data)
+	debug.Println("---LogSysQuery")
+	debug.Println("request :", usertokey, " | ", data)
 
 	if LoginCheckTokeyJson(usertokey) == false {
 		res.Status = 2
@@ -222,7 +221,7 @@ End:
 	}
 
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", err)
+	debug.Println("response:", err)
 	c.Data["Log_ret"] = string(jres)
 
 	c.TplNames = "logcontroller/log.tpl"
@@ -236,8 +235,8 @@ func (c *LogController) LogEventQuery() {
 	usertokey := c.GetString("UserTokey")
 	data := c.GetString("data")
 
-	fmt.Println("---LogEventQuery")
-	fmt.Println("request :", usertokey, " | ", data)
+	debug.Println("---LogEventQuery")
+	debug.Println("request :", usertokey, " | ", data)
 
 	if LoginCheckTokeyJson(usertokey) == false {
 		res.Status = 2
@@ -275,7 +274,7 @@ End:
 		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "查询:安全日志", data, "失败")
 	}
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", err)
+	debug.Println("response:", err)
 	c.Data["Log_ret"] = string(jres)
 
 	c.TplNames = "logcontroller/log.tpl"
@@ -287,8 +286,8 @@ func (c *LogController) LogHomeCount() {
 
 	usertokey := c.GetString("UserTokey")
 
-	fmt.Println("---LogHomeCount")
-	fmt.Println("request :", usertokey)
+	debug.Println("---LogHomeCount")
+	debug.Println("request :", usertokey)
 
 	if LoginCheckTokeyJson(usertokey) == false {
 		res.Status = 2
@@ -329,7 +328,7 @@ End:
 		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "查询:首页统计信息", "", "失败")
 	}
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", string(jres), err)
+	debug.Println("response:", string(jres), err)
 	c.Data["Log_ret"] = string(jres)
 
 	c.TplNames = "logcontroller/log.tpl"
@@ -349,8 +348,8 @@ func (c *LogController) LogHomeCountCharts() {
 
 	usertokey := c.GetString("UserTokey")
 
-	fmt.Println("---LogHomeCount")
-	fmt.Println("request :", usertokey)
+	debug.Println("---LogHomeCount")
+	debug.Println("request :", usertokey)
 
 	if LoginCheckTokeyJson(usertokey) == false {
 		res.Status = 2
@@ -420,8 +419,8 @@ func (c *LogController) LogExport() {
 	usertokey := c.GetString("UserTokey")
 	data := c.GetString("data")
 
-	fmt.Println("---LogExport")
-	fmt.Println("request :", usertokey, " | ", data)
+	debug.Println("---LogExport")
+	debug.Println("request :", usertokey, " | ", data)
 
 	if LoginCheckTokeyJson(usertokey) == false {
 		res.Status = 2
@@ -461,7 +460,7 @@ End:
 	}
 
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", err)
+	debug.Println("response:", err)
 	c.Data["Log_ret"] = string(jres)
 
 	c.TplNames = "logcontroller/log.tpl"

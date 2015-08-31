@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"../tools"
 	"github.com/astaxie/beego"
@@ -56,8 +55,8 @@ func (c *ClientController) ClientAdd() {
 
 	data := c.GetString("data")
 
-	fmt.Println("---ClientAdd")
-	fmt.Println("request :", c.GetString("data"))
+	tools.Println("---ClientAdd")
+	tools.Println("request :", c.GetString("data"))
 
 	if data == "" {
 		res.Status = 2
@@ -81,7 +80,7 @@ func (c *ClientController) ClientAdd() {
 	}
 
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", string(jres), err)
+	tools.Println("response:", string(jres), err)
 	c.Data["client_ret"] = string(jres)
 
 	c.TplNames = "client.tpl"
@@ -93,8 +92,8 @@ func (c *ClientController) ClientLog() {
 
 	data := c.GetString("data")
 
-	fmt.Println("---ClientLog")
-	fmt.Println("request :", c.GetString("data"))
+	tools.Println("---ClientLog")
+	tools.Println("request :", c.GetString("data"))
 
 	if data == "" {
 		res.Status = 2
@@ -122,7 +121,7 @@ func (c *ClientController) ClientLog() {
 	}
 
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", string(jres), err)
+	tools.Println("response:", string(jres), err)
 	c.Data["client_ret"] = string(jres)
 
 	c.TplNames = "client.tpl"

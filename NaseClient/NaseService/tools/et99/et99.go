@@ -4,9 +4,9 @@ package et99
 
 import (
 	"errors"
-	"fmt"
 	"unsafe"
 
+	"../debug"
 	"../serial"
 )
 
@@ -373,9 +373,9 @@ func Et99_check_client_login() (err error) {
 		return errors.New("错误：未知错误")
 	}
 
-	fmt.Println("Localcode: ", hcode)
-	//fmt.Println("type: ", keytype, "info: ", C.GoString(&info[0]))
-	fmt.Println("keycode: ", C.GoString(&mcode[0]))
+	debug.Println("Localcode: ", hcode)
+	//debug.Println("type: ", keytype, "info: ", C.GoString(&info[0]))
+	debug.Println("keycode: ", C.GoString(&mcode[0]))
 
 	if keytype != C.KEY_TYPE_Client {
 		return errors.New("错误:Key类型错误，请插入正确的USB_Key")
@@ -394,20 +394,20 @@ func main() {
 	code := "04291F39-C26B2600-17FA29EE"
 	info := "用户信息"
 
-	fmt.Println(code, info)
+	debug.Println(code, info)
 
 	// 一个key有写入次数上限
 	//if C.ET_Et99_set_code(C.KEY_TYPE_Client, C.CString(info), C.CString(code)) != 0 {
-	//	fmt.Println("写入失败")
+	//	debug.Println("写入失败")
 	//} else {
-	//	fmt.Println("写入成功")
+	//	debug.Println("写入成功")
 	//}
 
 	e := Et99_check_client_login()
 	if e == nil {
-		fmt.Println("USBKEY 验证成功")
+		debug.Println("USBKEY 验证成功")
 	} else {
-		fmt.Println(e.Error())
+		debug.Println(e.Error())
 	}
 }
 */

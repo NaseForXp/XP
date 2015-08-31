@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"../tools/debug"
 	"../tools/rules"
 	"../tools/xplog"
 	"github.com/astaxie/beego"
@@ -58,7 +59,7 @@ type SysController struct {
 }
 
 func (c *SysController) Get() {
-	fmt.Println("---Login Get")
+	debug.Println("---Login Get")
 }
 
 func (c *SysController) SysChangePassword() {
@@ -68,8 +69,8 @@ func (c *SysController) SysChangePassword() {
 	usertokey := c.GetString("UserTokey")
 	data := c.GetString("data")
 
-	fmt.Println("---SysChangePassword")
-	fmt.Println("request :", usertokey, " | ", data)
+	debug.Println("---SysChangePassword")
+	debug.Println("request :", usertokey, " | ", data)
 
 	if LoginCheckTokeyJson(usertokey) == false {
 		res.Status = 2
@@ -106,7 +107,7 @@ End:
 		xplog.LogInsertSys(req.User, "修改密码", "", "失败")
 	}
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", string(jres), err)
+	debug.Println("response:", string(jres), err)
 	c.Data["Sys_ret"] = string(jres)
 
 	c.TplNames = "syscontroller/sys.tpl"
@@ -120,8 +121,8 @@ func (c *SysController) SysAddWhite() {
 	usertokey := c.GetString("UserTokey")
 	data := c.GetString("data")
 
-	fmt.Println("---SysAddWhite")
-	fmt.Println("request :", usertokey, " | ", data)
+	debug.Println("---SysAddWhite")
+	debug.Println("request :", usertokey, " | ", data)
 
 	if LoginCheckTokeyJson(usertokey) == false {
 		res.Status = 2
@@ -157,7 +158,7 @@ End:
 		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "添加白名单", req.File, "失败")
 	}
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", string(jres), err)
+	debug.Println("response:", string(jres), err)
 	c.Data["Sys_ret"] = string(jres)
 
 	c.TplNames = "syscontroller/sys.tpl"
@@ -171,8 +172,8 @@ func (c *SysController) SysDelWhite() {
 	usertokey := c.GetString("UserTokey")
 	data := c.GetString("data")
 
-	fmt.Println("---SysDelWhite")
-	fmt.Println("request :", usertokey, " | ", data)
+	debug.Println("---SysDelWhite")
+	debug.Println("request :", usertokey, " | ", data)
 
 	if LoginCheckTokeyJson(usertokey) == false {
 		res.Status = 2
@@ -209,7 +210,7 @@ End:
 	}
 
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", string(jres), err)
+	debug.Println("response:", string(jres), err)
 	c.Data["Sys_ret"] = string(jres)
 
 	c.TplNames = "syscontroller/sys.tpl"
@@ -221,8 +222,8 @@ func (c *SysController) SysTotleWhite() {
 
 	usertokey := c.GetString("UserTokey")
 
-	fmt.Println("---SysTotleWhite")
-	fmt.Println("request :", usertokey)
+	debug.Println("---SysTotleWhite")
+	debug.Println("request :", usertokey)
 
 	if LoginCheckTokeyJson(usertokey) == false {
 		res.Status = 2
@@ -249,7 +250,7 @@ End:
 	}
 
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", string(jres), err)
+	debug.Println("response:", string(jres), err)
 	c.Data["Sys_ret"] = string(jres)
 
 	c.TplNames = "syscontroller/sys.tpl"
@@ -263,8 +264,8 @@ func (c *SysController) SysQueryWhite() {
 	usertokey := c.GetString("UserTokey")
 	data := c.GetString("data")
 
-	fmt.Println("---SysQueryWhite")
-	fmt.Println("request :", usertokey, " | ", data)
+	debug.Println("---SysQueryWhite")
+	debug.Println("request :", usertokey, " | ", data)
 
 	if LoginCheckTokeyJson(usertokey) == false {
 		res.Status = 2
@@ -304,7 +305,7 @@ End:
 	}
 
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", string(jres), err)
+	debug.Println("response:", string(jres), err)
 	c.Data["Sys_ret"] = string(jres)
 
 	c.TplNames = "syscontroller/sys.tpl"
@@ -318,8 +319,8 @@ func (c *SysController) SysAddBlack() {
 	usertokey := c.GetString("UserTokey")
 	data := c.GetString("data")
 
-	fmt.Println("---SysAddBlack")
-	fmt.Println("request :", usertokey, " | ", data)
+	debug.Println("---SysAddBlack")
+	debug.Println("request :", usertokey, " | ", data)
 
 	if LoginCheckTokeyJson(usertokey) == false {
 		res.Status = 2
@@ -355,7 +356,7 @@ End:
 		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "添加黑名单", req.File, "失败")
 	}
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", string(jres), err)
+	debug.Println("response:", string(jres), err)
 	c.Data["Sys_ret"] = string(jres)
 
 	c.TplNames = "syscontroller/sys.tpl"
@@ -369,8 +370,8 @@ func (c *SysController) SysDelBlack() {
 	usertokey := c.GetString("UserTokey")
 	data := c.GetString("data")
 
-	fmt.Println("---SysDelBlack")
-	fmt.Println("request :", usertokey, " | ", data)
+	debug.Println("---SysDelBlack")
+	debug.Println("request :", usertokey, " | ", data)
 
 	if LoginCheckTokeyJson(usertokey) == false {
 		res.Status = 2
@@ -406,7 +407,7 @@ End:
 		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "删除黑名单", req.File, "失败")
 	}
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", string(jres), err)
+	debug.Println("response:", string(jres), err)
 	c.Data["Sys_ret"] = string(jres)
 
 	c.TplNames = "syscontroller/sys.tpl"
@@ -420,8 +421,8 @@ func (c *SysController) SysQueryBlack() {
 	usertokey := c.GetString("UserTokey")
 	data := c.GetString("data")
 
-	fmt.Println("---SysQueryBlack")
-	fmt.Println("request :", usertokey, " | ", data)
+	debug.Println("---SysQueryBlack")
+	debug.Println("request :", usertokey, " | ", data)
 
 	if LoginCheckTokeyJson(usertokey) == false {
 		res.Status = 2
@@ -460,7 +461,7 @@ End:
 		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "查询黑名单", fmt.Sprintf("start=%d, length=%d", req.Start, req.Length), "失败")
 	}
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", string(jres), err)
+	debug.Println("response:", string(jres), err)
 	c.Data["Sys_ret"] = string(jres)
 
 	c.TplNames = "syscontroller/sys.tpl"
@@ -472,8 +473,8 @@ func (c *SysController) SysTotleBlack() {
 
 	usertokey := c.GetString("UserTokey")
 
-	fmt.Println("---SysTotleBlack")
-	fmt.Println("request :", usertokey)
+	debug.Println("---SysTotleBlack")
+	debug.Println("request :", usertokey)
 
 	if LoginCheckTokeyJson(usertokey) == false {
 		res.Status = 2
@@ -499,7 +500,7 @@ End:
 		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "查询黑名单总数", "", "失败")
 	}
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", string(jres), err)
+	debug.Println("response:", string(jres), err)
 	c.Data["Sys_ret"] = string(jres)
 
 	c.TplNames = "syscontroller/sys.tpl"

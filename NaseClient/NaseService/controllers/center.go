@@ -2,11 +2,11 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
 
+	"../tools/debug"
 	"../tools/toolcenter"
 	"github.com/astaxie/beego"
 )
@@ -38,11 +38,11 @@ type CenterController struct {
 }
 
 func (c *CenterController) Get() {
-	fmt.Println("---Center Get")
+	debug.Println("---Center Get")
 }
 
 func (c *CenterController) CenterGetaddr() {
-	fmt.Println("---CenterGetaddr")
+	debug.Println("---CenterGetaddr")
 
 	var res struct {
 		CenterIP   string
@@ -59,7 +59,7 @@ func (c *CenterController) CenterGetaddr() {
 	}
 
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", string(jres), err)
+	debug.Println("response:", string(jres), err)
 	c.Data["CenterAddr"] = string(jres)
 
 	c.TplNames = "centercontroller/centeraddr.tpl"
@@ -104,8 +104,8 @@ func (c *CenterController) CenterGetDirList() {
 	usertokey := c.GetString("UserTokey")
 	data := c.GetString("data")
 
-	fmt.Println("---SafeBaseSet")
-	fmt.Println("request :", usertokey, " | ", data)
+	debug.Println("---SafeBaseSet")
+	debug.Println("request :", usertokey, " | ", data)
 
 	if LoginCheckTokeyJson(usertokey) == false {
 		res.Status = 2
@@ -134,7 +134,7 @@ func (c *CenterController) CenterGetDirList() {
 
 End:
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", string(jres), err)
+	debug.Println("response:", string(jres), err)
 	c.Data["GetDirList"] = string(jres)
 
 	c.TplNames = "centercontroller/centerdirlist.tpl"

@@ -2,8 +2,8 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
 
+	"../tools/debug"
 	"../tools/rules"
 	"../tools/serial"
 	"../tools/xplog"
@@ -15,7 +15,7 @@ type AccountController struct {
 }
 
 func (c *AccountController) Get() {
-	fmt.Println("---Safe Get")
+	debug.Println("---Safe Get")
 }
 
 // 账户安全 - 设置 - 请求
@@ -67,8 +67,8 @@ func (c *AccountController) AccountSet() {
 	usertokey := c.GetString("UserTokey")
 	data := c.GetString("data")
 
-	fmt.Println("---AccountSet")
-	fmt.Println("request :", usertokey, " | ", data)
+	debug.Println("---AccountSet")
+	debug.Println("request :", usertokey, " | ", data)
 
 	if LoginCheckTokeyJson(usertokey) == false {
 		res.Status = 2
@@ -121,7 +121,7 @@ End:
 		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "设置账户安全配置", data, "失败")
 	}
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", string(jres), err)
+	debug.Println("response:", string(jres), err)
 	c.Data["Account_ret"] = string(jres)
 	c.TplNames = "accountcontroller/account.tpl"
 }
@@ -132,8 +132,8 @@ func (c *AccountController) AccountGet() {
 
 	usertokey := c.GetString("UserTokey")
 
-	fmt.Println("---AccountGet")
-	fmt.Println("request :", usertokey)
+	debug.Println("---AccountGet")
+	debug.Println("request :", usertokey)
 
 	if LoginCheckTokeyJson(usertokey) == false {
 		res.Status = 2
@@ -169,7 +169,7 @@ End:
 		}
 	*/
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", string(jres), err)
+	debug.Println("response:", string(jres), err)
 	c.Data["Account_ret"] = string(jres)
 	c.TplNames = "accountcontroller/account.tpl"
 }

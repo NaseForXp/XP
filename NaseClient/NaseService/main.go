@@ -1,9 +1,8 @@
 package main
 
 import (
-	"fmt"
-
 	_ "./routers"
+	"./tools/debug"
 	"./tools/rules"
 	"./tools/serial"
 	"./tools/toolcenter"
@@ -14,20 +13,20 @@ import (
 func main() {
 	err := xplog.LogInit()
 	if err != nil {
-		fmt.Println(err)
+		debug.Println(err)
 		return
 	}
 
 	err = rules.RulesInit()
 	if err != nil {
-		fmt.Println(err)
+		debug.Println(err)
 		xplog.LogFini()
 		return
 	}
 
 	err = rules.RuleMatchInit()
 	if err != nil {
-		fmt.Println(err)
+		debug.Println(err)
 		xplog.LogFini()
 		rules.RulesRelease()
 		return

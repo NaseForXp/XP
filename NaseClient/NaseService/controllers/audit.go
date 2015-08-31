@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"../tools/debug"
 	"../tools/xplog"
 	"github.com/astaxie/beego"
 )
@@ -13,7 +14,7 @@ type AuditController struct {
 }
 
 func (c *AuditController) Get() {
-	fmt.Println("---rules Get")
+	debug.Println("---rules Get")
 }
 
 // 规则导出 - 响应
@@ -28,8 +29,8 @@ func (c *AuditController) AuditReport() {
 
 	usertokey := c.GetString("UserTokey")
 
-	fmt.Println("---AuditReport")
-	fmt.Println("request :", usertokey)
+	debug.Println("---AuditReport")
+	debug.Println("request :", usertokey)
 
 	var dayinmon map[string]int
 	var monevetot xplog.LogHomeCount
@@ -72,7 +73,7 @@ End:
 		xplog.LogInsertSys(LoginGetUserByTokey(usertokey), "生成报表", "", "失败")
 	}
 	jres, err := json.Marshal(res)
-	fmt.Println("response:", len(jres), err)
+	debug.Println("response:", string(jres), err)
 	c.Data["Audit_ret"] = string(jres)
 	//c.TplNames = "auditcontroller/audit.tpl"
 

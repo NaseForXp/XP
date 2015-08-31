@@ -1,9 +1,10 @@
 package rules
 
 import (
-	"fmt"
 	"path/filepath"
 	"strings"
+
+	"../debug"
 )
 
 type StringInt map[string]int
@@ -173,13 +174,13 @@ func RulesMemGetHomeMode() (baseMode, highMode int) {
 func RulesMemPrint() {
 	rwLockRule.Lock()
 	defer rwLockRule.Unlock()
-	fmt.Println("SafeBaseCfg:", hMemRules.SafeBaseCfg)
-	fmt.Println("SafeHighCfg:", hMemRules.SafeHighCfg)
-	fmt.Println("AccountCfg:", hMemRules.AccountCfg)
-	fmt.Println("Black:", hMemRules.Black)
-	fmt.Println("White:", hMemRules.White)
-	fmt.Println("WinDir:", hMemRules.WinDir)
-	fmt.Println("WinStart:", hMemRules.WinStart)
-	fmt.Println("WinProc:", hMemRules.WinProc)
-	fmt.Println("HighWinStart:", hMemRules.HighWinStart)
+	debug.Println("SafeBaseCfg:", hMemRules.SafeBaseCfg)
+	debug.Println("SafeHighCfg:", hMemRules.SafeHighCfg)
+	debug.Println("AccountCfg:", hMemRules.AccountCfg)
+	debug.Println("Black:", hMemRules.Black)
+	debug.Println("White:", hMemRules.White)
+	debug.Println("WinDir:", hMemRules.WinDir)
+	debug.Println("WinStart:", hMemRules.WinStart)
+	debug.Println("WinProc:", hMemRules.WinProc)
+	debug.Println("HighWinStart:", hMemRules.HighWinStart)
 }
