@@ -447,14 +447,14 @@ func RuleMatchFileRead(uname, proc, file string) bool {
 	// 白名单放行
 	_, ok := hMemRules.White[proc]
 	if ok {
-		//xplog.LogInsertEvent("白名单", "防护模式", uname, proc, file, "写文件", "允许")
+		//xplog.LogInsertEvent("白名单", "防护模式", uname, proc, file, "读文件", "允许")
 		return true
 	}
 
 	// 黑名单拒绝
 	_, ok = hMemRules.Black[proc]
 	if ok {
-		xplog.LogInsertEvent("黑名单", "防护模式", uname, proc, file, "写文件", "拒绝")
+		xplog.LogInsertEvent("黑名单", "防护模式", uname, proc, file, "读文件", "拒绝")
 		return false
 	}
 
@@ -589,10 +589,10 @@ func RuleMatchFileUnlink(uname, proc, file string) bool {
 		_, ok = hMemRules.WinStart[file]
 		if ok {
 			if hMemRules.SafeBaseCfg.Mode == 0 {
-				xplog.LogInsertEvent("基本防护-系统启动文件保护", "监视模式", uname, proc, file, "写文件", "拒绝")
+				xplog.LogInsertEvent("基本防护-系统启动文件保护", "监视模式", uname, proc, file, "删除文件", "拒绝")
 				return true
 			} else {
-				xplog.LogInsertEvent("基本防护-系统启动文件保护", "防护模式", uname, proc, file, "写文件", "拒绝")
+				xplog.LogInsertEvent("基本防护-系统启动文件保护", "防护模式", uname, proc, file, "删除文件", "拒绝")
 				return false
 			}
 		}
@@ -773,7 +773,7 @@ func RuleMatchFileCreate(uname, proc, file string) bool {
 				xplog.LogInsertEvent("增强防护-禁止创建.exe文件", "监视模式", uname, proc, file, "创建文件", "拒绝")
 				return true
 			} else {
-				xplog.LogInsertEvent("增强防护-禁止创建.exe文件", "防护模式", uname, proc, file, "移动文件", "拒绝")
+				xplog.LogInsertEvent("增强防护-禁止创建.exe文件", "防护模式", uname, proc, file, "创建文件", "拒绝")
 				return false
 			}
 		}
