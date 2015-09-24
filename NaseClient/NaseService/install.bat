@@ -1,16 +1,17 @@
-"C:\\Program Files\\NaseForXP\\NaseClient\\instsrv.exe"  NaseForXPService "C:\\Program Files\\NaseForXP\\NaseClient\\srvany.exe"
+@echo off
 
-reg add HKLM\SYSTEM\CurrentControlSet\Services\NaseForXPService\Parameters /f
+@"C:\\Program Files\\NaseForXP\\NaseClient\\instsrv.exe"  NaseForXPService "C:\\Program Files\\NaseForXP\\NaseClient\\srvany.exe"
 
-reg add HKLM\SYSTEM\CurrentControlSet\Services\NaseForXPService\Parameters /v "Application"  /t REG_SZ /d "C:\\Program Files\\NaseForXP\\NaseClient\\NaseService.exe"
+@reg add HKLM\SYSTEM\CurrentControlSet\Services\NaseForXPService\Parameters /f
 
-reg add HKLM\SYSTEM\CurrentControlSet\Services\NaseForXPService\Parameters /v "AppDirectory"  /t REG_SZ /d "C:\\Program Files\\NaseForXP\\NaseClient"
+@reg add HKLM\SYSTEM\CurrentControlSet\Services\NaseForXPService\Parameters /v "Application"  /t REG_SZ /d "C:\\Program Files\\NaseForXP\\NaseClient\\NaseService.exe"
 
-reg add HKLM\SYSTEM\CurrentControlSet\Services\NaseForXPService\Parameters /v "AppParameters"  /t REG_SZ /d ""
+@reg add HKLM\SYSTEM\CurrentControlSet\Services\NaseForXPService\Parameters /v "AppDirectory"  /t REG_SZ /d "C:\\Program Files\\NaseForXP\\NaseClient"
 
-sc config NaseForXPService start= auto
+@reg add HKLM\SYSTEM\CurrentControlSet\Services\NaseForXPService\Parameters /v "AppParameters"  /t REG_SZ /d ""
 
-net start NaseForXPService
+@sc config NaseForXPService start= auto
 
-copy /y "C:\Program Files\NaseForXP\NaseClient\NASE¿Í»§¶Ë.lnk" "%USERPROFILE%\×ÀÃæ"
+@net start NaseForXPService
+
 
