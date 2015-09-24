@@ -997,7 +997,6 @@ func RuleMatchDriveLoad(uname, process, service_name, binPath string) bool {
 func RuleMatchRegSetValue(uname, process, regpath, regvalue string) bool {
 	process, _ = filepath.Abs(process)
 	process = strings.ToLower(process)
-	regpath, _ = filepath.Abs(regpath)
 	regpath = strings.ToUpper(regpath)
 
 	rwLockRule.Lock()
