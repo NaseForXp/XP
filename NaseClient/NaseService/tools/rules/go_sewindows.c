@@ -404,7 +404,7 @@ BOOLEAN C_reg_set_value(WCHAR *user_name, WCHAR *process, WCHAR *reg_path, WCHAR
 	}
 	return ret;
 }
-
+/*
 BOOLEAN C_reg_create_key(WCHAR *user_name, WCHAR *process, WCHAR *reg_path){
 	BOOLEAN ret = FALSE;
 	char *uname = NULL;
@@ -427,7 +427,7 @@ BOOLEAN C_reg_create_key(WCHAR *user_name, WCHAR *process, WCHAR *reg_path){
 	}
 	return ret;
 }
-
+*/
 int C_SewinInit(){
 	int   ret   = 0;
     HMODULE handle;
@@ -487,7 +487,7 @@ BOOLEAN C_SewinRegOps(){
 	ops.driver_load  = C_driver_load;
 	
 	ops.reg_set_value  = C_reg_set_value;
-	ops.reg_create_key = C_reg_create_key;
+	//ops.reg_create_key = C_reg_create_key;
 	
     return monitor_sewin_register_opt(&ops);
 }

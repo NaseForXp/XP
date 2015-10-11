@@ -12,7 +12,6 @@ package rules
 import "C"
 import (
 	"errors"
-	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -298,6 +297,7 @@ func Go_reg_set_value(user_name, process, rpath, rvalue *C.char) C.BOOLEAN {
 	return C.FALSE
 }
 
+/*
 //export Go_reg_create_key
 func Go_reg_create_key(user_name, process, rpath *C.char) C.BOOLEAN {
 	decoder := mahonia.NewDecoder("GBK")
@@ -315,12 +315,11 @@ func Go_reg_create_key(user_name, process, rpath *C.char) C.BOOLEAN {
 	}
 	return C.FALSE
 }
+*/
 
 // Sewindows驱动初始化
 func SewindowsInit() (err error) {
 	var ret C.int
-
-	InitUSBRegKey()
 
 	ret = C.C_SewinInit()
 
@@ -1060,98 +1059,5 @@ func RuleMatchRegSetValue(uname, process, regpath, regvalue string) bool {
 		}
 	}
 
-	// 防止驱动程序被加载
-	if hMemRules.SafeHighCfg.LoadSys == 1 {
-		// 白名单放行
-		/*_, ok := hMemRules.White[process]
-		if ok {
-			//xplog.LogInsertEvent("白名单", "防护模式", uname, process, logdst, "驱动加载", "允许")
-			return true
-		}*/
-
-		// 黑名单拒绝
-		_, ok := hMemRules.HighWinStart[regpath]
-		if ok {
-			xplog.LogInsertEvent("黑名单", "防护模式", uname, process, logdst, "驱动加载", "拒绝")
-			return false
-		}
-
-		// 是添加驱动的注册表项
-		fmt.Println("\n#1:", regpath)
-		_, ok = gUsbRegKey[regpath]
-		if ok {
-			fmt.Println("#2:", regpath)
-			// 功能开启
-			if hMemRules.SafeHighCfg.Mode == 0 {
-				xplog.LogInsertEvent("增强防护-防止驱动程序被加载", "监视模式", uname, process, logdst, "驱动加载", "拒绝")
-				return true
-			} else {
-				xplog.LogInsertEvent("增强防护-防止驱动程序被加载", "防护模式", uname, process, logdst, "驱动加载", "拒绝")
-				return false
-			}
-		}
-	}
 	return true
-}
-
-// 规则匹配 - 注册表创建key - USB等驱动拦截
-func RuleMatchRegCreateKey(uname, process, regpath string) bool {
-	process, _ = filepath.Abs(process)
-	process = strings.ToLower(process)
-	regpath = strings.ToUpper(regpath)
-	return true
-
-	//sysReg := "HKEY_LOCAL_MACHINE\\SYSTEM\\CURRENTCONTROLSET\\SERVICES\\"
-	//sysReg1 := "HKEY_LOCAL_MACHINE\\SYSTEM\\CURRENTSET001\\SERVICES\\"
-	//sysReg2 := "HKEY_LOCAL_MACHINE\\SYSTEM\\CURRENTSET002\\SERVICES\\"
-
-	rwLockRule.Lock()
-	defer rwLockRule.Unlock()
-
-	// 白名单放行
-	/*_, ok := hMemRules.White[process]
-	if ok {
-		//xplog.LogInsertEvent("白名单", "防护模式", uname, process, regpath, "驱动加载", "允许")
-		return true
-	}*/
-
-	// 黑名单拒绝
-	_, ok := hMemRules.Black[process]
-	if ok {
-		xplog.LogInsertEvent("黑名单", "防护模式", uname, process, regpath, "驱动加载", "拒绝")
-		return false
-	}
-
-	// 防止驱动程序被加载
-	if hMemRules.SafeHighCfg.LoadSys == 1 {
-		// 是添加驱动的注册表项
-		fmt.Println("\n#1:", regpath)
-		_, ok = gUsbRegKey[regpath]
-		if ok {
-			fmt.Println("#2:", regpath)
-			// 功能开启
-			if hMemRules.SafeHighCfg.Mode == 0 {
-				xplog.LogInsertEvent("增强防护-防止驱动程序被加载", "监视模式", uname, process, regpath, "驱动加载", "拒绝")
-				return true
-			} else {
-				xplog.LogInsertEvent("增强防护-防止驱动程序被加载", "防护模式", uname, process, regpath, "驱动加载", "拒绝")
-				return false
-			}
-		}
-	}
-
-	return true
-}
-
-var gUsbRegKey map[string]int
-
-// bug fix
-func InitUSBRegKey() {
-	gUsbRegKey = make(map[string]int)
-
-	gUsbRegKey["HKEY_LOCAL_MACHINE\\SYSTEM\\CURRENTSET001\\SERVICES\\USBSTOR\\IMAGEPATH"] = 0
-	gUsbRegKey["HKEY_LOCAL_MACHINE\\SYSTEM\\CURRENTSET001\\SERVICES\\DISK\\START"] = 0
-	gUsbRegKey["HKEY_LOCAL_MACHINE\\SYSTEM\\CURRENTSET001\\SERVICES\\CRCDISK\\START"] = 0
-	gUsbRegKey["HKEY_LOCAL_MACHINE\\SYSTEM\\CURRENTSET001\\SERVICES\\USBCCGP\\START"] = 0
-	gUsbRegKey["HKEY_LOCAL_MACHINE\\SYSTEM\\CURRENTSET001\\SERVICES\\USBVIDIO\\IMAGEPATH"] = 0
 }
