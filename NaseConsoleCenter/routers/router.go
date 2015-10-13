@@ -32,5 +32,8 @@ func init() {
 	// 接收客户端的日志统计信息
 	beego.Router("/client/log", &controllers.ClientController{}, "get,post:ClientLog")
 
+	// 系统设置页面
+	beego.Router("/sys/changepassword", &controllers.SysController{}, "get,post:SysChangePassword")
+
 	// 接收客户端日志
 }
