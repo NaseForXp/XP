@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"../tools/debug"
+	"../tools/et99"
 	"../tools/rules"
 	"../tools/toolcenter"
 	"../tools/xplog"
